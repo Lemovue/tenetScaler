@@ -52,10 +52,10 @@ On the presenting laptop:
 3. Find the hotspot IP (`ipconfig`, the Wi-Fi adapter's IPv4 address). Start the live stack:
 
    ```powershell
-   bin/tenantscaler.exe demo -live 0.0.0.0:8081
+   bin/tenantscaler.exe demo -live 0.0.0.0:8081 -config config/live-demo.yaml
    ```
 
-   The dashboard shows the banner **LIVE DEMO — live demo, not the experiment**.
+   `config/live-demo.yaml` is `config/real.yaml` with C at priority 50 (A and B borrow a spare replica first) and at most 2 requests in flight per replica. The dashboard shows no banner: say out loud that these are live-demo numbers, not the experiment results.
 
 On each teammate's laptop, copy the matching binary from `dist/` (build it with `./scripts/build-dist.ps1`):
 
