@@ -87,6 +87,8 @@ func (s *Server) StartObserve(t ObserveTarget) (int, error) {
 		return 0, ErrBusy
 	}
 	s.runs++
+	target := t
+	s.observing = &target
 	ctx, cancel := context.WithCancel(context.Background())
 	r := newRun(s.runs, s.opt.Seed, &s.opt, s.roles, cancel)
 	r.observe = &t

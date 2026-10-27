@@ -28,10 +28,11 @@ type Server struct {
 	roles    sim.Roles
 	scenario ScenarioInfo
 
-	mu     sync.Mutex
-	run    *abRun // current or last A/B run; nil before the first
-	runs   int    // A/B runs started
-	closed bool
+	mu        sync.Mutex
+	run       *abRun // current or last A/B run; nil before the first
+	runs      int    // A/B runs started
+	closed    bool
+	observing *ObserveTarget // set by StartObserve: this dashboard only watches a cluster
 }
 
 // New validates opt and returns an idle server.
@@ -46,8 +47,15 @@ func New(opt Options) (*Server, error) {
 
 // StartAB begins an A/B run with seed in the background and returns its
 // number. It returns ErrBusy while another run is in progress and
-// ErrClosed after Close.
+// ErrClosed after Close. A dashboard that watches a cluster (StartObserve)
+// never starts a stack of its own: StartAB starts watching again instead.
 func (s *Server) StartAB(seed int64) (int, error) {
+	s.mu.Lock()
+	target := s.observing
+	s.mu.Unlock()
+	if target != nil {
+		return s.StartObserve(*target)
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.closed {

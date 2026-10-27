@@ -93,6 +93,22 @@ func TestObserveRun(t *testing.T) {
 	if d := srv.Decisions(0, ""); d.Live || d.Total != 2 {
 		t.Errorf("decisions after stop %+v: want the last records kept, not live", d)
 	}
+	// The dashboard's Run button never starts a local stack while it watches
+	// a cluster: StartAB watches again.
+	if _, err := srv.StartAB(1); err != nil {
+		t.Fatal(err)
+	}
+	deadline = time.Now().Add(5 * time.Second)
+	for {
+		st := srv.State()
+		if st.Phase == PhaseRunning && st.Live && st.Stacks[1].Status == StatusRunning {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("StartAB while observing: %+v, want watching the cluster again", st)
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
 }
 
 // Without the admin key the observed gateway answers 401: the samples keep

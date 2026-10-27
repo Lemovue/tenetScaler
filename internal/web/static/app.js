@@ -93,6 +93,8 @@ window.TS = window.TS || {};
 
   function renderConfig(c) {
     renderBadge(c);
+    // Watching a cluster: the button starts watching again, never a local stack.
+    if (c.backend.kind === "kubernetes") U.setText($("run-btn"), "Watch cluster");
     TS.Comic.configure(c);
     U.setText($("backend-detail"), c.backend.detail + " Config: " + c.backend.configPath + ".");
     const sc = c.scenario;
