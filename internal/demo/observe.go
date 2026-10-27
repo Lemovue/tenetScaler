@@ -29,7 +29,13 @@ type ObserveTarget struct {
 	// GatewayURL serves GET /stats, which needs AdminKey; ControllerURL
 	// serves GET /status and GET /decisions.
 	GatewayURL, ControllerURL string
-	AdminKey                  string
+	// BaselineGatewayURL, when set, is the side-by-side baseline's gateway
+	// (deploy/k3s/side-by-side), shown in the baseline panel. Its /stats
+	// (same AdminKey) gives the per-tenant statistics and the ready
+	// replicas; KEDA's target is not read, so that panel shows no
+	// starting replicas.
+	BaselineGatewayURL string
+	AdminKey           string
 }
 
 // ObservedBackend describes an observed cluster for the dashboard's
@@ -60,6 +66,7 @@ func (s *Server) StartObserve(t ObserveTarget) (int, error) {
 		return 0, errors.New("demo: observing needs the gateway and the controller URL")
 	}
 	t.GatewayURL, t.ControllerURL = strings.TrimRight(t.GatewayURL, "/"), strings.TrimRight(t.ControllerURL, "/")
+	t.BaselineGatewayURL = strings.TrimRight(t.BaselineGatewayURL, "/")
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.closed {
@@ -72,7 +79,9 @@ func (s *Server) StartObserve(t ObserveTarget) (int, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	r := newRun(s.runs, s.opt.Seed, &s.opt, s.roles, cancel)
 	r.observe = &t
-	r.stacks[0].status = StatusSkipped // nothing runs here, the baseline neither
+	if t.BaselineGatewayURL == "" {
+		r.stacks[0].status = StatusSkipped // no baseline in the cluster to show
+	}
 	r.message = "Observing the TenantScaler in the Kubernetes cluster"
 	s.run = r
 	go r.executeObserve(ctx)
@@ -105,6 +114,13 @@ func (r *abRun) executeObserve(ctx context.Context) {
 	r.decStart = start
 	r.message = fmt.Sprintf("Observing the TenantScaler in the Kubernetes cluster: gateway %s, controller %s",
 		r.observe.GatewayURL, r.observe.ControllerURL)
+	baseline := r.observe.BaselineGatewayURL != ""
+	if baseline {
+		b := r.stacks[0]
+		b.status, b.simulated, b.trafficStart, b.gatewayURL = StatusRunning, r.opt.Backend.Simulated, start, r.observe.BaselineGatewayURL
+		r.message = fmt.Sprintf("Observing the Kubernetes cluster side by side: TenantScaler gateway %s (controller %s), baseline gateway %s (KEDA)",
+			r.observe.GatewayURL, r.observe.ControllerURL, r.observe.BaselineGatewayURL)
+	}
 	r.mu.Unlock()
 
 	tick := time.NewTicker(r.opt.SampleEvery)
@@ -137,6 +153,22 @@ func (r *abRun) executeObserve(ctx context.Context) {
 		}
 		smp.Starting = max(smp.Desired-smp.Ready, 0)
 		r.addSample(i, smp, liveSample(smp, gs), gs)
+		if baseline {
+			bs, err := r.gatewayStats(ctx, r.observe.BaselineGatewayURL)
+			if err != nil && ctx.Err() == nil {
+				log.Debug("observed baseline gateway stats unavailable", "err", err)
+			}
+			bsmp := eval.Sample{T: time.Since(start), InFlight: map[string]int{}, Queued: map[string]int{}, CounterGap: math.NaN()}
+			if bs != nil {
+				bsmp.Ready, bsmp.Desired = bs.Endpoints, bs.Endpoints // KEDA's target is not read
+				for k := range bs.Tenants {
+					o := &bs.Tenants[k]
+					o.Tenant = names.shown(o.Tenant)
+					bsmp.InFlight[o.Tenant], bsmp.Queued[o.Tenant] = o.InFlight, o.QueueLength
+				}
+			}
+			r.addSample(0, bsmp, liveSample(bsmp, bs), bs)
+		}
 
 		if time.Since(decided) >= observeDecisionsEvery {
 			decided = time.Now()
@@ -158,6 +190,9 @@ func (r *abRun) executeObserve(ctx context.Context) {
 		case <-ctx.Done():
 			r.mu.Lock()
 			sr.status, r.phase = StatusStopped, PhaseStopped
+			if baseline {
+				r.stacks[0].status = StatusStopped
+			}
 			r.message = "Stopped observing: the cluster keeps running"
 			r.mu.Unlock()
 			log.Info("observing stopped")

@@ -1,0 +1,53 @@
+# SIDE BY SIDE: real KEDA (2.21, core manifest) scales model-pool-baseline
+# with no notion of tenants, the queue-based baseline of the evaluation
+# (autoscale.DefaultKEDAConfig): 4 waiting requests per replica, 15 s
+# polling, a 300 s scale-down window, 1..4 replicas (the demo budget, as the
+# TenantScaler controller's -capacity after scripts/k3s/demo-size.sh).
+# No Prometheus: the metrics-api scaler reads the baseline gateway's /stats
+# (admin key from the Secret, sent as a bearer token). That gateway passes
+# every request straight through, so inFlight counts each replica's running
+# requests (up to 8, the simulated engine's maxNumSeqs) plus its waiting
+# ones; 4 waiting per replica is therefore 12 in flight per replica
+# (AverageValue: desired = ceil(inFlight / 12)).
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: gateway-baseline-admin
+  namespace: tenantscaler
+  labels:
+    app.kubernetes.io/part-of: tenantscaler
+spec:
+  secretTargetRef:
+    - parameter: token
+      name: tenantscaler-keys
+      key: TS_ADMIN_KEY
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: model-pool-baseline
+  namespace: tenantscaler
+  labels:
+    app.kubernetes.io/part-of: tenantscaler
+spec:
+  scaleTargetRef:
+    name: model-pool-baseline
+  minReplicaCount: 1
+  maxReplicaCount: 4
+  pollingInterval: 15
+  advanced:
+    horizontalPodAutoscalerConfig:
+      behavior:
+        scaleDown:
+          stabilizationWindowSeconds: 300
+  triggers:
+    - type: metrics-api
+      metricType: AverageValue
+      metadata:
+        url: http://gateway-baseline.tenantscaler.svc.cluster.local:8080/stats?window=15s
+        valueLocation: inFlight
+        targetValue: "12"
+        activationTargetValue: "0"
+        authMode: bearer
+      authenticationRef:
+        name: gateway-baseline-admin

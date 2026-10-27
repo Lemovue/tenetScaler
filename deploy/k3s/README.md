@@ -115,6 +115,45 @@ The replicas are the **simulated** engine (`tenantscaler replica`), not llama.cp
   Remove-NetFirewallHyperVRule -Name TenantScalerGW
   ```
 
+## Side by side: the KEDA baseline beside TenantScaler, on the same live traffic
+
+The baseline runs beside TenantScaler in the same cluster:
+- it has its own pool of simulated replicas (`model-pool-baseline`);
+- a passthrough gateway (`gateway-baseline`) sits in front of that pool;
+- real KEDA (2.21) scales the pool from that gateway's `/stats`: 12 requests in flight per replica, which is the simulated engine's 8 running plus the baseline's 4 waiting.
+
+No Prometheus is needed. On Windows, `tenantscaler mirror` serves the teammates on port 8081: TenantScaler answers each request, and the baseline gets a copy of it. Both pools therefore see the same live traffic.
+
+1. **Install KEDA**, once. This is a download, so get the owner's approval first:
+   ```bash
+   sudo kubectl apply --server-side -f https://github.com/kedacore/keda/releases/download/v2.21.0/keda-2.21.0-core.yaml
+   ```
+   The core manifest has no admission webhooks, so the operator's `cert-rotation ... keda-admission not found` errors are expected.
+
+2. **Deploy the baseline.** Do this after `up.sh` and `demo-size.sh`:
+   ```bash
+   sudo kubectl apply -f deploy/k3s/side-by-side/
+   ```
+
+3. **Forward to this machine only.** Run this in Ubuntu and keep it running:
+   ```bash
+   bash scripts/k3s/expose.sh side-by-side
+   ```
+   It forwards the TenantScaler gateway to 18081, the baseline gateway to 18082 and the controller to 18090.
+
+4. **Start the mirror** in Windows PowerShell. The Windows firewall rule for `bin\tenantscaler.exe` or `scripts/demo/firewall.ps1` covers it, so no Hyper-V rule is needed:
+   ```powershell
+   bin\tenantscaler.exe mirror -addr 0.0.0.0:8081
+   ```
+
+5. **Open the dashboard**, with both panels live:
+   ```powershell
+   bin\tenantscaler.exe demo -config config/live-demo.yaml -observe-gateway http://127.0.0.1:18081 -observe-controller http://127.0.0.1:18090 -observe-baseline-gateway http://127.0.0.1:18082 -observe-keys $env:USERPROFILE\.tenantscaler\k8s.env
+   ```
+   KEDA's target is not read, so the baseline panel shows ready replicas only, with no "starting" line.
+
+Teammates run the same `loadgen` command against `http://<laptop IP>:8081` with their cluster key.
+
 ## Afterwards
 
 ```bash

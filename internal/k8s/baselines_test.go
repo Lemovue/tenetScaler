@@ -10,11 +10,30 @@ import (
 	"testing"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+
+	"tenantscaler/internal/engine"
 )
+
+// sideBySideSet is the apply set of the side-by-side baseline, which runs
+// BESIDE TenantScaler on its own pool (TestSideBySideBaseline); every other
+// autoscaler replaces TenantScaler on model-pool.
+const sideBySideSet = "k3s/side-by-side"
+
+// replacingAutoscalers are the baseline autoscalers that run instead of
+// the TenantScaler controller.
+func replacingAutoscalers(ms []manifest) []manifest {
+	var out []manifest
+	for _, m := range append(byKind(ms, "ScaledObject"), byKind(ms, "HorizontalPodAutoscaler")...) {
+		if applySet(m.file) != sideBySideSet {
+			out = append(out, m)
+		}
+	}
+	return out
+}
 
 func TestBaselinesTargetModelPool(t *testing.T) {
 	ms := loadManifests(t)
-	for _, m := range append(byKind(ms, "ScaledObject"), byKind(ms, "HorizontalPodAutoscaler")...) {
+	for _, m := range replacingAutoscalers(ms) {
 		if !strings.HasPrefix(m.file, "k8s/baselines/") {
 			t.Errorf("%v: autoscalers must live in k8s/baselines/ so `kubectl apply -f deploy/k8s/` skips them", m)
 		}
@@ -130,7 +149,7 @@ func TestPassthroughGatewayOverlay(t *testing.T) {
 
 	// Each autoscaler's runbook stops the controller and switches the
 	// gateway to passthrough before it applies the autoscaler.
-	autoscalers := append(byKind(ms, "ScaledObject"), byKind(ms, "HorizontalPodAutoscaler")...)
+	autoscalers := replacingAutoscalers(ms)
 	if len(autoscalers) == 0 {
 		t.Fatal("no baseline autoscalers under deploy/")
 	}
@@ -151,5 +170,52 @@ func TestPassthroughGatewayOverlay(t *testing.T) {
 			}
 			last = max(last, i)
 		}
+	}
+}
+
+// The side-by-side baseline runs BESIDE TenantScaler on its own pool: real
+// KEDA scales model-pool-baseline (never model-pool) from the passthrough
+// baseline gateway's /stats, with the queue-based baseline's settings.
+func TestSideBySideBaseline(t *testing.T) {
+	ms := inSet(loadManifests(t), sideBySideSet)
+	find(t, ms, "Deployment", "model-pool-baseline")
+	gw := flagValues(containerArgs(t, find(t, ms, "Deployment", "gateway-baseline")))
+	if gw["-mode"] != "passthrough" || gw["-k8s-service"] != "model-pool-baseline" {
+		t.Errorf("gateway-baseline -mode %q -k8s-service %q, want passthrough in front of model-pool-baseline", gw["-mode"], gw["-k8s-service"])
+	}
+	so := find(t, ms, "ScaledObject", "model-pool-baseline")
+	if name, _, _ := unstructured.NestedString(so.Object, "spec", "scaleTargetRef", "name"); name != "model-pool-baseline" {
+		t.Errorf("side-by-side ScaledObject scales %q, want model-pool-baseline (model-pool is TenantScaler's)", name)
+	}
+	lo, _, _ := unstructured.NestedInt64(so.Object, "spec", "minReplicaCount")
+	hi, _, _ := unstructured.NestedInt64(so.Object, "spec", "maxReplicaCount")
+	poll, _, _ := unstructured.NestedInt64(so.Object, "spec", "pollingInterval")
+	window, _, _ := unstructured.NestedInt64(so.Object, "spec", "advanced", "horizontalPodAutoscalerConfig", "behavior", "scaleDown", "stabilizationWindowSeconds")
+	if lo != 1 || hi != 4 || poll != 15 || window != 300 {
+		t.Errorf("side-by-side KEDA: replicas %d..%d, polling %d s, scale-down window %d s; want 1..4 (the demo budget), 15 s and 300 s", lo, hi, poll, window)
+	}
+	triggers, _, _ := unstructured.NestedSlice(so.Object, "spec", "triggers")
+	if len(triggers) != 1 {
+		t.Fatalf("side-by-side ScaledObject has %d triggers, want 1", len(triggers))
+	}
+	trigger := triggers[0].(map[string]interface{})
+	meta, _, _ := unstructured.NestedStringMap(trigger, "metadata")
+	auth, _, _ := unstructured.NestedString(trigger, "authenticationRef", "name")
+	// In flight per replica = the simulated engine's running requests plus
+	// the queue-based baseline's 4 waiting ones.
+	want := strconv.Itoa(engine.DefaultParams().MaxNumSeqs + 4)
+	if trigger["type"] != "metrics-api" || trigger["metricType"] != "AverageValue" ||
+		!strings.HasPrefix(meta["url"], "http://gateway-baseline.tenantscaler.svc.cluster.local:8080/stats") ||
+		meta["valueLocation"] != "inFlight" || meta["targetValue"] != want || meta["authMode"] != "bearer" {
+		t.Errorf("side-by-side KEDA trigger = %v, want metrics-api on gateway-baseline /stats inFlight, %s per replica (AverageValue), bearer auth", trigger, want)
+	}
+	ta := find(t, ms, "TriggerAuthentication", auth)
+	refs, _, _ := unstructured.NestedSlice(ta.Object, "spec", "secretTargetRef")
+	if len(refs) != 1 {
+		t.Fatalf("TriggerAuthentication %s has %d secret refs, want 1", auth, len(refs))
+	}
+	ref := refs[0].(map[string]interface{})
+	if ref["parameter"] != "token" || ref["name"] != keysSecret || ref["key"] != "TS_ADMIN_KEY" {
+		t.Errorf("TriggerAuthentication %s ref = %v, want the token from %s/TS_ADMIN_KEY", auth, ref, keysSecret)
 	}
 }

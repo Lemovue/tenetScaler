@@ -246,11 +246,13 @@ func flagValues(args []string) map[string]string {
 
 // externalKinds are the manifests whose Go types client-go's scheme does
 // not hold: the CRD (k8s.io/apiextensions-apiserver is not a dependency),
-// KEDA's ScaledObject, kind's cluster config and the TenantScaler itself
-// (checked against the CRD schema by TestSampleTenantsAreValid).
+// KEDA's ScaledObject and TriggerAuthentication, kind's cluster config and
+// the TenantScaler itself (checked against the CRD schema by
+// TestSampleTenantsAreValid).
 var externalKinds = map[string]bool{
 	"apiextensions.k8s.io/v1/CustomResourceDefinition": true,
 	"keda.sh/v1alpha1/ScaledObject":                    true,
+	"keda.sh/v1alpha1/TriggerAuthentication":           true,
 	"kind.x-k8s.io/v1alpha4/Cluster":                   true,
 	Group + "/" + Version + "/" + Kind:                 true,
 }
