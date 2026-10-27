@@ -35,13 +35,15 @@ func ParseTenantKeys(s string) (map[string]KeyGrant, error) {
 		return nil, nil
 	}
 	keys := map[string]KeyGrant{}
-	for _, pair := range strings.Split(s, ",") {
+	for i, pair := range strings.Split(s, ",") {
 		who, key, ok := strings.Cut(strings.TrimSpace(pair), "=")
 		tenant, maxPrio, capped := strings.Cut(strings.TrimSpace(who), ":")
 		tenant, key = strings.TrimSpace(tenant), strings.TrimSpace(key)
 		switch {
 		case !ok || tenant == "" || key == "":
-			return nil, fmt.Errorf("tenant keys: want tenant[:maxPriority]=key pairs separated by commas, got %q", pair)
+			// The pair is not echoed: it may hold a key, and this error ends
+			// up in logs (a crash-looping pod's, for one).
+			return nil, fmt.Errorf("tenant keys: pair %d is not tenant[:maxPriority]=key (pairs are separated by commas)", i+1)
 		case len(key) < MinKeyLength:
 			return nil, fmt.Errorf("tenant keys: the key of tenant %s is shorter than %d characters", tenant, MinKeyLength)
 		}
