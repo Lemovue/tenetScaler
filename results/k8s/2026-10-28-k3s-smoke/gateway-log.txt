@@ -1,0 +1,28 @@
+time=2026-10-27T20:17:31.455Z level=INFO msg="gateway access" tenantKeys=3 adminKey=true
+gateway (fair mode) on http://[::]:8080: 3 tenants, dispatch window 8 per replica, upstream Service tenantscaler/model-pool port 8000
+time=2026-10-27T20:17:48.725Z level=INFO msg="policy applied" version=1 tenants=3 propagationMs=0.195071
+time=2026-10-27T20:18:01.709Z level=INFO msg="endpoints changed" endpoints=[http://10.42.0.8:8000]
+time=2026-10-27T20:18:03.721Z level=INFO msg="policy applied" version=2 tenants=3 propagationMs=0.147516
+time=2026-10-27T20:18:21.046Z level=INFO msg="policy applied" version=3 tenants=3 propagationMs=0.139087
+time=2026-10-27T20:18:36.042Z level=INFO msg="policy applied" version=4 tenants=3 propagationMs=0.175535
+time=2026-10-27T20:18:51.044Z level=INFO msg="policy applied" version=5 tenants=3 propagationMs=0.132503
+time=2026-10-27T20:19:08.258Z level=INFO msg="policy applied" version=6 tenants=3 propagationMs=0.11839
+time=2026-10-27T20:19:23.260Z level=INFO msg="policy applied" version=7 tenants=3 propagationMs=0.133343
+time=2026-10-27T20:19:40.623Z level=INFO msg="policy applied" version=8 tenants=3 propagationMs=0.219195
+time=2026-10-27T20:19:55.623Z level=INFO msg="policy applied" version=9 tenants=3 propagationMs=0.150466
+time=2026-10-27T20:20:12.958Z level=INFO msg="policy applied" version=10 tenants=3 propagationMs=0.220663
+time=2026-10-27T20:20:14.941Z level=INFO msg="endpoints changed" endpoints="[http://10.42.0.11:8000 http://10.42.0.8:8000]"
+time=2026-10-27T20:20:27.953Z level=INFO msg="policy applied" version=11 tenants=3 propagationMs=0.121204
+time=2026-10-27T20:20:45.142Z level=INFO msg="policy applied" version=12 tenants=3 propagationMs=0.157791
+time=2026-10-27T20:20:47.131Z level=INFO msg="endpoints changed" endpoints="[http://10.42.0.11:8000 http://10.42.0.12:8000 http://10.42.0.13:8000 http://10.42.0.14:8000 http://10.42.0.15:8000 http://10.42.0.8:8000]"
+time=2026-10-27T20:21:00.146Z level=INFO msg="policy applied" version=13 tenants=3 propagationMs=0.176746
+time=2026-10-27T20:21:17.543Z level=INFO msg="policy applied" version=14 tenants=3 propagationMs=0.254732
+time=2026-10-27T20:21:32.543Z level=INFO msg="policy applied" version=15 tenants=3 propagationMs=0.127406
+time=2026-10-27T20:21:33.528Z level=INFO msg="endpoints changed" endpoints="[http://10.42.0.11:8000 http://10.42.0.12:8000 http://10.42.0.13:8000 http://10.42.0.14:8000 http://10.42.0.15:8000 http://10.42.0.16:8000 http://10.42.0.8:8000]"
+time=2026-10-27T20:21:49.874Z level=INFO msg="policy applied" version=16 tenants=3 propagationMs=0.142188
+time=2026-10-27T20:21:51.864Z level=INFO msg="endpoints changed" endpoints="[http://10.42.0.11:8000 http://10.42.0.12:8000 http://10.42.0.13:8000 http://10.42.0.14:8000 http://10.42.0.15:8000 http://10.42.0.16:8000 http://10.42.0.17:8000 http://10.42.0.8:8000]"
+time=2026-10-27T20:22:04.877Z level=INFO msg="policy applied" version=17 tenants=3 propagationMs=0.155481
+time=2026-10-27T20:22:19.875Z level=INFO msg="policy applied" version=18 tenants=3 propagationMs=0.131822
+time=2026-10-27T20:22:37.261Z level=INFO msg="policy applied" version=19 tenants=3 propagationMs=0.155784
+time=2026-10-27T20:22:52.258Z level=INFO msg="policy applied" version=20 tenants=3 propagationMs=0.125956
+time=2026-10-27T20:23:09.637Z level=INFO msg="policy applied" version=21 tenants=3 propagationMs=0.125402

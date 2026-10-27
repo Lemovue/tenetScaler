@@ -1,0 +1,16 @@
+live demo traffic (not the experiment): profile spike (C pattern) -> http://10.43.40.150:8080; Ctrl+C stops
+spike started for 1m30s
+   10s  answered  10  429  21  failed   0  p95 time-to-first-token 1.33 s
+   20s  answered  13  429   0  failed   0  p95 time-to-first-token 2.14 s
+   30s  answered  15  429   1  failed   0  p95 time-to-first-token 1.89 s
+   40s  answered  22  429   4  failed   0  p95 time-to-first-token 1.58 s
+   50s  answered  41  429   0  failed   0  p95 time-to-first-token 1.95 s
+  1m0s  answered  27  429   0  failed   0  p95 time-to-first-token 0.10 s
+ 1m10s  answered  56  429   0  failed   0  p95 time-to-first-token 0.14 s
+ 1m20s  answered  42  429   0  failed   0  p95 time-to-first-token 0.09 s
+ 1m30s  answered  19  429   0  failed   0  p95 time-to-first-token 0.11 s
+ 1m40s  answered   6  429   0  failed   0  p95 time-to-first-token 0.07 s
+ 1m50s  answered   0  429   0  failed   0  p95 time-to-first-token -
+  2m0s  answered   1  429   0  failed   0  p95 time-to-first-token 0.05 s
+time=2026-10-27T20:22:11.087Z level=WARN msg="loadgen: request failed (first of its kind for this target)" target=gateway tenant=C category=aborted err="read stream: context deadline exceeded"
+total after 2m0s: 252 answered, 26 rejected with 429, 1 failed

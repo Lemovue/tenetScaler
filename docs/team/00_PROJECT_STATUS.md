@@ -59,7 +59,7 @@ Legend: ✅ done · 🟡 started or partly done · ⬜ not started.
 | Detect P-cores vs E-cores (6 P + 4 E found on this laptop) | ✅ | `internal/topology` |
 | Pin each replica to one P-core, services on the other cores (verified: llama-server on CPUs 0–1, services on 8–15) | ✅ (N2) | `internal/llama`, `internal/realrun` |
 | `loadgen` for teammates' laptops (live demo), built for Windows/Mac/Linux | ⬜ (N5) | |
-| Live Kubernetes run (k3s) | ⬜ (N7, needs your OK to install) | |
+| Live Kubernetes run (k3s v1.36.5 in WSL2, simulated replicas): pool scaled 1 → 8 → 1, status and EndpointSlices work, c shed with the demo sizing | ✅ (N7, smoke test) | `deploy/k3s`, `scripts/k3s`, `results/k8s` |
 
 ### Phase 3: Proof (measurements): 4 of 11 done
 
@@ -120,6 +120,6 @@ Rule for everyone: **never say a number on stage that is not in this table or in
 | N4 | 3 | Real test harness: S4, readiness hold, interleaved runs, tokenizer |
 | N5 | 4 | `loadgen` for laptops, firewall script, DEMO.md |
 | N6 | 3–4 | Headline real runs + final numbers in README |
-| N7 | 2 | k3s live Kubernetes smoke (needs approval) |
+| N7 ✅ | 2 | k3s live Kubernetes smoke (done 2026-10-28, simulated replicas: `results/k8s/`) |
 
 Per-person details: `01_Nilay.md`, `02_Mayank.md`, `03_Harshit.md`, `04_Akshat.md`.

@@ -12,7 +12,12 @@ TenantScaler runs two coupled loops:
 > **What is real and what is simulated**
 > - **REAL:** the headline results and the live demo use real inference. Each replica is a `llama-server` process (llama.cpp b11898) serving **Qwen2.5-0.5B-Instruct Q4_K_M**, pinned to one physical CPU core (2 threads, 4 slots) of an Intel i5-14450HX laptop, with a budget of 4 replicas. TTFT, TPOT, cold start and throughput are measured, not modelled.
 > - **SIMULATED (labelled everywhere):** the 10-setup sweep, the cold-start sweep and the forecaster's control-loop study run in a discrete-event simulator. It executes the **same** gateway scheduler, controller and autoscaler code in virtual time, with replica compute replaced by a latency model. That model is calibrated to the real replica, and the calibration is checked against the measurements within ±25% (`results/real/profile.md`).
-> - **NOT RUN:** a live Kubernetes cluster. The CRD, controller, RBAC and manifests are built and unit-tested with client-go fakes, but Docker and kind are not available on the development machine (see Limitations).
+> - **KUBERNETES (smoke test, SIMULATED replicas, not a headline result):**
+>   - The CRD, controller, gateway, RBAC and manifests ran on a real cluster: k3s v1.36.5, one node in WSL2 on the same laptop.
+>   - The controller scaled the `model-pool` Deployment up and down and wrote every decision into `TenantScaler` status. The gateway followed the pods through EndpointSlices.
+>   - With the laptop's demo sizing, the noisy tenant c was shed (`over-share`, `SHEDDING true`) while a and b were never rejected.
+>   - The replicas in the cluster are the simulated engine, not llama.cpp.
+>   - Evidence: `results/k8s/`. Runbook: `deploy/k3s/README.md`.
 
 ## Pre-registered main claim
 
@@ -114,7 +119,7 @@ Dashboard headings use the Bangers font by Vernon Adams (SIL Open Font License 1
 | `tenantscaler profile -config config/real.yaml` | REAL: drives one llama replica at concurrency 1..6. Reports TTFT/TPOT/throughput, the capacity C and a calibrated simulated engine, and checks that calibration (`results/real/profile.md`) |
 | `tenantscaler realrun -config config/real.yaml -runs 5` | REAL: S2/S3/S5/S7 on real replicas, one setup at a time, mean ± 95% CI (`results/real/`), about 1.5 h |
 | `tenantscaler experiment -runs 10 -out results/sim/default` | SIMULATED: all setups, cold-start sweep 10/30/60/120 s, forecaster evaluation (`-scenario reclaim`, `-capacity 6`, `-config config/real.yaml -scenario real -initial 2` for the calibrated cross-check) |
-| `tenantscaler pool` / `gateway` / `controller` | The three services as separate processes (local mode), or in Kubernetes with `-kubeconfig` and the manifests in `deploy/k8s/` |
+| `tenantscaler pool` / `gateway` / `controller` | The three services as separate processes (local mode). In Kubernetes, `gateway -k8s-service` and `controller -k8s` run with `replica` pods from the manifests in `deploy/k8s/` (`deploy/k3s/README.md`). |
 | `tenantscaler loadgen`, `baseline` | Replay a scenario against any OpenAI-compatible endpoint; run a KEDA/HPA baseline on a pool |
 | `tenantscaler cleanup` | Kill `llama-server` replicas left by a crashed run (PID file `.run/llama.pids`) |
 | `tenantscaler config -config <file>` | Validate a config (rejects guarantees that exceed the budget) |

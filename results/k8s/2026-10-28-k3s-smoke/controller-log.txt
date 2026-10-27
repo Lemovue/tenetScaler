@@ -1,0 +1,25 @@
+controller on http://[::]:8090: kubernetes mode, metrics from gateway, cycle 15s, pool "shared-llm-pool" of 10 replicas
+time=2026-10-27T20:17:31.460Z level=WARN msg="could not read every policy version in use; a gateway that ignores a policy as stale raises it later" err="read gateway policy version: GET http://gateway:8080/policy: Get \"http://gateway:8080/policy\": dial tcp 10.43.40.150:8080: connect: connection refused"
+time=2026-10-27T20:17:31.565Z level=ERROR msg="controller cycle stage failed" stage=metrics cycle=1 err="gateway source: GET http://gateway:8080/stats?window=15s: Get \"http://gateway:8080/stats?window=15s\": dial tcp 10.43.40.150:8080: connect: connection refused"
+time=2026-10-27T20:17:31.565Z level=INFO msg="control cycle" cycle=1 failStatic=true desiredReplicas=1 poolReplicas=1 readyReplicas=0 policyVersion=0
+time=2026-10-27T20:17:48.734Z level=INFO msg="control cycle" cycle=2 failStatic=false desiredReplicas=1 poolReplicas=1 readyReplicas=0 policyVersion=1
+time=2026-10-27T20:18:03.730Z level=INFO msg="control cycle" cycle=3 failStatic=false desiredReplicas=1 poolReplicas=1 readyReplicas=1 policyVersion=2
+time=2026-10-27T20:18:21.054Z level=INFO msg="control cycle" cycle=4 failStatic=false desiredReplicas=1 poolReplicas=1 readyReplicas=1 policyVersion=3
+time=2026-10-27T20:18:36.051Z level=INFO msg="control cycle" cycle=5 failStatic=false desiredReplicas=1 poolReplicas=1 readyReplicas=1 policyVersion=4
+time=2026-10-27T20:18:51.065Z level=INFO msg="control cycle" cycle=6 failStatic=false desiredReplicas=1 poolReplicas=1 readyReplicas=1 policyVersion=5
+time=2026-10-27T20:19:08.266Z level=INFO msg="control cycle" cycle=7 failStatic=false desiredReplicas=1 poolReplicas=1 readyReplicas=1 policyVersion=6
+time=2026-10-27T20:19:23.269Z level=INFO msg="control cycle" cycle=8 failStatic=false desiredReplicas=1 poolReplicas=1 readyReplicas=1 policyVersion=7
+time=2026-10-27T20:19:40.634Z level=INFO msg="control cycle" cycle=9 failStatic=false desiredReplicas=2 poolReplicas=2 readyReplicas=1 policyVersion=8
+time=2026-10-27T20:19:55.632Z level=INFO msg="control cycle" cycle=10 failStatic=false desiredReplicas=2 poolReplicas=2 readyReplicas=1 policyVersion=9
+time=2026-10-27T20:20:12.976Z level=INFO msg="control cycle" cycle=11 failStatic=false desiredReplicas=6 poolReplicas=6 readyReplicas=1 policyVersion=10
+time=2026-10-27T20:20:27.962Z level=INFO msg="control cycle" cycle=12 failStatic=false desiredReplicas=6 poolReplicas=6 readyReplicas=2 policyVersion=11
+time=2026-10-27T20:20:45.152Z level=INFO msg="control cycle" cycle=13 failStatic=false desiredReplicas=6 poolReplicas=6 readyReplicas=2 policyVersion=12
+time=2026-10-27T20:21:00.156Z level=INFO msg="control cycle" cycle=14 failStatic=false desiredReplicas=7 poolReplicas=7 readyReplicas=6 policyVersion=13
+time=2026-10-27T20:21:17.553Z level=INFO msg="control cycle" cycle=15 failStatic=false desiredReplicas=8 poolReplicas=8 readyReplicas=6 policyVersion=14
+time=2026-10-27T20:21:32.552Z level=INFO msg="control cycle" cycle=16 failStatic=false desiredReplicas=8 poolReplicas=8 readyReplicas=6 policyVersion=15
+time=2026-10-27T20:21:49.883Z level=INFO msg="control cycle" cycle=17 failStatic=false desiredReplicas=5 poolReplicas=8 readyReplicas=7 policyVersion=16
+time=2026-10-27T20:22:04.891Z level=INFO msg="control cycle" cycle=18 failStatic=false desiredReplicas=3 poolReplicas=8 readyReplicas=8 policyVersion=17
+time=2026-10-27T20:22:19.884Z level=INFO msg="control cycle" cycle=19 failStatic=false desiredReplicas=3 poolReplicas=8 readyReplicas=8 policyVersion=18
+time=2026-10-27T20:22:37.269Z level=INFO msg="control cycle" cycle=20 failStatic=false desiredReplicas=1 poolReplicas=8 readyReplicas=8 policyVersion=19
+time=2026-10-27T20:22:52.267Z level=INFO msg="control cycle" cycle=21 failStatic=false desiredReplicas=2 poolReplicas=8 readyReplicas=8 policyVersion=20
+time=2026-10-27T20:23:09.645Z level=INFO msg="control cycle" cycle=22 failStatic=false desiredReplicas=1 poolReplicas=8 readyReplicas=8 policyVersion=21

@@ -25,7 +25,7 @@ Arbiter (guarantee → borrow → reclaim), demand estimate, stabilizer, control
 | CPU detection: 6 P-cores + 4 E-cores | ✅ |
 | One replica per P-core, services on the other cores (verified live) | ✅ |
 | Live demo: teammates' laptops send traffic with `tenantscaler loadgen` (Windows/Mac/Linux builds in `dist/`) | ✅ |
-| Live Kubernetes cluster (k3s) | ⬜ (section 3) |
+| Live Kubernetes cluster (k3s) | ✅ smoke test, simulated replicas (section 3) |
 
 ### Phase 3: Proof (measurements): 9 of 11 done, 2 running
 
@@ -80,6 +80,15 @@ Code is not compiled while the real runs are going: compiling loads the CPU core
 ---
 
 ## 3. K8s actual environment kab run hoga
+
+**Done on 2026-10-28** (update): WSL2 + Ubuntu 24.04 + k3s v1.36.5 on this laptop. Runbook: `deploy/k3s/README.md`. Evidence: `results/k8s/`.
+
+What differs from the plan below:
+- The cluster runs the **simulated** replicas (`deploy/k8s/10-model-pool.yaml`), not llama-server.
+- The image is built without Docker (`scripts/k3s/image.sh`), so no llama.cpp image and no Docker install were needed.
+- The controller scaled the pool from 1 to 8 and back, not from 1 to 3.
+
+The original plan, kept for the record:
 
 **Not yet: it needs WSL2, which is not installed on this laptop.** You chose (decision N7-A in `PLAN.md`) to install it **after the headline runs**, because installing it needs a reboot, and a reboot would kill the running experiment.
 
