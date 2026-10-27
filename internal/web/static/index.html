@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TenantScaler A/B Demo</title>
+<meta name="description" content="Sequential A/B of a queue-based KEDA baseline and TenantScaler on the same multi-tenant LLM traffic">
+<link rel="stylesheet" href="style.css">
+<script src="util.js" defer></script>
+<script src="chart.js" defer></script>
+<script src="decisions.js" defer></script>
+<script src="results.js" defer></script>
+<script src="summary.js" defer></script>
+<script src="app.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div>
+    <h1>TenantScaler</h1>
+    <p class="tagline">Same recorded traffic, two stacks, one at a time: queue-based KEDA, then TenantScaler.</p>
+  </div>
+  <div class="backend">
+    <span id="backend-badge" class="badge badge-loading">Loading backend…</span>
+    <p id="backend-detail" class="detail"></p>
+  </div>
+</header>
+<p id="conn-error" class="banner banner-error" role="alert" hidden></p>
+
+<main id="main">
+  <div class="tabs" role="tablist" aria-label="Dashboard views">
+    <button type="button" role="tab" id="tab-ab" aria-controls="view-ab" aria-selected="true">Live A/B</button>
+    <button type="button" role="tab" id="tab-results" aria-controls="view-results" aria-selected="false" tabindex="-1">Results</button>
+  </div>
+
+  <section id="view-ab" role="tabpanel" aria-labelledby="tab-ab">
+    <div class="controls">
+      <button id="run-btn" class="btn btn-primary" type="button" disabled>Run A/B</button>
+      <button id="stop-btn" class="btn" type="button" disabled>Stop</button>
+      <div class="phase">
+        <div class="progress" id="progress" role="progressbar" aria-label="A/B run progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="progress-bar"></span></div>
+        <p id="phase-text" aria-live="polite">Loading…</p>
+        <p id="phase-detail" class="muted"></p>
+      </div>
+    </div>
+    <p id="live-banner" class="banner banner-live" role="status" hidden></p>
+    <p id="run-error" class="banner banner-error" role="alert" hidden></p>
+    <p id="action-error" class="banner banner-error" role="alert" hidden></p>
+    <p id="scenario-text" class="scenario"></p>
+
+    <div class="panels">
+      <article class="panel" data-key="baseline" aria-labelledby="h-baseline">
+        <div class="panel-head">
+          <h2 id="h-baseline">Baseline: queue-based KEDA</h2>
+          <span class="status" data-role="status">loading</span>
+        </div>
+        <p class="setup" data-role="setup"></p>
+        <p class="panel-error" data-role="error" hidden></p>
+        <figure>
+          <figcaption>p99 TTFT per tenant <span class="muted" data-role="window-note"></span></figcaption>
+          <div class="chart-box"><canvas data-role="ttft" tabindex="0"></canvas></div>
+          <ul class="legend" data-role="ttft-legend"></ul>
+        </figure>
+        <figure>
+          <figcaption>Replicas</figcaption>
+          <div class="chart-box"><canvas class="short" data-role="replicas" tabindex="0"></canvas></div>
+          <ul class="legend" data-role="replicas-legend"></ul>
+        </figure>
+        <div class="table-wrap">
+          <table>
+            <caption>Per tenant <span class="muted" data-role="table-scope"></span></caption>
+            <thead><tr><th scope="col">Tenant</th><th scope="col">SLO attainment</th><th scope="col">p99 TTFT</th><th scope="col">Shed</th></tr></thead>
+            <tbody data-role="tenant-rows"></tbody>
+          </table>
+        </div>
+        <p class="engine" data-role="engine"></p>
+      </article>
+
+      <article class="panel" data-key="tenantscaler" aria-labelledby="h-tenantscaler">
+        <div class="panel-head">
+          <h2 id="h-tenantscaler">TenantScaler</h2>
+          <span class="status" data-role="status">loading</span>
+        </div>
+        <p class="setup" data-role="setup"></p>
+        <p class="panel-error" data-role="error" hidden></p>
+        <figure>
+          <figcaption>p99 TTFT per tenant <span class="muted" data-role="window-note"></span></figcaption>
+          <div class="chart-box"><canvas data-role="ttft" tabindex="0"></canvas></div>
+          <ul class="legend" data-role="ttft-legend"></ul>
+        </figure>
+        <figure>
+          <figcaption>Replicas</figcaption>
+          <div class="chart-box"><canvas class="short" data-role="replicas" tabindex="0"></canvas></div>
+          <ul class="legend" data-role="replicas-legend"></ul>
+        </figure>
+        <div class="table-wrap">
+          <table>
+            <caption>Per tenant <span class="muted" data-role="table-scope"></span></caption>
+            <thead><tr><th scope="col">Tenant</th><th scope="col">SLO attainment</th><th scope="col">p99 TTFT</th><th scope="col">Shed</th></tr></thead>
+            <tbody data-role="tenant-rows"></tbody>
+          </table>
+        </div>
+        <p class="engine" data-role="engine"></p>
+      </article>
+    </div>
+
+    <section class="summary card" aria-labelledby="summary-title">
+      <h2 id="summary-title">Side by side</h2>
+      <div id="summary-body"><p class="empty">Shown when both stacks have finished.</p></div>
+    </section>
+
+    <section class="decisions" aria-labelledby="dec-title">
+      <div class="section-head">
+        <h2 id="dec-title">TenantScaler decision log</h2>
+        <label>Tenant
+          <select id="dec-tenant"><option value="">All tenants</option></select>
+        </label>
+      </div>
+      <p id="dec-status" class="muted" aria-live="polite">No decisions yet: they appear while the TenantScaler stack runs.</p>
+      <ol id="dec-list" class="dec-list" aria-label="Decision records, newest first" hidden></ol>
+    </section>
+  </section>
+
+  <section id="view-results" role="tabpanel" aria-labelledby="tab-results" hidden>
+    <div class="section-head">
+      <p class="muted">Evaluation summaries written by <code>tenantscaler realrun</code> (real replicas) and <code>tenantscaler experiment</code> (simulated).</p>
+      <button id="results-refresh" class="btn btn-small" type="button">Reload</button>
+    </div>
+    <div id="results-body" aria-live="polite"><p class="empty">Loading results…</p></div>
+  </section>
+</main>
+<footer>
+  Live charts show the stack gateway's measurements over a sliding window; the final tables and the side-by-side summary come from the client-side records of each run (eval). Numbers are measured by this run, never typed in.
+</footer>
+</body>
+</html>
