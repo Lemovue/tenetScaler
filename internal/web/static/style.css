@@ -201,7 +201,7 @@ code { font-family: var(--mono); font-size: 0.88em; background: var(--surface-2)
 /* Webs: a fixed layer behind everything (decor.js draws them). */
 .webs { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
 .webs canvas { position: absolute; display: block; }
-.top, .hero, main, footer { position: relative; z-index: 1; }
+.top, .hero, main { position: relative; z-index: 1; }
 
 /* Cards and other plates: everything that holds text. */
 .card, .panel {
@@ -365,7 +365,7 @@ code { font-family: var(--mono); font-size: 0.88em; background: var(--surface-2)
 .detail, .muted, .setup, .engine, .scenario { color: var(--ink-2); }
 
 main { padding: 16px var(--gutter) 32px; max-width: calc(1500px + 2 * var(--gutter)); }
-@media (min-width: 1600px) { .hero { margin-left: auto; margin-right: auto; } main, footer { margin: 0 auto; } }
+@media (min-width: 1600px) { .hero { margin-left: auto; margin-right: auto; } main { margin: 0 auto; } }
 
 .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 .btn {
@@ -393,7 +393,6 @@ main { padding: 16px var(--gutter) 32px; max-width: calc(1500px + 2 * var(--gutt
 body > .banner { position: relative; z-index: 1; margin: 12px var(--gutter) 0; max-width: 1500px; }
 @media (min-width: 1600px) { body > .banner { margin-left: auto; margin-right: auto; } }
 .banner-error { background: var(--error-bg); color: var(--error-ink); border-color: var(--error-ink); }
-.banner-live { background: var(--ink); color: var(--invert-ink); font-weight: 600; }
 /* Offline: the header pill and both panel badges. */
 .badge-offline, .status-offline { background: var(--error-bg); color: var(--error-ink); border-color: var(--error-ink); }
 .scenario { margin: 12px 0 0; }
@@ -491,8 +490,6 @@ select { font: inherit; padding: 6px 12px; border-radius: 999px; border: 1px sol
 .results-section h2 { margin-bottom: 4px; }
 .results-label { margin: 4px 0 10px; }
 .badges { display: inline-flex; flex-wrap: wrap; gap: 6px; }
-
-footer { margin: 0 var(--gutter) 24px; padding: 12px 18px; max-width: 1500px; color: var(--ink-2); font-size: 0.85rem; }
 
 @media (max-width: 760px) {
   .tabs { order: 3; width: 100%; }

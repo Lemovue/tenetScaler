@@ -86,7 +86,6 @@
         <p id="backend-detail" class="detail"></p>
       </details>
     </div>
-    <p id="live-banner" class="banner banner-live" role="status" hidden></p>
     <p id="run-error" class="banner banner-error" role="alert" hidden></p>
     <p id="action-error" class="banner banner-error" role="alert" hidden></p>
 
@@ -174,9 +173,6 @@
     <div id="results-body" aria-live="polite"><p class="empty">Loading results…</p></div>
   </section>
 </main>
-<footer class="card">
-  Live charts show the stack gateway's measurements over a sliding window; the final tables and the side-by-side summary come from the client-side records of each run (eval). Numbers are measured by this run, never typed in. SLO status: MET when a tenant's SLO attainment reaches its target, MISSED when it does not, SHED when some of its requests were shed.
-</footer>
 <div id="glitch" class="glitch" aria-hidden="true"></div>
 </body>
 </html>

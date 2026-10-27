@@ -233,7 +233,6 @@ window.TS = window.TS || {};
     }
     TS.Decor.setActivity({ running, real: !!config && !config.backend.simulated, rates });
     const shared = sharedScales(state);
-    renderLive(state);
     for (const s of state.stacks) if (panels[s.key]) renderPanel(panels[s.key], s, state, shared);
     const sk = state.run + ":" + state.phase + ":" + state.stacks.map((s) => s.status).join(",");
     if (sk !== summaryKey) {
@@ -249,17 +248,6 @@ window.TS = window.TS || {};
       decisions.refresh();
       TS.Comic.update(); // captions from the same decisions
     }
-  }
-
-  // renderLive shows the live-demo banner: traffic from teammates' laptops
-  // is not the experiment, and its numbers are not results (decision Q16).
-  function renderLive(state) {
-    const lb = $("live-banner");
-    lb.hidden = !state.live;
-    if (!state.live) return;
-    const where = state.liveAddress ? " Teammates send traffic to http://" + state.liveAddress + "." : "";
-    U.setText(lb, "LIVE DEMO \u2014 live demo, not the experiment: the TenantScaler stack serves traffic from teammates' " +
-      "laptops, so these numbers are not experiment results." + where);
   }
 
   // phaseSummary is the coarse phase announced to screen readers.
