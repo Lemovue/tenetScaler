@@ -248,6 +248,53 @@ func TestServicesMatchDeploymentsAndFlags(t *testing.T) {
 	}
 }
 
+// keysSecret is the Secret the gateway and the controller read their keys
+// from. It is created by hand (deploy/k3s/README.md) and never committed.
+const keysSecret = "tenantscaler-keys"
+
+func TestKeysComeFromTheSecret(t *testing.T) {
+	ms := loadManifests(t)
+	if secrets := byKind(ms, "Secret"); len(secrets) > 0 {
+		t.Errorf("Secrets under deploy/ %v: keys must never be committed", secrets)
+	}
+	want := map[string][]string{
+		"gateway":                 {"TS_TENANT_KEYS", "TS_ADMIN_KEY"},
+		"tenantscaler-controller": {"TS_ADMIN_KEY"},
+	}
+	for _, m := range byKind(ms, "Deployment") {
+		got := map[string]string{}
+		for _, c := range containers(t, m.obj) {
+			env, _, _ := unstructured.NestedSlice(c, "env")
+			for _, e := range env {
+				e := e.(map[string]interface{})
+				name, _ := e["name"].(string)
+				if _, literal := e["value"]; literal && strings.Contains(name, "KEY") {
+					t.Errorf("%v: env %s has a literal value; keys come from the Secret", m, name)
+				}
+				ref, _, _ := unstructured.NestedMap(e, "valueFrom", "secretKeyRef")
+				if ref["optional"] == true {
+					t.Errorf("%v: env %s is optional; without the Secret the component would run without keys", m, name)
+				}
+				secret, _ := ref["name"].(string)
+				key, _ := ref["key"].(string)
+				got[name] = secret + "/" + key
+			}
+		}
+		for _, name := range want[m.obj.GetName()] {
+			if got[name] != keysSecret+"/"+name {
+				t.Errorf("%v: env %s = %q, want secretKeyRef %s/%s", m, name, got[name], keysSecret, name)
+			}
+		}
+		// The gateway's fairness state and the controller's single writer
+		// live in one pod each: never two at once during a rollout.
+		if _, ok := want[m.obj.GetName()]; ok {
+			if s, _, _ := unstructured.NestedString(m.obj.Object, "spec", "strategy", "type"); s != "Recreate" {
+				t.Errorf("%v: strategy %q, want Recreate", m, s)
+			}
+		}
+	}
+}
+
 // grants reports whether a Role rule set allows verb on group/resource.
 func grants(rules []interface{}, group, resource, verb string) bool {
 	for _, r := range rules {
