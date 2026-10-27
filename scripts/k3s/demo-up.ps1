@@ -21,6 +21,9 @@ foreach ($port in 8080, 8081) {
         throw "port $port is in use (a Windows demo -live?); stop it first"
     }
 }
+# After a network change the node may still hold its old address: heal.sh
+# restarts k3s (and KEDA) when it does. This also starts the VM if WSL stopped it.
+& wsl -d $Distro -u root --cd $root -- bash scripts/k3s/heal.sh
 Start-Process wsl -ArgumentList '-d', $Distro, '--cd', $root, '--', 'bash', 'scripts/k3s/expose.sh', 'side-by-side'
 Start-Process wsl -ArgumentList '-d', $Distro, '--cd', $root, '--', 'bash', 'scripts/k3s/mirror.sh', 'dist/tenantscaler-linux-amd64'
 $up = $false
@@ -38,6 +41,9 @@ $dash = "bin\tenantscaler.exe demo -config config/live-demo.yaml -observe-gatewa
     "-observe-controller http://127.0.0.1:18090 -observe-baseline-gateway http://127.0.0.1:18082 " +
     "-observe-replicas $Replicas -observe-keys `"$Keys`""
 Start-Process powershell -WorkingDirectory $root -ArgumentList '-NoExit', '-Command', $dash
+# The narrated "backend" view for the judges (scripts/k3s/explain.py).
+$wslKeys = '/mnt/' + $Keys.Substring(0, 1).ToLower() + $Keys.Substring(2).Replace('\', '/')
+Start-Process wsl -ArgumentList '-d', $Distro, '--cd', $root, '--', 'python3', 'scripts/k3s/explain.py', '--keys', $wslKeys
 Start-Sleep -Seconds 3
 Start-Process 'http://127.0.0.1:8080'
-Write-Output "Up: teammates use http://<laptop IP>:8081 with their cluster keys; dashboard on http://127.0.0.1:8080. Keep the three windows open."
+Write-Output "Up: teammates use http://<laptop IP>:8081 with their cluster keys; dashboard on http://127.0.0.1:8080; the explain window narrates the backend. Keep the windows open."

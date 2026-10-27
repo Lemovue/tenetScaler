@@ -162,7 +162,24 @@ bash scripts/k3s/mirror.sh dist/tenantscaler-linux-amd64
 
 It listens on 8081 with the Hyper-V firewall rule above, so stop the Windows mirror first.
 
-`./scripts/k3s/demo-up.ps1` opens all three windows in one go: expose, the node mirror and the dashboard. Run it again whenever they were closed. Closing every WSL window can let WSL stop the VM. k3s comes back by itself when the VM restarts.
+**Narrated backend for the judges.** Run this in Ubuntu:
+
+```bash
+python3 scripts/k3s/explain.py --keys /mnt/c/Users/<you>/.tenantscaler/k8s.env
+```
+
+It prints in plain words only what changed:
+
+| Line | Shows |
+|---|---|
+| `CONTROLLER`, `POOL` | each tenant's grant and why, in the controller's own reason text, and the pool size it applies |
+| `KEDA` | the baseline's metric and replica target |
+| `PODS` | llama pods starting, ready and stopping, in both pools |
+| `TRAFFIC` | per tenant every 10 s: req/s, 429s and p99 TTFT at both gateways |
+
+The admin key is read from the file and never printed.
+
+`./scripts/k3s/demo-up.ps1` opens all four windows in one go: expose, the node mirror, the dashboard and `explain.py`. Run it again whenever they were closed. Closing every WSL window can let WSL stop the VM. k3s comes back by itself when the VM restarts.
 
 ## Real llama.cpp replicas (CPU load you can see)
 
@@ -211,4 +228,10 @@ Then, in Windows:
 - Run `./scripts/k3s/keys.ps1 -Force` so the keys handed out stop working at the next deploy. Clipboard history may still hold them.
 - Run `wsl --shutdown` to free the VM's memory.
 
-If the laptop changes networks, the node's IP changes with it in mirrored mode. Run `sudo systemctl restart k3s`.
+If the laptop changes networks, the node's IP changes with it in mirrored mode, for example when the hotspot reconnects. k3s keeps the old address, and then several things break:
+- pods time out on the API server (`10.43.0.1`);
+- the gateways stop discovering pods;
+- the controller fails static;
+- KEDA crash-loops.
+
+`sudo bash scripts/k3s/heal.sh` fixes it: it restarts k3s and then KEDA. `demo-up.ps1` runs it first.
