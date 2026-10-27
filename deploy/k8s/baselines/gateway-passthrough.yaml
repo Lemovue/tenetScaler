@@ -20,6 +20,8 @@ metadata:
     app.kubernetes.io/part-of: tenantscaler
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app.kubernetes.io/name: gateway
@@ -58,6 +60,17 @@ spec:
             - model-pool
             - -k8s-port
             - "8000"
+          env:
+            - name: TS_TENANT_KEYS
+              valueFrom:
+                secretKeyRef:
+                  name: tenantscaler-keys
+                  key: TS_TENANT_KEYS
+            - name: TS_ADMIN_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: tenantscaler-keys
+                  key: TS_ADMIN_KEY
           ports:
             - name: http
               containerPort: 8080

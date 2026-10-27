@@ -67,7 +67,7 @@ _These answers describe the finished system. Anything still marked ⬜ in `00_PR
 | "How did you make the comparison fair?" | "Same trace and seed, same model and budget, setups in a seeded interleaved order, at least five runs each, every run reported with t-based 95% intervals and a drift check." |
 | "Isn't the cold start fake?" | "The 30-second hold is injected and labelled as such; inference is real. We also report the runs without it." |
 | "Why only 4 replicas?" | "One replica per physical performance core of the laptop. The claim is relative: setups at equal budget. Absolute numbers will differ on a GPU fleet." |
-| "Did you run Kubernetes?" | "The controller, CRD and manifests are built and tested with Kubernetes fakes. The live cluster smoke test on k3s is planned. If it doesn't happen, the README says exactly why." |
+| "Did you run Kubernetes?" | "Yes, a smoke test on a real cluster: k3s in WSL2 on the laptop, one node. The controller scaled the pool Deployment up and down, wrote each tenant's decision into its TenantScaler status, and the gateway followed the pods through EndpointSlices. With the laptop's sizing the noisy tenant was shed while a and b were never rejected. The replicas in the cluster are simulated, not llama.cpp, so those latencies are not results. Evidence: `results/k8s/`." |
 
 ## Tumhare liye kya baaki hai (phase-wise)
 
@@ -76,5 +76,5 @@ _These answers describe the finished system. Anything still marked ⬜ in `00_PR
 | 2–3 | **Now:** pin replicas to P-cores, re-profile, measure the 1–4 replica throughput curve, derive the TPOT SLO | N2 |
 | 3 | Real harness: S4 on real replicas, readiness hold T, interleaved runner, per-run CSV | N4 |
 | 3 | Headline real runs: 5 setups × ≥5 runs × (T = 30 s and T = 0). This takes several hours of an otherwise idle laptop | N6 |
-| 2 | k3s live Kubernetes smoke in WSL2. **Needs approval before installing anything.** (The PDF says Docker Desktop; the brief now says k3s.) | N7 |
+| 2 | ✅ k3s live Kubernetes smoke in WSL2 (2026-10-28; `deploy/k3s/README.md`, `results/k8s/`). The PDF says Docker Desktop; what ran is k3s. | N7 |
 | 4 | Run the demo end to end 3 times and record the backup video; fill the [N]/[X]/[Y]/[Z] placeholders from `results/real/summary.md` only | end |

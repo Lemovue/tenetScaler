@@ -56,8 +56,12 @@ func TestParseTenantKeys(t *testing.T) {
 		t.Fatalf("empty: %v, %v; want no keys", got, err)
 	}
 	for _, bad := range []string{"A", "A=", "=" + keyA, "A=short", "A=" + keyA + ",C=" + keyA, "A:urgent=" + keyA} {
-		if _, err := ParseTenantKeys(bad); err == nil {
+		_, err := ParseTenantKeys(bad)
+		switch {
+		case err == nil:
 			t.Errorf("ParseTenantKeys(%q) accepted", bad)
+		case strings.Contains(err.Error(), keyA):
+			t.Errorf("ParseTenantKeys(%q) error %q echoes the key", bad, err)
 		}
 	}
 }

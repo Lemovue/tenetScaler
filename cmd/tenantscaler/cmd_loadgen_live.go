@@ -38,7 +38,8 @@ func loadgenLiveRequested(args []string) bool {
 func runLoadgenLive(args []string) error {
 	fs := flag.NewFlagSet("loadgen", flag.ContinueOnError)
 	gw := fs.String("gateway", "", "live-demo gateway base URL, e.g. http://192.168.43.10:8081")
-	key := fs.String("key", os.Getenv("TS_API_KEY"), "this tenant's API key (default $TS_API_KEY); the gateway derives the tenant from it")
+	// Not the flag's default: flag usage prints defaults, and this is a key.
+	key := fs.String("key", "", "this tenant's API key (default $TS_API_KEY); the gateway derives the tenant from it")
 	profile := fs.String("profile", "steady", "traffic shape: steady | periodic | spike (the real scenario's A, B, C patterns)")
 	spikeNow := fs.Bool("spike-now", false, "spike profile: start the spike immediately")
 	spikeFor := fs.Duration("spike-duration", 40*time.Second, "spike profile: how long a spike lasts")
@@ -50,6 +51,9 @@ func runLoadgenLive(args []string) error {
 			return nil
 		}
 		return err
+	}
+	if *key == "" {
+		*key = os.Getenv("TS_API_KEY")
 	}
 	kind, ok := liveProfiles[*profile]
 	switch {

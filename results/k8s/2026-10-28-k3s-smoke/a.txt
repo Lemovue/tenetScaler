@@ -1,0 +1,21 @@
+live demo traffic (not the experiment): profile steady (A pattern) -> http://10.43.40.150:8080; Ctrl+C stops
+   10s  answered   2  429   0  failed   0  p95 time-to-first-token 0.06 s
+   20s  answered   7  429   0  failed   0  p95 time-to-first-token 0.09 s
+   30s  answered   1  429   0  failed   0  p95 time-to-first-token 0.06 s
+   40s  answered   7  429   0  failed   0  p95 time-to-first-token 0.11 s
+   50s  answered   1  429   0  failed   0  p95 time-to-first-token 0.11 s
+  1m0s  answered   1  429   0  failed   0  p95 time-to-first-token 0.09 s
+ 1m10s  answered   2  429   0  failed   0  p95 time-to-first-token 0.46 s
+ 1m20s  answered   2  429   0  failed   0  p95 time-to-first-token 0.13 s
+ 1m30s  answered   2  429   0  failed   0  p95 time-to-first-token 0.24 s
+ 1m40s  answered   4  429   0  failed   0  p95 time-to-first-token 0.08 s
+ 1m50s  answered   0  429   0  failed   0  p95 time-to-first-token -
+  2m0s  answered   3  429   0  failed   0  p95 time-to-first-token 0.08 s
+ 2m10s  answered   2  429   0  failed   0  p95 time-to-first-token 0.08 s
+ 2m20s  answered   5  429   0  failed   0  p95 time-to-first-token 0.07 s
+ 2m30s  answered   2  429   0  failed   0  p95 time-to-first-token 0.06 s
+ 2m40s  answered   2  429   0  failed   0  p95 time-to-first-token 0.06 s
+ 2m50s  answered   5  429   0  failed   0  p95 time-to-first-token 0.06 s
+  3m0s  answered   8  429   0  failed   0  p95 time-to-first-token 0.06 s
+ 3m10s  answered   1  429   0  failed   0  p95 time-to-first-token 0.06 s
+total after 3m20s: 62 answered, 0 rejected with 429, 0 failed

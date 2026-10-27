@@ -106,7 +106,7 @@ Status values: Planned → In progress → **Done** / Blocked / Cut.
 
 | ID | Requirement | Status |
 |---|---|---|
-| R23 → Q15-K | Kubernetes live smoke (N7): WSL2 Ubuntu + k3s, CPU only; the controller scales a llama-server Deployment 1 → 3 on a spike, `TenantScaler.status` updates, the gateway discovers replicas via EndpointSlices. Checkpoint: ask before installing. Time-box 3 h; not used for headline numbers; if blocked, the exact reason goes in the README (cut order item 3) | Planned (needs approval) |
+| R23 → Q15-K | Kubernetes live smoke (N7): WSL2 Ubuntu + k3s, CPU only; the controller scales a llama-server Deployment 1 → 3 on a spike, `TenantScaler.status` updates, the gateway discovers replicas via EndpointSlices. Checkpoint: ask before installing. Time-box 3 h; not used for headline numbers; if blocked, the exact reason goes in the README (cut order item 3) | **Done 2026-10-28** with the simulated pool instead of llama-server (approved install of WSL2 + k3s v1.36.5; image built without Docker): pool 1 → 8 → 1, status and EndpointSlices verified, c shed with the demo sizing. `results/k8s/`, `deploy/k3s/README.md` |
 | R24 | "What-if" latency estimate (PS: cut first) | Cut |
 | R25 | Real-model inference run | Superseded by R26–R29 (decision U1): real llama.cpp inference is the headline path |
 
@@ -193,7 +193,7 @@ After each milestone: guard → build → tests → smoke run → update this ma
 - **N4** Real harness: S4 + readiness hold + interleaved runner + per-run CSV + tokenizer counting — **done**.
 - **N5** `loadgen` live-demo subcommand + cross-compiled binaries + firewall script + DEMO.md — **done** (firewall script written, not run).
 - **N6** Headline real runs, simulated appendix, forecaster evaluation, `results/real/summary.md`, README from measured results.
-- **N7** Kubernetes live smoke on k3s (checkpoint: ask before installing).
+- **N7** Kubernetes live smoke on k3s (checkpoint: ask before installing) — **done** 2026-10-28 with simulated replicas (`results/k8s/`).
 - Cut order: stretch mode → real cold-start sweep (keep simulated) → N7 → forecaster. Never cut: S4 in real runs, S8, readiness hold, dispatch window, interleaved runs.
 
 ---

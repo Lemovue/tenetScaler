@@ -15,6 +15,16 @@
 # controller runs with (it has no -config), so both agree on the dispatch
 # window per replica. After editing the file's tenants:
 #   kubectl -n tenantscaler rollout restart deployment gateway
+#
+# Keys: the gateway reads $TS_TENANT_KEYS (which key is which tenant, with
+# lower-case tenant names as above) and $TS_ADMIN_KEY (POST/GET /policy,
+# /stats, /metrics) from the Secret tenantscaler-keys, which is created by
+# hand and never committed (deploy/k3s/README.md). Keys are read at start:
+# after changing the Secret, restart the gateway and the controller. With
+# the admin key set, /metrics needs "Authorization: Bearer <admin key>" too,
+# so a Prometheus that scrapes through the annotations below must send it.
+# Recreate, not a rolling update: two gateways behind one Service would
+# split the fairness state and the controller's /stats and /policy.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -56,6 +66,8 @@ metadata:
     app.kubernetes.io/part-of: tenantscaler
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app.kubernetes.io/name: gateway
@@ -94,6 +106,17 @@ spec:
             - model-pool
             - -k8s-port
             - "8000"
+          env:
+            - name: TS_TENANT_KEYS
+              valueFrom:
+                secretKeyRef:
+                  name: tenantscaler-keys
+                  key: TS_TENANT_KEYS
+            - name: TS_ADMIN_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: tenantscaler-keys
+                  key: TS_ADMIN_KEY
           ports:
             - name: http
               containerPort: 8080

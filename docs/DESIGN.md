@@ -736,8 +736,12 @@ the middle of a spike (`TestFlowControlMetricBlindSpot`). The test now records t
 - **Two listeners:** the gateway's full handler (`/policy`, `/stats`, `/metrics`) stays on
   loopback for the controller and the dashboard; `stack.Options.PublicAddr` adds a listener with
   `gateway.PublicHandler` (completions and `/healthz` only, keys required).
-- **Dashboard:** `tenantscaler demo -live 0.0.0.0:8081` runs the TenantScaler stack until Stop,
-  with the banner "LIVE DEMO — live demo, not the experiment" (`State.live`, `liveAddress`).
+- **Dashboard:** `tenantscaler demo -live 0.0.0.0:8081 -config config/live-demo.yaml` runs the
+  TenantScaler stack until Stop (`State.live`, `liveAddress`). `config/live-demo.yaml` is
+  `config/real.yaml` with C at priority 50 (A and B borrow a spare replica first) and
+  `gateway.slotsPerReplica: 2` (measured p99 TTFT 1.318 s at concurrency 2 vs 1.816 s at 4,
+  `results/real/profile.md`). The dashboard shows no banner; the presenter says the live
+  numbers are not experiment results.
 - **Teammates:** `tenantscaler loadgen -gateway http://<ip>:8081 -key <key> -profile
   steady|periodic|spike [-spike-now]` (cross-compiled into `dist/` by `scripts/build-dist.*`)
   sends one tenant's pattern from the real scenario and prints a line every 10 s.

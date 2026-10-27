@@ -9,6 +9,8 @@
 .vscode
 .idea
 bin
+dist
+.cache
 results
 TenantScaler_Final
 *.pdf

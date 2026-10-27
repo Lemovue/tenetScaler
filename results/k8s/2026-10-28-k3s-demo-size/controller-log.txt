@@ -1,0 +1,18 @@
+controller on http://[::]:8090: kubernetes mode, metrics from gateway, cycle 15s, pool "shared-llm-pool" of 4 replicas
+time=2026-10-27T20:30:18.054Z level=INFO msg="continuing the policy versions in use" inUse=47 nextVersion=48
+time=2026-10-27T20:30:18.069Z level=INFO msg="control cycle" cycle=1 failStatic=false desiredReplicas=1 poolReplicas=1 readyReplicas=1 policyVersion=48
+time=2026-10-27T20:30:35.318Z level=INFO msg="control cycle" cycle=2 failStatic=false desiredReplicas=2 poolReplicas=2 readyReplicas=1 policyVersion=49
+time=2026-10-27T20:30:50.311Z level=INFO msg="control cycle" cycle=3 failStatic=false desiredReplicas=2 poolReplicas=2 readyReplicas=1 policyVersion=50
+time=2026-10-27T20:31:07.699Z level=INFO msg="control cycle" cycle=4 failStatic=false desiredReplicas=2 poolReplicas=2 readyReplicas=1 policyVersion=51
+time=2026-10-27T20:31:22.699Z level=INFO msg="control cycle" cycle=5 failStatic=false desiredReplicas=4 poolReplicas=4 readyReplicas=2 policyVersion=52
+time=2026-10-27T20:31:39.867Z level=INFO msg="control cycle" cycle=6 failStatic=false desiredReplicas=4 poolReplicas=4 readyReplicas=2 policyVersion=53
+time=2026-10-27T20:31:54.866Z level=INFO msg="control cycle" cycle=7 failStatic=false desiredReplicas=4 poolReplicas=4 readyReplicas=2 policyVersion=54
+time=2026-10-27T20:32:09.866Z level=INFO msg="control cycle" cycle=8 failStatic=false desiredReplicas=4 poolReplicas=4 readyReplicas=4 policyVersion=55
+time=2026-10-27T20:32:26.956Z level=INFO msg="control cycle" cycle=9 failStatic=false desiredReplicas=4 poolReplicas=4 readyReplicas=4 policyVersion=56
+time=2026-10-27T20:32:41.960Z level=INFO msg="control cycle" cycle=10 failStatic=false desiredReplicas=4 poolReplicas=4 readyReplicas=4 policyVersion=57
+time=2026-10-27T20:32:59.085Z level=INFO msg="control cycle" cycle=11 failStatic=false desiredReplicas=4 poolReplicas=4 readyReplicas=4 policyVersion=58
+time=2026-10-27T20:33:14.085Z level=INFO msg="control cycle" cycle=12 failStatic=false desiredReplicas=3 poolReplicas=4 readyReplicas=4 policyVersion=59
+time=2026-10-27T20:33:31.178Z level=INFO msg="control cycle" cycle=13 failStatic=false desiredReplicas=3 poolReplicas=4 readyReplicas=4 policyVersion=60
+time=2026-10-27T20:33:46.178Z level=INFO msg="control cycle" cycle=14 failStatic=false desiredReplicas=2 poolReplicas=4 readyReplicas=4 policyVersion=61
+time=2026-10-27T20:34:03.254Z level=INFO msg="control cycle" cycle=15 failStatic=false desiredReplicas=1 poolReplicas=4 readyReplicas=4 policyVersion=62
+time=2026-10-27T20:34:18.245Z level=INFO msg="control cycle" cycle=16 failStatic=false desiredReplicas=1 poolReplicas=4 readyReplicas=4 policyVersion=63

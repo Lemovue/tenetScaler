@@ -1,10 +1,14 @@
 # Everything TenantScaler runs in one namespace. On a fresh cluster the CRD
 # must be established before the TenantScalers in 40-tenants.yaml can be
-# created, so apply in two steps:
+# created, and the gateway and the controller need the Secret
+# tenantscaler-keys (never committed; scripts/k3s/keys.ps1 writes the env
+# file, with lower-case tenants a, b, c), so:
 #   kubectl apply -f deploy/k8s/00-namespace.yaml -f deploy/k8s/01-crd.yaml
 #   kubectl wait --for=condition=Established crd/tenantscalers.scaling.tenantscaler.dev
+#   kubectl -n tenantscaler create secret generic tenantscaler-keys --from-env-file=<key env file>
 #   kubectl apply -f deploy/k8s/
 # (baselines/ is not applied by that command; see the files there.)
+# scripts/k3s/up.sh does all of it on k3s (deploy/k3s/README.md).
 # Pods here must meet the "restricted" Pod Security Standard; every
 # Deployment in this directory does (internal/k8s tests check the fields).
 apiVersion: v1

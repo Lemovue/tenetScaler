@@ -15,6 +15,8 @@
 # The root filesystem is read-only, so the decision
 # log is not written to a file (-decisions-file ""): read it from /decisions,
 # and each tenant's latest outcome from its TenantScaler status.
+# It calls the gateway's admin endpoints (/stats, /policy) with $TS_ADMIN_KEY
+# from the Secret tenantscaler-keys, the same key the gateway checks.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -68,6 +70,12 @@ spec:
             - http://gateway:8080
             - -decisions-file
             - ""
+          env:
+            - name: TS_ADMIN_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: tenantscaler-keys
+                  key: TS_ADMIN_KEY
           ports:
             - name: http
               containerPort: 8090

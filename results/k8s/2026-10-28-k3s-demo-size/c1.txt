@@ -1,0 +1,15 @@
+live demo traffic (not the experiment): profile spike (C pattern) -> http://10.43.40.150:8080; Ctrl+C stops
+spike started for 1m30s
+   10s  answered  12  429  14  failed   0  p95 time-to-first-token 0.85 s
+   20s  answered  12  429  10  failed   0  p95 time-to-first-token 0.13 s
+   30s  answered  18  429  10  failed   0  p95 time-to-first-token 0.14 s
+   40s  answered  19  429  12  failed   0  p95 time-to-first-token 0.15 s
+   50s  answered  25  429   0  failed   0  p95 time-to-first-token 0.11 s
+  1m0s  answered  44  429   9  failed   0  p95 time-to-first-token 0.12 s
+ 1m10s  answered  30  429  12  failed   0  p95 time-to-first-token 0.23 s
+ 1m20s  answered  22  429   4  failed   0  p95 time-to-first-token 0.17 s
+ 1m30s  answered  28  429   1  failed   0  p95 time-to-first-token 0.13 s
+ 1m40s  answered   8  429   0  failed   0  p95 time-to-first-token 0.11 s
+ 1m50s  answered   0  429   0  failed   0  p95 time-to-first-token -
+  2m0s  answered   1  429   0  failed   0  p95 time-to-first-token 0.06 s
+total after 2m0s: 219 answered, 72 rejected with 429, 0 failed

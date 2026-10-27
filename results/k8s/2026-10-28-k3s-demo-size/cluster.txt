@@ -1,0 +1,29 @@
+# kubectl version
+Client Version: v1.36.5+k3s1
+Kustomize Version: v5.8.1
+Server Version: v1.36.5+k3s1
+
+# nodes
+NAME    STATUS   ROLES           AGE   VERSION        INTERNAL-IP    EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION                              CONTAINER-RUNTIME
+nilay   Ready    control-plane   18m   v1.36.5+k3s1   10.118.2.180   <none>        Ubuntu 24.04.5 LTS   6.18.54.1-microsoft-standard-WSL2 (amd64)   containerd://2.3.4-k3s1.36
+
+# image
+docker.io/library/tenantscaler               dev                 e5cbe4ae7532a       32MB
+
+# deployments
+NAME                      READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES             SELECTOR
+gateway                   1/1     1            1           17m   gateway      tenantscaler:dev   app.kubernetes.io/name=gateway
+model-pool                4/4     4            4           17m   replica      tenantscaler:dev   app.kubernetes.io/name=model-pool
+tenantscaler-controller   1/1     1            1           17m   controller   tenantscaler:dev   app.kubernetes.io/name=tenantscaler-controller
+
+# endpointslices
+NAME                            ADDRESSTYPE   PORTS   ENDPOINTS                                     AGE
+gateway-f2xp2                   IPv4          8080    10.42.0.9                                     17m
+model-pool-626ft                IPv4          8000    10.42.0.8,10.42.0.19,10.42.0.21 + 1 more...   17m
+tenantscaler-controller-ksjf6   IPv4          8090    10.42.0.18                                    17m
+
+# rbac checks
+update tenantscalers.scaling.tenantscaler.dev --subresource=status --as=system:serviceaccount:tenantscaler:tenantscaler-controller: yes
+update deployments.apps --subresource=scale --as=system:serviceaccount:tenantscaler:tenantscaler-controller: yes
+list endpointslices.discovery.k8s.io --as=system:serviceaccount:tenantscaler:gateway: yes
+update deployments.apps --subresource=scale --as=system:serviceaccount:tenantscaler:gateway: no

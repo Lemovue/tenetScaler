@@ -1,0 +1,76 @@
+# LIVE DEMO configuration: config/real.yaml with tenant C (the noisy
+# neighbour) at priority 50, below A and B (100). Priority only orders
+# who borrows a spare replica first (internal/arbiter lendingOrder), so A
+# and B get the spare before C. The experiment results use real.yaml.
+# The gateway sends at most 2 requests at a time to a replica (real.yaml:
+# 4, the llama-server slots): one replica measured p99 TTFT 1.318 s at
+# concurrency 2 vs 1.816 s at 4 (results/real/profile.md), so a request
+# shares its core with at most one other; extra requests wait in the
+# gateway's fair queue, where A and B's priority applies.
+#
+# REAL inference configuration (PLAN.md decisions Q5-Q8, Q13).
+# Replicas are real llama.cpp llama-server processes (Qwen2.5-0.5B-Instruct
+# Q4_K_M), each pinned to one physical P-core (both hardware threads); the
+# gateway, controller and load generator run on the other CPUs. Budget: 4
+# replicas (the machine-safety cap of 8 parallel threads = 4 x 2 threads; the
+# 2026-10-27 scaling curve keeps it: results/real/scaling.md).
+# SLO (docs/DESIGN.md section 20, from results/real/scaling.md): TTFT p99
+# <= 2 s; TPOT p99 <= 200 ms = 1.25 x the 156.6 ms p99 TPOT of the full,
+# unqueued budget, rounded up to 10 ms.
+# Re-measure on another machine: `tenantscaler profile -config config/real.yaml -scaling 4`.
+pool:
+  name: real-llm-pool
+  capacityReplicas: 4
+  minReplicas: 1
+tenants:
+  - name: A
+    guaranteedReplicas: 1
+    maxReplicas: 3
+    priority: 100
+    slo: {ttftSeconds: 2, tpotMillis: 200, targetFraction: 0.99}
+  - name: B
+    guaranteedReplicas: 1
+    maxReplicas: 3
+    priority: 100
+    slo: {ttftSeconds: 2, tpotMillis: 200, targetFraction: 0.99}
+  - name: C
+    guaranteedReplicas: 1
+    maxReplicas: 3
+    priority: 50
+    slo: {ttftSeconds: 2, tpotMillis: 200, targetFraction: 0.99}
+controller:
+  cycleSeconds: 10
+  headroom: 0.2
+  # Weighted tokens/s (input + 2 x output) per replica while the whole
+  # budget is busy: 466.7 / 4 replicas at the dispatch window (measured
+  # 2026-10-27, results/real/scaling.md; one replica alone: 136,
+  # results/real/profile.md).
+  replicaCapacityTokensPerSec: 117
+  scaleDownWindowSeconds: 60
+  maxStepPerCycle: 2
+  retryAfterSeconds: 2
+  forecast: {enabled: false, bucketSeconds: 10, seasonBuckets: 6, alpha: 0.5, beta: 0.1, gamma: 0.3}
+# Simulated engine calibrated from the pinned profile of 2026-10-27
+# (results/real/profile.md): within 25% of the real replica at concurrency
+# 1-5, which covers the dispatch window (4); at concurrency 6 its p50 TTFT is
+# 28% high. Used only when real replicas are unavailable (labelled
+# SIMULATED) and by the simulated cross-check of the real runs.
+engine:
+  prefillOverhead: 14.587ms
+  prefillPerToken: 7.911ms
+  interTokenLatency: 20.966ms
+  maxNumSeqs: 4
+  timeFactorUnderLoad: 4.65
+  prefillFactorUnderLoad: 1.2
+  startupDuration: 605ms
+  jitterFraction: 0.05
+backend:
+  kind: llama
+  llama:
+    threads: 2
+    parallel: 4
+    ctxPerSlot: 1024
+    gpuLayers: 0
+    readyTimeoutSeconds: 120
+gateway:
+  slotsPerReplica: 2

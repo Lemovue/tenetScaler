@@ -1,0 +1,101 @@
+apiVersion: v1
+items:
+- apiVersion: scaling.tenantscaler.dev/v1alpha1
+  kind: TenantScaler
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"scaling.tenantscaler.dev/v1alpha1","kind":"TenantScaler","metadata":{"annotations":{},"name":"a","namespace":"tenantscaler"},"spec":{"guaranteedReplicas":3,"maxReplicas":8,"pool":"shared-llm-pool","priority":100,"slo":{"targetFraction":0.99,"tpotMillis":100,"ttftSeconds":2}}}
+    creationTimestamp: "2026-10-27T20:17:28Z"
+    generation: 2
+    name: a
+    namespace: tenantscaler
+    resourceVersion: "1914"
+    uid: ebe3296a-7348-4c72-a4e4-55696eca8c86
+  spec:
+    guaranteedReplicas: 1
+    maxReplicas: 3
+    pool: shared-llm-pool
+    priority: 100
+    slo:
+      targetFraction: 0.99
+      tpotMillis: 100
+      ttftSeconds: 2
+  status:
+    demand: 0
+    grant: 0
+    lastUpdate: "2026-10-27T20:34:18Z"
+    observedGeneration: 2
+    policyVersion: 63
+    reason: 'a got 0 replicas: no demand this cycle, so its guarantee of 1 is free
+      for others to borrow until it needs it back. Gateway policy v63: weight 1, no
+      shedding.'
+    shedding: false
+    sloSlack: 1
+- apiVersion: scaling.tenantscaler.dev/v1alpha1
+  kind: TenantScaler
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"scaling.tenantscaler.dev/v1alpha1","kind":"TenantScaler","metadata":{"annotations":{},"name":"b","namespace":"tenantscaler"},"spec":{"guaranteedReplicas":3,"maxReplicas":8,"pool":"shared-llm-pool","priority":100,"slo":{"targetFraction":0.99,"tpotMillis":100,"ttftSeconds":2}}}
+    creationTimestamp: "2026-10-27T20:17:28Z"
+    generation: 2
+    name: b
+    namespace: tenantscaler
+    resourceVersion: "1915"
+    uid: 1d6ce011-40d7-4b2e-9fc3-2ebac3f30592
+  spec:
+    guaranteedReplicas: 1
+    maxReplicas: 3
+    pool: shared-llm-pool
+    priority: 100
+    slo:
+      targetFraction: 0.99
+      tpotMillis: 100
+      ttftSeconds: 2
+  status:
+    demand: 0
+    grant: 0
+    lastUpdate: "2026-10-27T20:34:18Z"
+    observedGeneration: 2
+    policyVersion: 63
+    reason: 'b got 0 replicas: no demand this cycle, so its guarantee of 1 is free
+      for others to borrow until it needs it back. Gateway policy v63: weight 1, no
+      shedding.'
+    shedding: false
+    sloSlack: 1
+- apiVersion: scaling.tenantscaler.dev/v1alpha1
+  kind: TenantScaler
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"scaling.tenantscaler.dev/v1alpha1","kind":"TenantScaler","metadata":{"annotations":{},"name":"c","namespace":"tenantscaler"},"spec":{"guaranteedReplicas":3,"maxReplicas":8,"pool":"shared-llm-pool","priority":100,"slo":{"targetFraction":0.99,"tpotMillis":100,"ttftSeconds":2}}}
+    creationTimestamp: "2026-10-27T20:17:28Z"
+    generation: 2
+    name: c
+    namespace: tenantscaler
+    resourceVersion: "1916"
+    uid: 55bc9b1c-88a9-4591-ac0d-adc217cfb43a
+  spec:
+    guaranteedReplicas: 1
+    maxReplicas: 3
+    pool: shared-llm-pool
+    priority: 50
+    slo:
+      targetFraction: 0.99
+      tpotMillis: 100
+      ttftSeconds: 2
+  status:
+    demand: 0
+    grant: 0
+    lastUpdate: "2026-10-27T20:34:18Z"
+    observedGeneration: 2
+    policyVersion: 63
+    reason: 'c got 0 replicas: no demand this cycle, so its guarantee of 1 is free
+      for others to borrow until it needs it back. Gateway policy v63: weight 1, no
+      shedding.'
+    shedding: false
+    sloSlack: 1
+kind: List
+metadata:
+  resourceVersion: ""
