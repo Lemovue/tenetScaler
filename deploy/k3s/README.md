@@ -74,6 +74,19 @@ The replicas are the **simulated** engine (`tenantscaler replica`), not llama.cp
   - It reconnects by itself when `up.sh` replaces the pods.
   - In mirrored mode Windows and WSL share ports, so first stop a Windows `demo -live`, which also uses 8081.
 
+- **Dashboard.** The dashboard can watch the cluster instead of starting its own stack. With `expose.sh` running, in Windows PowerShell:
+  ```powershell
+  bin\tenantscaler.exe demo -config config/live-demo.yaml -observe-gateway http://127.0.0.1:8081 -observe-controller http://127.0.0.1:18090 -observe-keys $env:USERPROFILE\.tenantscaler\k8s.env
+  ```
+  Then open http://127.0.0.1:8080.
+  - The badge reads "KUBERNETES (k3s): SIMULATED replicas".
+  - The TenantScaler panel shows:
+    - the cluster's ready and desired replicas;
+    - the gateway's per-tenant statistics, with the cluster's a, b, c shown as A, B, C;
+    - the controller's decision log.
+  - The admin key is read from the key file and never printed.
+  - Stop only stops watching; the cluster keeps running.
+
 - **Traffic from this laptop.** Use one Windows PowerShell per tenant:
   ```powershell
   ./scripts/k3s/loadgen.ps1 -Tenant a -LoadProfile steady

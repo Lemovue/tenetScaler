@@ -41,6 +41,7 @@ type abRun struct {
 	decisions []model.DecisionRecord // the stopped TenantScaler stack's decisions
 	decStart  time.Time              // traffic start of the TenantScaler stack
 	liveMode  *liveMode              // set for a live run (StartLive)
+	observe   *ObserveTarget         // set for an observing run (StartObserve)
 }
 
 // stackRun is the progress of one stack, guarded by abRun.mu.
@@ -274,6 +275,9 @@ func (r *abRun) gatewayStats(ctx context.Context, base string) (*gateway.Stats, 
 	if err != nil {
 		return nil, err
 	}
+	if r.observe != nil && r.observe.AdminKey != "" { // an observed gateway guards /stats
+		req.Header.Set("Authorization", "Bearer "+r.observe.AdminKey)
+	}
 	resp, err := r.stats.Do(req)
 	if err != nil {
 		return nil, err
@@ -300,7 +304,7 @@ func (r *abRun) addSample(i int, smp eval.Sample, ls LiveSample, gs *gateway.Sta
 	}
 	sr.samples = append(sr.samples, ls)
 	sr.elapsed = smp.T
-	if r.liveMode != nil { // no trace: the live stack runs until stopped
+	if r.liveMode != nil || r.observe != nil { // no trace: runs until stopped
 		return
 	}
 	dur := r.opt.Scenario.Duration

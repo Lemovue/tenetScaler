@@ -114,8 +114,11 @@ func (s *Server) State() State {
 	defer run.mu.Unlock()
 	started := run.startedAt
 	st.Phase, st.Message, st.Error, st.Seed, st.StartedAt = run.phase, run.message, run.err, run.seed, &started
-	if run.liveMode != nil {
-		st.Live, st.LiveAddress = true, run.liveMode.public
+	if run.liveMode != nil || run.observe != nil {
+		st.Live = true
+		if run.liveMode != nil {
+			st.LiveAddress = run.liveMode.public
+		}
 		for _, sr := range run.stacks {
 			st.Stacks = append(st.Stacks, s.stackState(sr))
 		}
@@ -183,10 +186,13 @@ func (s *Server) Decisions(limit int, tenant string) DecisionsReply {
 		return reply
 	}
 	run.mu.Lock()
-	live, recs, start := run.live, run.decisions, run.decStart
+	live, recs, start, observed := run.live, run.decisions, run.decStart, run.observe != nil
 	run.mu.Unlock()
 	if live != nil {
 		recs, reply.Live = live.Decisions(0), true
+	}
+	if observed { // the observed controller's log, read every few seconds
+		reply.Live = !run.finished()
 	}
 	if !start.IsZero() {
 		reply.TrafficStartedAt = &start

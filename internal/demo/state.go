@@ -59,7 +59,9 @@ type State struct {
 	WindowSeconds float64      `json:"windowSeconds"`
 	Stacks        []StackState `json:"stacks"`
 	// Live marks a live run (StartLive): its traffic comes from teammates'
-	// laptops, LiveLabel; LiveAddress is its public gateway address.
+	// laptops, LiveLabel; LiveAddress is its public gateway address. An
+	// observing run (StartObserve) is live too, without an address: it
+	// watches a TenantScaler running in a Kubernetes cluster.
 	Live        bool   `json:"live"`
 	LiveAddress string `json:"liveAddress,omitempty"`
 }
