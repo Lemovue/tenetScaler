@@ -1,0 +1,29 @@
+# build output
+/bin/
+*.exe
+*.test
+*.out
+
+# downloaded engine + model (scripts/setup-llama.*)
+/.cache/
+
+# runtime artefacts
+/.run/
+*.log
+*.pid
+scripts/dev/.heavy.lock
+__pycache__/
+/results/live/
+
+# local secrets
+.env
+
+# editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Cross-compiled binaries (scripts/build-dist.*)
+dist/

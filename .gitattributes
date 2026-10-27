@@ -1,0 +1,8 @@
+# Normalise text to LF everywhere (gofmt expects LF); never touch binaries.
+* text=auto eol=lf
+*.pdf binary
+*.png binary
+*.jpg binary
+*.ico binary
+*.exe binary
+*.ps1 text eol=crlf

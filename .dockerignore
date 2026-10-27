@@ -1,0 +1,21 @@
+# Keep the build context to what `go build ./cmd/tenantscaler` needs, and
+# keep local secrets out of the image.
+.git
+.gitattributes
+.gitignore
+.env
+.env.*
+.run
+.vscode
+.idea
+bin
+results
+TenantScaler_Final
+*.pdf
+*.exe
+*.test
+*.log
+**/__pycache__
+scripts/dev/.heavy.lock
+Dockerfile
+.dockerignore
