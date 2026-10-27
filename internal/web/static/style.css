@@ -1,0 +1,598 @@
+/* TenantScaler dashboard: spider-web theme. Dark is the default theme;
+   theme.js sets data-theme="light"|"dark" on <html> before the first paint
+   (stored choice, else the system's prefers-color-scheme). The light tokens
+   appear twice: for data-theme="light" and as the no-script fallback; keep
+   the two blocks identical.
+
+   Rules (THEME_NOTES.md lists every contrast ratio, computed by
+   ../contrast.mjs from this file):
+   - All text sits on a plate (card, header, banner) at least 86% opaque, so
+     a web strand behind text or a chart shows at <= 0.60 x 0.14 = 8.4%.
+   - Theme red and blue colour only the spider toggle. Status colours
+     (--met, --missed, --shed) differ from them, and every status also has a
+     text label and an icon.
+   - Cards: 1px borders, no shadows, no gradients. */
+:root {
+  color-scheme: dark;
+  --page: #0a0a0a;
+  --plate: rgba(10, 10, 10, 0.86);
+  --surface: #141414;
+  --surface-2: #222222;
+  --line: rgba(245, 245, 245, 0.22);
+  --ink: #f5f5f5;
+  --ink-2: #ababab;
+  --invert-ink: #0a0a0a;
+  --focus: #f5f5f5;
+  --web-rgb: 255, 255, 255;
+  --web-alpha-max: 0.6;
+  --web-alpha-min: 0.25;
+  --thread: rgba(245, 245, 245, 0.7);
+  --spider: #4d8eff;
+  --spider-dark: #4d8eff;
+  --spider-light: #d7263d;
+  --grid: #2a2a2a;
+  --axis: #474747;
+  --band: rgba(255, 255, 255, 0.07);
+  --series-1: #f5f5f5;
+  --series-2: #c4a7ff;
+  --series-3: #f2c14e;
+  --series-4: #a3e635;
+  --series-5: #f0a7c8;
+  --series-6: #2dd4bf;
+  --series-7: #fb923c;
+  --series-8: #d4d4d4;
+  --rep-ready: #f5f5f5;
+  --rep-starting: #f2c14e;
+  --threshold: #ababab;
+  --met: #4ade80;
+  --missed: #fb923c;
+  --shed: #d4d4d4;
+  --sim-bg: #ffe14d;
+  --sim-ink: #111111;
+  --error-bg: #2a1f0a;
+  --error-ink: #fcd34d;
+  --panel-border: #d4d4d4;
+  --panel-shadow: #4a4a4a;
+  --halftone: rgba(255, 255, 255, 0.09);
+  --mis-red: rgba(255, 59, 92, 0.85);
+  --mis-cyan: rgba(0, 214, 240, 0.85);
+  --caption-bg: #fff1a6;
+  --caption-ink: #111111;
+  --font: "Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif;
+  --display: "Bangers", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius: 18px;
+  --gutter: clamp(16px, 2.6vw, 40px);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --page: #f7f7f5;
+  --plate: rgba(255, 255, 255, 0.86);
+  --surface: #ffffff;
+  --surface-2: #e9e9e5;
+  --line: rgba(17, 17, 17, 0.2);
+  --ink: #111111;
+  --ink-2: #555555;
+  --invert-ink: #f7f7f5;
+  --focus: #111111;
+  --web-rgb: 0, 0, 0;
+  --web-alpha-max: 0.5;
+  --web-alpha-min: 0.2;
+  --thread: rgba(17, 17, 17, 0.7);
+  --spider: #d7263d;
+  --grid: #e2e2dd;
+  --axis: #b9b9b2;
+  --band: rgba(0, 0, 0, 0.05);
+  --series-1: #111111;
+  --series-2: #6d28d9;
+  --series-3: #8a5a00;
+  --series-4: #3f6212;
+  --series-5: #9d174d;
+  --series-6: #0f766e;
+  --series-7: #c2410c;
+  --series-8: #525252;
+  --rep-ready: #111111;
+  --rep-starting: #8a5a00;
+  --threshold: #555555;
+  --met: #166534;
+  --missed: #7c4f00;
+  --shed: #525252;
+  --sim-bg: #ffe14d;
+  --sim-ink: #111111;
+  --error-bg: #fff4d6;
+  --error-ink: #6b3300;
+  --panel-border: #111111;
+  --panel-shadow: #111111;
+  --halftone: rgba(0, 0, 0, 0.08);
+  --mis-red: rgba(230, 20, 70, 0.75);
+  --mis-cyan: rgba(0, 160, 200, 0.75);
+  --caption-bg: #fff1a6;
+  --caption-ink: #111111;
+}
+
+@media not all and (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: light;
+    --page: #f7f7f5;
+    --plate: rgba(255, 255, 255, 0.86);
+    --surface: #ffffff;
+    --surface-2: #e9e9e5;
+    --line: rgba(17, 17, 17, 0.2);
+    --ink: #111111;
+    --ink-2: #555555;
+    --invert-ink: #f7f7f5;
+    --focus: #111111;
+    --web-rgb: 0, 0, 0;
+    --web-alpha-max: 0.5;
+    --web-alpha-min: 0.2;
+    --thread: rgba(17, 17, 17, 0.7);
+    --spider: #d7263d;
+    --grid: #e2e2dd;
+    --axis: #b9b9b2;
+    --band: rgba(0, 0, 0, 0.05);
+    --series-1: #111111;
+    --series-2: #6d28d9;
+    --series-3: #8a5a00;
+    --series-4: #3f6212;
+    --series-5: #9d174d;
+    --series-6: #0f766e;
+    --series-7: #c2410c;
+    --series-8: #525252;
+    --rep-ready: #111111;
+    --rep-starting: #8a5a00;
+    --threshold: #555555;
+    --met: #166534;
+    --missed: #7c4f00;
+    --shed: #525252;
+    --sim-bg: #ffe14d;
+    --sim-ink: #111111;
+    --error-bg: #fff4d6;
+    --error-ink: #6b3300;
+    --panel-border: #111111;
+    --panel-shadow: #111111;
+    --halftone: rgba(0, 0, 0, 0.08);
+    --mis-red: rgba(230, 20, 70, 0.75);
+    --mis-cyan: rgba(0, 160, 200, 0.75);
+    --caption-bg: #fff1a6;
+    --caption-ink: #111111;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--ink);
+  font: 16px/1.5 var(--font);
+}
+
+h1, h2, h3 { line-height: 1.2; margin: 0; font-weight: 600; letter-spacing: -0.01em; }
+h1 { font-size: 1.35rem; }
+h2 { font-size: 1.2rem; }
+h3 { font-size: 1rem; }
+
+code { font-family: var(--mono); font-size: 0.88em; background: var(--surface-2); border-radius: 6px; padding: 1px 6px; }
+
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.skip {
+  position: absolute;
+  left: 8px;
+  top: -56px;
+  background: var(--ink);
+  color: var(--invert-ink);
+  padding: 10px 16px;
+  border-radius: 999px;
+  z-index: 10;
+}
+.skip:focus { top: 8px; }
+
+/* Webs: a fixed layer behind everything (decor.js draws them). */
+.webs { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.webs canvas { position: absolute; display: block; }
+.top, .hero, main, footer { position: relative; z-index: 1; }
+
+/* Cards and other plates: everything that holds text. */
+.card, .panel {
+  background: var(--plate);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  min-width: 0;
+}
+
+/* Top bar: wordmark, views, backend badge, Calm, spider toggle. Opaque, so
+   no web shows behind it. */
+.top {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  align-items: center;
+  padding: 10px var(--gutter);
+  background: var(--page);
+  border-bottom: 1px solid var(--line);
+}
+.wordmark { font-size: 1.35rem; letter-spacing: -0.02em; }
+.top-end { margin-left: auto; display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: flex-end; }
+
+.tabs { display: flex; gap: 4px; }
+.tabs [role="tab"] {
+  font: inherit;
+  color: var(--ink);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 7px 16px;
+  min-height: 44px;
+  cursor: pointer;
+}
+.tabs [role="tab"]:hover { border-color: var(--line); }
+.tabs [role="tab"][aria-selected="true"] { background: var(--ink); color: var(--invert-ink); font-weight: 600; }
+
+/* Calm switch. */
+.calm-switch {
+  font: inherit;
+  font-size: 0.92rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 6px 14px 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+.calm-switch[aria-disabled="true"] { cursor: not-allowed; }
+.switch-track { position: relative; width: 36px; height: 22px; border-radius: 999px; border: 1px solid var(--ink-2); }
+.switch-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ink-2);
+  transition: transform 0.15s ease;
+}
+.calm-switch[aria-checked="true"] .switch-track { background: var(--ink); border-color: var(--ink); }
+.calm-switch[aria-checked="true"] .switch-knob { transform: translateX(14px); background: var(--invert-ink); }
+.calm-note { font-size: 0.8rem; color: var(--ink-2); }
+
+/* Spider toggle: a 44 x 44 button; the thread runs from the top of the bar
+   to the spider. On click the spider drops 24px, the theme crossfades and
+   the spider climbs back (decor.js). */
+.spider-toggle {
+  position: relative;
+  align-self: flex-start;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--spider);
+  cursor: pointer;
+}
+.spider-toggle:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 50%; }
+.spider-toggle .thread {
+  position: absolute;
+  left: calc(50% - 0.5px);
+  top: -10px;
+  width: 1px;
+  height: 25px;
+  background: var(--thread);
+  transform-origin: top;
+  transition: transform 0.26s ease-out;
+}
+.spider-toggle .spider {
+  position: absolute;
+  left: 7px;
+  top: 7px;
+  width: 30px;
+  height: 30px;
+  transition: transform 0.26s ease-out;
+}
+.spider-toggle.drop .thread { transform: scaleY(1.96); transition: transform 0.16s ease-in; }
+.spider-toggle.drop .spider { transform: translateY(24px); transition: transform 0.16s ease-in; }
+
+/* The shared WebGL canvas (spider3d.js): over the page, never in the way.
+   With the 3D spider on, the SVG spider and its CSS thread are hidden. */
+.gl-layer { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 6; pointer-events: none; }
+.spider-3d .spider-toggle .spider, .spider-3d .spider-toggle .thread { visibility: hidden; }
+.calm .gl-layer { visibility: hidden; } /* Calm: no 3D at all, no frames */
+
+::view-transition-old(root),
+::view-transition-new(root) { animation-duration: 0.3s; }
+.theme-fade, .theme-fade * { transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important; }
+
+.badge {
+  display: inline-block;
+  padding: 4px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--ink);
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+.badge-real { background: var(--ink); color: var(--invert-ink); }
+.badge-sim { background: var(--sim-bg); color: var(--sim-ink); border-color: var(--sim-ink); }
+.badge-injected { background: var(--plate); color: var(--ink); border: 1.5px dashed var(--ink); }
+.badge-loading { background: var(--surface-2); color: var(--ink); border-color: transparent; font-weight: 600; }
+
+/* Hero: one line (a small label and the statement) and the 3D web's slot
+   (spider3d.js draws there; nothing else sits under it). */
+.hero { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin: 14px var(--gutter) 0; padding: 10px 20px; max-width: 1500px; }
+.kicker {
+  display: inline-block;
+  flex: none;
+  margin: 0;
+  padding: 2px 12px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--invert-ink);
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+.hero-line { margin: 0; flex: 1 1 24em; min-width: 0; font-size: 1.15rem; font-weight: 300; line-height: 1.3; letter-spacing: -0.01em; }
+.hero-web { position: relative; flex: none; width: 170px; height: 72px; margin-left: auto; }
+/* The 2D stand-in for the 3D hero (Calm, or no WebGL): a web and the SVG
+   spider. With the 3D on it is hidden; the WebGL layer draws there. */
+.hero-fallback { position: absolute; inset: 0; width: 100%; height: 100%; display: none; }
+.hero-fallback-web { color: rgb(var(--web-rgb)); opacity: 0.45; }
+.hero-fallback-spider { color: var(--spider); }
+.calm .hero-fallback, .no-webgl .hero-fallback { display: block; }
+@media (max-width: 1100px) { .hero-web { display: none; } }
+.detail { margin: 6px 0 0; max-width: 80ch; font-size: 0.85rem; overflow-wrap: anywhere; }
+.backend-more { margin-top: 8px; font-size: 0.85rem; }
+.backend-more summary { cursor: pointer; color: var(--ink-2); }
+.detail, .muted, .setup, .engine, .scenario { color: var(--ink-2); }
+
+main { padding: 16px var(--gutter) 32px; max-width: calc(1500px + 2 * var(--gutter)); }
+@media (min-width: 1600px) { .hero { margin-left: auto; margin-right: auto; } main, footer { margin: 0 auto; } }
+
+.controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.btn {
+  font: inherit;
+  font-weight: 600;
+  padding: 8px 22px;
+  border-radius: 999px;
+  border: 1px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  min-height: 44px;
+}
+.btn-primary { background: var(--ink); color: var(--invert-ink); }
+.btn:not(:disabled):hover { background: var(--surface-2); color: var(--ink); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-small { padding: 4px 14px; min-height: 36px; font-weight: 500; }
+
+.phase { flex: 1 1 280px; min-width: 0; }
+.phase p { margin: 4px 0 0; }
+.progress { height: 8px; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+.progress span { display: block; height: 100%; width: 0; background: var(--ink); transition: width 0.4s ease; }
+
+.banner { margin: 14px 0 0; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--line); }
+body > .banner { position: relative; z-index: 1; margin: 12px var(--gutter) 0; max-width: 1500px; }
+@media (min-width: 1600px) { body > .banner { margin-left: auto; margin-right: auto; } }
+.banner-error { background: var(--error-bg); color: var(--error-ink); border-color: var(--error-ink); }
+.banner-live { background: var(--ink); color: var(--invert-ink); font-weight: 600; }
+/* Offline: the header pill and both panel badges. */
+.badge-offline, .status-offline { background: var(--error-bg); color: var(--error-ink); border-color: var(--error-ink); }
+.scenario { margin: 12px 0 0; }
+
+.panels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
+@media (max-width: 980px) { .panels { grid-template-columns: minmax(0, 1fr); } }
+
+.panel-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+.setup { margin: 6px 0 8px; font-size: 0.85rem; }
+.status { font-size: 0.85rem; padding: 2px 11px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink); white-space: nowrap; }
+.status-done { border-color: var(--ink); font-weight: 600; }
+.status-error { background: var(--error-bg); color: var(--error-ink); border-color: var(--error-ink); }
+.panel-error { margin: 8px 0; color: var(--error-ink); }
+
+figure { margin: 12px 0; }
+figcaption { font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; }
+figcaption .muted { font-weight: 400; }
+.chart-box { position: relative; }
+.chart-box canvas { display: block; width: 100%; height: 190px; }
+.chart-box canvas.short { height: 140px; }
+.tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  z-index: 2;
+}
+.tooltip .tt-head { color: var(--ink-2); margin-bottom: 2px; }
+.tooltip .tt-row { display: flex; align-items: center; gap: 6px; }
+.tooltip .tt-row strong { font-variant-numeric: tabular-nums; }
+.key { display: inline-block; width: 14px; height: 0; border-top: 2px solid; vertical-align: middle; }
+.key-dash { border-top-style: dashed; }
+.key-dot { border-top-style: dotted; }
+
+.legend { list-style: none; display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 6px 0 0; padding: 0; font-size: 0.85rem; color: var(--ink-2); }
+.legend li { display: flex; align-items: center; gap: 6px; }
+
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+caption { text-align: left; font-weight: 600; padding: 4px 0; }
+caption .muted { font-weight: 400; }
+th, td { padding: 6px 8px; text-align: right; border-bottom: 1px solid var(--grid); }
+th:first-child, td:first-child { text-align: left; }
+thead th { color: var(--ink-2); font-weight: 600; font-size: 0.82rem; border-bottom: 1px solid var(--ink-2); }
+td { font-variant-numeric: tabular-nums; }
+.engine { font-size: 0.8rem; margin: 10px 0 0; }
+
+/* SLO status: a text label and an icon; colour only repeats them. */
+.slo-cell { display: inline-flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
+.slo {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+.slo svg { width: 12px; height: 12px; flex: none; }
+.slo-met { color: var(--met); }
+.slo-missed { color: var(--missed); }
+.slo-shed { color: var(--shed); border-style: dashed; }
+
+.summary, .decisions, .results-section, .results-head { margin-top: 16px; }
+.summary .lead { margin: 6px 0 10px; }
+.section-head { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.results-head { margin-top: 0; }
+.results-head .section-head { margin-bottom: 0; }
+select { font: inherit; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); min-height: 40px; }
+.empty { color: var(--ink-2); font-style: italic; margin: 8px 0; }
+#results-body > p { background: var(--plate); border: 1px solid var(--line); border-radius: 12px; padding: 10px 16px; }
+
+.dec-list { list-style: none; margin: 0; padding: 0; max-height: 520px; overflow-y: auto; border: 1px solid var(--line); border-radius: 12px; }
+.dec-list li { border-bottom: 1px solid var(--grid); }
+.dec-list li:last-child { border-bottom: 0; }
+.dec-list summary { cursor: pointer; padding: 8px 12px; list-style-position: inside; }
+.dec-meta { color: var(--ink-2); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.dec-reason { display: block; margin-top: 2px; }
+.dec-body { padding: 0 12px 12px 32px; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px 24px; font-size: 0.85rem; }
+.dec-body dl { display: grid; grid-template-columns: auto auto; gap: 2px 12px; margin: 4px 0 0; }
+.dec-body dt { color: var(--ink-2); }
+.dec-body dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+.dec-body ol { margin: 4px 0 0; padding-left: 18px; }
+.flag { font-size: 0.75rem; font-weight: 600; padding: 1px 6px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink); margin-left: 6px; }
+.flag-warn { background: var(--sim-bg); color: var(--sim-ink); border-color: var(--sim-ink); }
+
+.results-section h2 { margin-bottom: 4px; }
+.results-label { margin: 4px 0 10px; }
+.badges { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+
+footer { margin: 0 var(--gutter) 24px; padding: 12px 18px; max-width: 1500px; color: var(--ink-2); font-size: 0.85rem; }
+
+@media (max-width: 760px) {
+  .tabs { order: 3; width: 100%; }
+}
+
+/* No motion under reduced motion or Calm: decor.js also stops the sway and
+   skips the drop and the crossfade. */
+@media (prefers-reduced-motion: reduce) {
+  .progress span, .switch-knob, .spider-toggle .thread, .spider-toggle .spider { transition: none !important; }
+}
+.calm .progress span, .calm .switch-knob, .calm .spider-toggle .thread, .calm .spider-toggle .spider { transition: none !important; }
+
+/* --- Comic-print layer ------------------------------------------------------
+   Chrome only: chart plots, axes, legends and the per-tenant tables stay
+   plain (no halftone, no offset shadow, no display font). Bangers (SIL OFL
+   1.1, fonts/OFL-Bangers.txt) is self-hosted. */
+@font-face {
+  font-family: "Bangers";
+  src: url("fonts/Bangers-Regular.ttf") format("truetype");
+  font-display: swap;
+}
+
+/* Headings: the display font with a static print misregistration. */
+h1, h2 {
+  font-family: var(--display);
+  font-weight: 400;
+  letter-spacing: 0.035em;
+  text-shadow: -1.5px 0 var(--mis-red), 1.5px 0 var(--mis-cyan);
+}
+h1 { font-size: 1.75rem; }
+h2 { font-size: 1.45rem; }
+
+/* Ink panels: a 2.5px ink outline and a hard 4px offset shadow. The
+   outline is a box-shadow ring: browsers round border widths down to whole
+   device pixels (2.5px would draw as 2px). */
+.card, .panel {
+  border: 0;
+  border-radius: 10px;
+  box-shadow: 0 0 0 2.5px var(--panel-border), 4px 4px 0 2.5px var(--panel-shadow);
+}
+
+/* Halftone: a dot screen at 8-9% in the hero and the section headers. */
+.hero, .panel-head, .decisions .section-head, .summary > h2, .results-head, .results-section .section-head {
+  background-image: radial-gradient(var(--halftone) 1.15px, transparent 1.5px);
+  background-size: 7px 7px;
+}
+.panel-head, .decisions .section-head, .results-section .section-head { margin: -6px -8px 8px; padding: 6px 8px; border-radius: 6px; }
+.summary > h2 { margin: -6px -8px 4px; padding: 6px 8px; border-radius: 6px; }
+
+/* Captions: comic caption boxes for the controller's decisions (comic.js),
+   sitting across the panels' top edge, in the gap and the panels' padding,
+   so no text or chart is covered. */
+.panels { position: relative; }
+.caption-box {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  z-index: 3;
+  max-width: min(92%, 680px);
+  padding: 4px 16px;
+  transform: translate(-50%, -50%);
+  background: var(--caption-bg);
+  color: var(--caption-ink);
+  border: 2.5px solid var(--caption-ink);
+  box-shadow: 4px 4px 0 var(--panel-shadow);
+  font-family: var(--display);
+  font-size: 1.05rem;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.caption-box.in { animation: caption-in 180ms ease-out both; }
+@keyframes caption-in {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.92) rotate(-1.5deg); }
+  to { opacity: 1; transform: translate(-50%, -50%); }
+}
+.flag-caption { background: var(--caption-bg); color: var(--caption-ink); border-color: var(--caption-ink); }
+
+/* The 250 ms red/cyan split glitch of view and theme switches (transform
+   and opacity only). */
+.glitch { position: fixed; inset: 0; z-index: 30; pointer-events: none; opacity: 0; }
+.glitch::before, .glitch::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, transparent 0 14px, var(--glitch-band) 14px 20px, transparent 20px 34px);
+}
+.glitch::before { --glitch-band: var(--mis-red); }
+.glitch::after { --glitch-band: var(--mis-cyan); background-position: 0 10px; }
+.glitch.on { animation: glitch-fade 250ms steps(5) both; }
+.glitch.on::before { animation: glitch-left 250ms steps(5) both; }
+.glitch.on::after { animation: glitch-right 250ms steps(5) both; }
+.glitching main, .glitching .hero { animation: glitch-shift 250ms steps(4) both; }
+@keyframes glitch-fade { 0% { opacity: 0; } 20%, 80% { opacity: 0.45; } 100% { opacity: 0; } }
+@keyframes glitch-left { 0% { transform: translateX(-14px); } 50% { transform: translateX(6px); } 100% { transform: none; } }
+@keyframes glitch-right { 0% { transform: translateX(14px); } 50% { transform: translateX(-6px); } 100% { transform: none; } }
+@keyframes glitch-shift { 25% { transform: translateX(-3px); } 50% { transform: translateX(3px); } 75% { transform: translateX(-1px); } 100% { transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .glitch.on, .glitch.on::before, .glitch.on::after, .glitching main, .glitching .hero, .caption-box.in { animation: none !important; }
+}
+.calm .glitch, .calm .caption-box { display: none !important; }

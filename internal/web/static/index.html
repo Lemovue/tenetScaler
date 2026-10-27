@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TenantScaler A/B demo</title>
+<meta name="description" content="Sequential A/B of a queue-based KEDA baseline and TenantScaler on the same multi-tenant LLM traffic">
+<link rel="stylesheet" href="style.css">
+<script src="theme.js"></script>
+<script src="util.js" defer></script>
+<script src="chart.js" defer></script>
+<script src="decisions.js" defer></script>
+<script src="results.js" defer></script>
+<script src="summary.js" defer></script>
+<script src="decor.js" defer></script>
+<script src="comic.js" defer></script>
+<script src="app.js" defer></script>
+<script type="module" src="spider3d.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div id="webs" class="webs" aria-hidden="true"></div>
+<header class="top">
+  <h1 class="wordmark">TenantScaler</h1>
+  <div class="tabs" role="tablist" aria-label="Dashboard views">
+    <button type="button" role="tab" id="tab-ab" aria-controls="view-ab" aria-selected="true">Live A/B</button>
+    <button type="button" role="tab" id="tab-results" aria-controls="view-results" aria-selected="false" tabindex="-1">Results</button>
+  </div>
+  <div class="top-end">
+    <span id="backend-badge" class="badge badge-loading">Loading backend…</span>
+    <button id="calm-toggle" class="calm-switch" type="button" role="switch" aria-checked="false">
+      <span class="switch-track" aria-hidden="true"><span class="switch-knob"></span></span>
+      <span>Calm<span class="visually-hidden"> (freeze the decoration)</span></span>
+    </button>
+    <span id="calm-note" class="calm-note" hidden>On during runs on real replicas</span>
+    <button id="theme-toggle" class="spider-toggle" type="button" aria-label="Switch to light theme">
+      <span class="thread" aria-hidden="true"></span>
+      <svg class="spider" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+        <g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M13.6 18.6 9.2 13.2 6.4 15.6M13.3 19.8 7.6 17.6 4.2 20.4M13.4 21.2 7.8 22.4 5.2 26.6M14.2 22.6 10.6 26.4 10 30.4"/>
+          <path d="M18.4 18.6 22.8 13.2 25.6 15.6M18.7 19.8 24.4 17.6 27.8 20.4M18.6 21.2 24.2 22.4 26.8 26.6M17.8 22.6 21.4 26.4 22 30.4"/>
+        </g>
+        <ellipse cx="16" cy="11.5" rx="4.6" ry="5.6" fill="currentColor"/>
+        <circle cx="16" cy="20.2" r="3.1" fill="currentColor"/>
+      </svg>
+    </button>
+  </div>
+</header>
+<section class="hero card" aria-label="About this demo">
+  <p class="kicker">A/B demo · multi-tenant LLM autoscaling</p>
+  <p class="hero-line">Same recorded traffic, two stacks, one at a time: queue-based KEDA, then TenantScaler.</p>
+  <div id="hero-web" class="hero-web" aria-hidden="true">
+    <svg class="hero-fallback" viewBox="0 0 170 72" focusable="false">
+      <g class="hero-fallback-web" fill="none" stroke="currentColor" stroke-width="0.8">
+        <path d="M85 36L117.7 39.9M85 36L111.2 54.5M85 36L97.7 64.0M85 36L80.7 66.1M85 36L64.9 60.1M85 36L54.5 47.6M85 36L52.3 32.1M85 36L58.8 17.5M85 36L72.3 8.0M85 36L89.3 5.9M85 36L105.1 11.9M85 36L115.5 24.4"/>
+        <path d="M91.9 36.8L90.6 39.9L87.7 41.9L84.1 42.4L80.7 41.1L78.5 38.5L78.1 35.2L79.4 32.1L82.3 30.1L85.9 29.6L89.3 30.9L91.5 33.5L91.9 36.8M98.9 37.7L96.1 43.8L90.4 47.9L83.2 48.8L76.5 46.2L72.1 40.9L71.1 34.3L73.9 28.2L79.6 24.1L86.8 23.2L93.5 25.8L97.9 31.1L98.9 37.7M105.8 38.5L101.7 47.7L93.1 53.8L82.3 55.2L72.2 51.3L65.6 43.4L64.2 33.5L68.3 24.3L76.9 18.2L87.7 16.8L97.8 20.7L104.4 28.6L105.8 38.5M112.8 39.3L107.2 51.7L95.7 59.8L81.4 61.5L68.0 56.5L59.1 45.9L57.2 32.7L62.8 20.3L74.3 12.2L88.6 10.5L102.0 15.5L110.9 26.1L112.8 39.3"/>
+      </g>
+      <g class="hero-fallback-spider" transform="translate(69 20)">
+        <g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M13.6 18.6 9.2 13.2 6.4 15.6M13.3 19.8 7.6 17.6 4.2 20.4M13.4 21.2 7.8 22.4 5.2 26.6M14.2 22.6 10.6 26.4 10 30.4"/>
+          <path d="M18.4 18.6 22.8 13.2 25.6 15.6M18.7 19.8 24.4 17.6 27.8 20.4M18.6 21.2 24.2 22.4 26.8 26.6M17.8 22.6 21.4 26.4 22 30.4"/>
+        </g>
+        <ellipse cx="16" cy="11.5" rx="4.6" ry="5.6" fill="currentColor"/>
+        <circle cx="16" cy="20.2" r="3.1" fill="currentColor"/>
+      </g>
+    </svg>
+  </div>
+</section>
+<p id="conn-error" class="banner banner-error" role="alert" hidden></p>
+
+<main id="main">
+  <section id="view-ab" role="tabpanel" aria-labelledby="tab-ab">
+    <div class="card">
+      <div class="controls">
+        <button id="run-btn" class="btn btn-primary" type="button" disabled>Run A/B</button>
+        <button id="stop-btn" class="btn" type="button" disabled>Stop</button>
+        <div class="phase">
+          <div class="progress" id="progress" role="progressbar" aria-label="A/B run progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="progress-bar"></span></div>
+          <p id="phase-text" aria-live="polite">Loading…</p>
+          <p id="phase-detail" class="muted"></p>
+        </div>
+      </div>
+      <p id="scenario-text" class="scenario"></p>
+      <details class="backend-more">
+        <summary>Backend details</summary>
+        <p id="backend-detail" class="detail"></p>
+      </details>
+    </div>
+    <p id="live-banner" class="banner banner-live" role="status" hidden></p>
+    <p id="run-error" class="banner banner-error" role="alert" hidden></p>
+    <p id="action-error" class="banner banner-error" role="alert" hidden></p>
+
+    <div class="panels">
+      <div id="caption-box" class="caption-box" aria-hidden="true" hidden><span class="caption-text"></span></div>
+      <article class="panel" data-key="baseline" aria-labelledby="h-baseline">
+        <div class="panel-head">
+          <h2 id="h-baseline">Baseline: queue-based KEDA</h2>
+          <span class="status" data-role="status">Loading</span>
+        </div>
+        <p class="setup" data-role="setup"></p>
+        <p class="panel-error" data-role="error" hidden></p>
+        <figure>
+          <figcaption>p99 TTFT per tenant <span class="muted" data-role="window-note"></span></figcaption>
+          <div class="chart-box"><canvas data-role="ttft" tabindex="0"></canvas></div>
+          <ul class="legend" data-role="ttft-legend"></ul>
+        </figure>
+        <figure>
+          <figcaption>Replicas</figcaption>
+          <div class="chart-box"><canvas class="short" data-role="replicas" tabindex="0"></canvas></div>
+          <ul class="legend" data-role="replicas-legend"></ul>
+        </figure>
+        <div class="table-wrap">
+          <table>
+            <caption>Per tenant <span class="muted" data-role="table-scope"></span></caption>
+            <thead><tr><th scope="col">Tenant</th><th scope="col">SLO attainment</th><th scope="col">p99 TTFT</th><th scope="col">Shed</th><th scope="col">SLO status</th></tr></thead>
+            <tbody data-role="tenant-rows"></tbody>
+          </table>
+        </div>
+        <p class="engine" data-role="engine"></p>
+      </article>
+
+      <article class="panel" data-key="tenantscaler" aria-labelledby="h-tenantscaler">
+        <div class="panel-head">
+          <h2 id="h-tenantscaler">TenantScaler</h2>
+          <span class="status" data-role="status">Loading</span>
+        </div>
+        <p class="setup" data-role="setup"></p>
+        <p class="panel-error" data-role="error" hidden></p>
+        <figure>
+          <figcaption>p99 TTFT per tenant <span class="muted" data-role="window-note"></span></figcaption>
+          <div class="chart-box"><canvas data-role="ttft" tabindex="0"></canvas></div>
+          <ul class="legend" data-role="ttft-legend"></ul>
+        </figure>
+        <figure>
+          <figcaption>Replicas</figcaption>
+          <div class="chart-box"><canvas class="short" data-role="replicas" tabindex="0"></canvas></div>
+          <ul class="legend" data-role="replicas-legend"></ul>
+        </figure>
+        <div class="table-wrap">
+          <table>
+            <caption>Per tenant <span class="muted" data-role="table-scope"></span></caption>
+            <thead><tr><th scope="col">Tenant</th><th scope="col">SLO attainment</th><th scope="col">p99 TTFT</th><th scope="col">Shed</th><th scope="col">SLO status</th></tr></thead>
+            <tbody data-role="tenant-rows"></tbody>
+          </table>
+        </div>
+        <p class="engine" data-role="engine"></p>
+      </article>
+    </div>
+
+    <section class="summary card" aria-labelledby="summary-title">
+      <h2 id="summary-title">Side by side</h2>
+      <div id="summary-body"><p class="empty">Shown when both stacks have finished.</p></div>
+    </section>
+
+    <section class="decisions card" aria-labelledby="dec-title">
+      <div class="section-head">
+        <h2 id="dec-title">TenantScaler decision log</h2>
+        <label>Tenant
+          <select id="dec-tenant"><option value="">All tenants</option></select>
+        </label>
+      </div>
+      <p id="dec-status" class="muted" aria-live="polite">No decisions yet: they appear while the TenantScaler stack runs.</p>
+      <ol id="dec-list" class="dec-list" aria-label="Decision records, newest first" hidden></ol>
+    </section>
+  </section>
+
+  <section id="view-results" role="tabpanel" aria-labelledby="tab-results" hidden>
+    <div class="results-head card">
+      <div class="section-head">
+        <p class="muted">Evaluation summaries written by <code>tenantscaler realrun</code> (real replicas) and <code>tenantscaler experiment</code> (simulated).</p>
+        <button id="results-refresh" class="btn btn-small" type="button">Reload</button>
+      </div>
+    </div>
+    <div id="results-body" aria-live="polite"><p class="empty">Loading results…</p></div>
+  </section>
+</main>
+<footer class="card">
+  Live charts show the stack gateway's measurements over a sliding window; the final tables and the side-by-side summary come from the client-side records of each run (eval). Numbers are measured by this run, never typed in. SLO status: MET when a tenant's SLO attainment reaches its target, MISSED when it does not, SHED when some of its requests were shed.
+</footer>
+<div id="glitch" class="glitch" aria-hidden="true"></div>
+</body>
+</html>
