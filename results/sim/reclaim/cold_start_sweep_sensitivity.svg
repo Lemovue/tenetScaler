@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="420" viewBox="0 0 960 420" role="img" aria-label="Sensitivity variants vs cold start (simulated, mean over runs)">
+<style>
+text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:12px;fill:#52514e}
+.title{font-size:14px;font-weight:600;fill:#0b0b0b}.bg{fill:#fcfcfb}
+.grid{stroke:#e1e0d9;stroke-width:1}.axis{stroke:#c3c2b7;stroke-width:1}.err{stroke:#52514e;stroke-width:1.5}
+.line{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.k1{stroke:#2a78d6}.f1{fill:#2a78d6}
+.k2{stroke:#eb6834}.f2{fill:#eb6834}
+.k3{stroke:#1baf7a}.f3{fill:#1baf7a}
+.k4{stroke:#eda100}.f4{fill:#eda100}
+.k5{stroke:#e87ba4}.f5{fill:#e87ba4}
+.k6{stroke:#008300}.f6{fill:#008300}
+.k7{stroke:#6250d6}.f7{fill:#6250d6}
+.k8{stroke:#e34948}.f8{fill:#e34948}
+@media (prefers-color-scheme:dark){
+text{fill:#c3c2b7}.title{fill:#f0efec}.bg{fill:#1a1a19}
+.grid{stroke:#2c2c2a}.axis{stroke:#383835}.err{stroke:#c3c2b7}
+.k1{stroke:#3987e5}.f1{fill:#3987e5}
+.k2{stroke:#d95926}.f2{fill:#d95926}
+.k3{stroke:#199e70}.f3{fill:#199e70}
+.k4{stroke:#c98500}.f4{fill:#c98500}
+.k5{stroke:#d55181}.f5{fill:#d55181}
+.k6{stroke:#008300}.f6{fill:#008300}
+.k7{stroke:#9085e9}.f7{fill:#9085e9}
+.k8{stroke:#e66767}.f8{fill:#e66767}
+}
+</style>
+<rect class="bg" width="960" height="420"/>
+<text class="title" x="16.0" y="24">Sensitivity variants vs cold start (simulated, mean over runs)</text>
+<line class="line k1" x1="16.0" y1="46.0" x2="32.0" y2="46.0"/>
+<text x="38.0" y="46.0" dy=".32em">S4-flowcontrol-equiv</text>
+<line class="line k2" x1="194.0" y1="46.0" x2="210.0" y2="46.0"/>
+<text x="216.0" y="46.0" dy=".32em">S7-ts-full</text>
+<line class="line k3" x1="302.0" y1="46.0" x2="318.0" y2="46.0"/>
+<text x="324.0" y="46.0" dy=".32em">S4b-flowcontrol-outstanding</text>
+<line class="line k4" x1="529.0" y1="46.0" x2="545.0" y2="46.0"/>
+<text x="551.0" y="46.0" dy=".32em">S7nr-ts-no-reservation</text>
+<line class="grid" x1="72.0" y1="372.0" x2="936.0" y2="372.0"/>
+<text x="64.0" y="372.0" dy=".32em" text-anchor="end">0</text>
+<line class="grid" x1="72.0" y1="296.0" x2="936.0" y2="296.0"/>
+<text x="64.0" y="296.0" dy=".32em" text-anchor="end">10</text>
+<line class="grid" x1="72.0" y1="220.0" x2="936.0" y2="220.0"/>
+<text x="64.0" y="220.0" dy=".32em" text-anchor="end">20</text>
+<line class="grid" x1="72.0" y1="144.0" x2="936.0" y2="144.0"/>
+<text x="64.0" y="144.0" dy=".32em" text-anchor="end">30</text>
+<line class="grid" x1="72.0" y1="68.0" x2="936.0" y2="68.0"/>
+<text x="64.0" y="68.0" dy=".32em" text-anchor="end">40</text>
+<text transform="translate(18 220.0) rotate(-90)" text-anchor="middle" dy=".32em">victim violation %</text>
+<line class="axis" x1="72.0" y1="372.0" x2="936.0" y2="372.0"/>
+<text x="72.0" y="390.0" text-anchor="middle">0</text>
+<text x="216.0" y="390.0" text-anchor="middle">20</text>
+<text x="360.0" y="390.0" text-anchor="middle">40</text>
+<text x="504.0" y="390.0" text-anchor="middle">60</text>
+<text x="648.0" y="390.0" text-anchor="middle">80</text>
+<text x="792.0" y="390.0" text-anchor="middle">100</text>
+<text x="936.0" y="390.0" text-anchor="middle">120</text>
+<text x="504.0" y="410.0" text-anchor="middle">cold start (s)</text>
+<path class="line k1" d="M144.0 292.9 L288.0 246.3 L504.0 178.2 L936.0 88.6"><title>S4-flowcontrol-equiv</title></path>
+<path class="line k2" d="M144.0 372.0 L288.0 372.0 L504.0 371.3 L936.0 370.2"><title>S7-ts-full</title></path>
+<path class="line k3" d="M144.0 371.4 L288.0 371.4 L504.0 371.4 L936.0 371.2"><title>S4b-flowcontrol-outstanding</title></path>
+<path class="line k4" d="M144.0 372.0 L288.0 372.0 L504.0 371.3 L936.0 370.3"><title>S7nr-ts-no-reservation</title></path>
+</svg>
