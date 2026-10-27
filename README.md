@@ -12,11 +12,11 @@ TenantScaler runs two coupled loops:
 > **What is real and what is simulated**
 > - **REAL:** the headline results and the live demo use real inference. Each replica is a `llama-server` process (llama.cpp b11898) serving **Qwen2.5-0.5B-Instruct Q4_K_M**, pinned to one physical CPU core (2 threads, 4 slots) of an Intel i5-14450HX laptop, with a budget of 4 replicas. TTFT, TPOT, cold start and throughput are measured, not modelled.
 > - **SIMULATED (labelled everywhere):** the 10-setup sweep, the cold-start sweep and the forecaster's control-loop study run in a discrete-event simulator. It executes the **same** gateway scheduler, controller and autoscaler code in virtual time, with replica compute replaced by a latency model. That model is calibrated to the real replica, and the calibration is checked against the measurements within ±25% (`results/real/profile.md`).
-> - **KUBERNETES (smoke test, SIMULATED replicas, not a headline result):**
+> - **KUBERNETES (smoke tests, not headline results):**
 >   - The CRD, controller, gateway, RBAC and manifests ran on a real cluster: k3s v1.36.5, one node in WSL2 on the same laptop.
 >   - The controller scaled the `model-pool` Deployment up and down and wrote every decision into `TenantScaler` status. The gateway followed the pods through EndpointSlices.
->   - With the laptop's demo sizing, the noisy tenant c was shed (`over-share`, `SHEDDING true`) while a and b were never rejected.
->   - The replicas in the cluster are the simulated engine, not llama.cpp.
+>   - With SIMULATED replicas and the laptop's demo sizing, the noisy tenant c was shed (`over-share`, `SHEDDING true`) while a and b were never rejected.
+>   - Then **real llama.cpp pods** ran both pools side by side: TenantScaler, and a real KEDA baseline beside it, on identical mirrored traffic with a budget of 2 + 2 replicas. TenantScaler served a and b 3 to 4 times more requests (p99 TTFT about 6.5 s against about 58 s) but did not meet the 2 s SLO under the spike. These are single runs in an unpinned VM (CLAIMS C13).
 >   - Evidence: `results/k8s/`. Runbook: `deploy/k3s/README.md`.
 
 ## Pre-registered main claim

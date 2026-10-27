@@ -1,0 +1,10 @@
+live demo traffic (not the experiment): profile spike (C pattern) -> http://127.0.0.1:8081; Ctrl+C stops
+spike started for 1m0s
+   10s  answered   6  429  23  failed   0  p95 time-to-first-token 3.06 s
+   20s  answered   3  429  18  failed   0  p95 time-to-first-token 3.63 s
+   30s  answered   0  429  22  failed   0  p95 time-to-first-token -
+   40s  answered   6  429  38  failed   0  p95 time-to-first-token 0.90 s
+   50s  answered   3  429  20  failed   0  p95 time-to-first-token 1.43 s
+  1m0s  answered   1  429  34  failed   0  p95 time-to-first-token 0.54 s
+ 1m10s  answered   3  429   2  failed   0  p95 time-to-first-token 1.32 s
+total after 1m15s: 22 answered, 157 rejected with 429, 0 failed

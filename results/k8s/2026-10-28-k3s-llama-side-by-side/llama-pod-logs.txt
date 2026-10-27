@@ -1,0 +1,48 @@
+=== pod/model-pool-55d5c44b9c-dzl6c
+warning: no usable GPU found, --gpu-layers option will be ignored
+warning: one possible reason is that llama.cpp was compiled without GPU support
+warning: consult docs/build.md for compilation instructions
+warn: LLAMA_ARG_HOST environment variable is set, but will be overwritten by command line argument --host
+warn: LLAMA_ARG_PORT environment variable is set, but will be overwritten by command line argument --port
+0.00.027.826 I srv  llama_server: initializing ...
+0.00.027.878 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.00.028.242 W srv  server_setup: security: no API key is set and CORS allows all origins (see https://github.com/ggml-org/llama.cpp/pull/25655)
+0.00.034.841 I srv    load_model: loading model '/models/qwen2.5-0.5b-instruct-q4_k_m.gguf'
+0.00.306.847 W load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+0.00.628.160 I cmn          init: llama threadpool init, n_threads = 2
+0.00.698.001 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 1024, kv_unified = 'false'
+0.00.698.131 W srv          init: --cache-idle-slots requires --cache-ram, disabling
+0.00.707.165 I srv  server_run_i: model loaded
+0.00.707.191 I srv  server_on_li: listening on http://0.0.0.0:8000
+=== pod/model-pool-baseline-64c9dbb4fd-lq2k5
+warning: no usable GPU found, --gpu-layers option will be ignored
+warning: one possible reason is that llama.cpp was compiled without GPU support
+warning: consult docs/build.md for compilation instructions
+warn: LLAMA_ARG_HOST environment variable is set, but will be overwritten by command line argument --host
+warn: LLAMA_ARG_PORT environment variable is set, but will be overwritten by command line argument --port
+0.00.027.871 I srv  llama_server: initializing ...
+0.00.027.894 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.00.028.210 W srv  server_setup: security: no API key is set and CORS allows all origins (see https://github.com/ggml-org/llama.cpp/pull/25655)
+0.00.037.613 I srv    load_model: loading model '/models/qwen2.5-0.5b-instruct-q4_k_m.gguf'
+0.00.315.083 W load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+0.00.628.947 I cmn          init: llama threadpool init, n_threads = 2
+0.00.711.805 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 1024, kv_unified = 'false'
+0.00.711.881 W srv          init: --cache-idle-slots requires --cache-ram, disabling
+0.00.715.158 I srv  server_run_i: model loaded
+0.00.715.183 I srv  server_on_li: listening on http://0.0.0.0:8000
+=== pod/model-pool-baseline-64c9dbb4fd-wjqkw
+warning: no usable GPU found, --gpu-layers option will be ignored
+warning: one possible reason is that llama.cpp was compiled without GPU support
+warning: consult docs/build.md for compilation instructions
+warn: LLAMA_ARG_HOST environment variable is set, but will be overwritten by command line argument --host
+warn: LLAMA_ARG_PORT environment variable is set, but will be overwritten by command line argument --port
+0.00.027.533 I srv  llama_server: initializing ...
+0.00.027.612 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.00.027.927 W srv  server_setup: security: no API key is set and CORS allows all origins (see https://github.com/ggml-org/llama.cpp/pull/25655)
+0.00.035.975 I srv    load_model: loading model '/models/qwen2.5-0.5b-instruct-q4_k_m.gguf'
+0.00.307.986 W load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+0.00.628.339 I cmn          init: llama threadpool init, n_threads = 2
+0.00.703.526 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 1024, kv_unified = 'false'
+0.00.703.677 W srv          init: --cache-idle-slots requires --cache-ram, disabling
+0.00.709.869 I srv  server_run_i: model loaded
+0.00.709.895 I srv  server_on_li: listening on http://0.0.0.0:8000

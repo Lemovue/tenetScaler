@@ -154,6 +154,50 @@ No Prometheus is needed. On Windows, `tenantscaler mirror` serves the teammates 
 
 Teammates run the same `loadgen` command against `http://<laptop IP>:8081` with their cluster key.
 
+A sturdier mirror runs on the node itself, against the gateways' ClusterIPs, so that no port-forward sits in the data path. A port-forward once dropped requests under load (`results/k8s/2026-10-28-k3s-llama-side-by-side/`, run 1). Run it in Ubuntu:
+
+```bash
+bash scripts/k3s/mirror.sh dist/tenantscaler-linux-amd64
+```
+
+It listens on 8081 with the Hyper-V firewall rule above, so stop the Windows mirror first.
+
+`./scripts/k3s/demo-up.ps1` opens all three windows in one go: expose, the node mirror and the dashboard. Run it again whenever they were closed. Closing every WSL window can let WSL stop the VM. k3s comes back by itself when the VM restarts.
+
+## Real llama.cpp replicas (CPU load you can see)
+
+`deploy/k3s/llama` swaps both pools for llama.cpp pods. The Deployment names and labels stay the same, so nothing else needs rewiring.
+
+| | |
+|---|---|
+| Image | official llama.cpp server image, build b11913, pinned by digest, about 309 MB to download |
+| Model | the pinned Qwen2.5-0.5B GGUF, already on disk |
+| Each pod | 2 CPUs requested and limited, `-t 2 -np 4`, 1024 tokens per slot |
+| Budget | 2 replicas per pool, which keeps the laptop's 8-thread cap |
+
+The model reaches the pods through a PersistentVolume. The restricted Pod Security Standard forbids hostPath volumes in pods.
+
+`scripts/k3s/llama-up.sh` does the switch:
+- copies the model to the node and checks its pinned SHA-256;
+- pulls the image if it is absent (ask first);
+- shrinks the tenants to a 1/1, b 1/1, c 0/2 (priority 50);
+- gives the controller `-capacity 2` and `deploy/k3s/llama/15-config.yaml` (C = 117, 10 s cycle);
+- points both gateways at that config (2 requests in flight per replica);
+- sets KEDA to 1..2 replicas at 8 in flight per replica;
+- rolls the pools out.
+
+Run it as root in WSL:
+
+```bash
+sudo bash scripts/k3s/llama-up.sh "/mnt/c/.../.cache/models/qwen2.5-0.5b-instruct-q4_k_m.gguf"
+```
+
+Then start the dashboard with `-observe-replicas llama`, which `demo-up.ps1` passes by default. The badge then reads "KUBERNETES (k3s): REAL llama.cpp replicas".
+
+These pods run unpinned in a VM, so their latencies are real but not comparable with `results/real/`. The 2 s SLO and C = 117 were measured on bare metal. Evidence: `results/k8s/2026-10-28-k3s-llama-side-by-side/`.
+
+To go back to simulated replicas, run `up.sh` and `kubectl apply -f deploy/k3s/side-by-side/` again.
+
 ## Afterwards
 
 ```bash

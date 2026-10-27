@@ -46,6 +46,8 @@ func runDemo(args []string) error {
 	observeCtl := fs.String("observe-controller", "", "with -observe-gateway: the controller's base URL, e.g. http://127.0.0.1:18090")
 	observeBase := fs.String("observe-baseline-gateway", "", "with -observe-gateway: the side-by-side baseline gateway's base URL "+
 		"(deploy/k3s/side-by-side), e.g. http://127.0.0.1:18082, shown in the baseline panel")
+	observeReplicas := fs.String("observe-replicas", "simulated", "with -observe-gateway: what the cluster's replicas run, for the "+
+		"dashboard's labels: simulated (deploy/k8s) | llama (deploy/k3s/llama)")
 	observeKeys := fs.String("observe-keys", "", "with -observe-gateway: the env file holding the cluster's TS_ADMIN_KEY "+
 		"(scripts/k3s/keys.ps1 writes it); the key is not printed")
 	if err := fs.Parse(args); err != nil {
@@ -59,6 +61,8 @@ func runDemo(args []string) error {
 		return errors.New("demo: -live and -observe-gateway exclude each other")
 	case *sideBySide && *live == "":
 		return errors.New("demo: -side-by-side needs -live")
+	case *observeReplicas != "simulated" && *observeReplicas != "llama":
+		return fmt.Errorf("demo: -observe-replicas must be simulated or llama, got %q", *observeReplicas)
 	}
 	keys, err := gateway.ParseTenantKeys(envfile.Get("TS_TENANT_KEYS", ""))
 	if err != nil {
@@ -78,7 +82,7 @@ func runDemo(args []string) error {
 	}
 	var adminKey string
 	if observing {
-		info = demo.ObservedBackend(cfg, info.ConfigPath)
+		info = demo.ObservedBackend(cfg, info.ConfigPath, *observeReplicas == "llama")
 		if adminKey, err = envValue(*observeKeys, "TS_ADMIN_KEY"); err != nil {
 			return err
 		}

@@ -18,6 +18,8 @@
 # never a measurement. Run this in its own terminal.
 set -uo pipefail
 ns=tenantscaler
+# As the WSL user: the kubeconfig copied in deploy/k3s/README.md (root uses k3s's own).
+if [ -z "${KUBECONFIG:-}" ] && [ -r "$HOME/.kube/config" ]; then export KUBECONFIG="$HOME/.kube/config"; fi
 
 forward() {
   while :; do

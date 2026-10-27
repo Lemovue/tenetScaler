@@ -1,0 +1,39 @@
+# REAL llama.cpp replicas in the cluster (deploy/k3s/README.md): the model.
+# The namespace enforces the restricted Pod Security Standard, which forbids
+# hostPath volumes in pods, so the pods mount this claim, read-only. The
+# volume behind it is a node directory that scripts/k3s/llama-up.sh fills
+# with the pinned GGUF (SHA-256 checked, as scripts/setup-llama.ps1 pins it).
+# One node only: the path is on that node.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: tenantscaler-llama-models
+  labels:
+    app.kubernetes.io/part-of: tenantscaler
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes: ["ReadOnlyMany"]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  hostPath:
+    path: /var/lib/tenantscaler/models
+    type: Directory
+  claimRef:
+    namespace: tenantscaler
+    name: llama-models
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: llama-models
+  namespace: tenantscaler
+  labels:
+    app.kubernetes.io/part-of: tenantscaler
+spec:
+  accessModes: ["ReadOnlyMany"]
+  storageClassName: ""
+  volumeName: tenantscaler-llama-models
+  resources:
+    requests:
+      storage: 1Gi
