@@ -78,6 +78,14 @@ window.TS = window.TS || {};
     return el("span", { class: simulated ? "badge badge-sim" : "badge badge-real" }, simulated ? "SIMULATED" : "REAL");
   }
 
+  // injectedBadge marks real runs whose replicas had the injected load delay
+  // (readinessHoldSeconds > 0); null otherwise.
+  function injectedBadge(s) {
+    if (!isNum(s.readinessHoldSeconds) || s.readinessHoldSeconds <= 0) return null;
+    return el("span", { class: "badge badge-injected", title: "Injected load delay (emulates network model load); inference is real" },
+      "INJECTED " + num(s.readinessHoldSeconds, 0) + " s LOAD DELAY");
+  }
+
   function section(title, file, emptyText, renderSummary) {
     const sec = el("section", { class: "results-section card" });
     if (!file || !file.present) {
@@ -95,7 +103,8 @@ window.TS = window.TS || {};
   }
 
   function renderReal(sec, s, path) {
-    sec.appendChild(el("div", { class: "section-head" }, [el("h2", {}, "Real replicas"), badge(!!s.simulated)]));
+    sec.appendChild(el("div", { class: "section-head" }, [el("h2", {}, "Real replicas"),
+      el("span", { class: "badges" }, [badge(!!s.simulated), injectedBadge(s)])]));
     sec.appendChild(el("p", { class: "results-label" }, s.label || "No label in the summary."));
     const sc = s.scenario || {};
     sec.appendChild(el("p", { class: "muted" }, "Scenario " + (sc.name || "?") + " (" + num(sc.durationSeconds, 0) +

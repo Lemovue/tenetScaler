@@ -11,9 +11,11 @@ window.TS = window.TS || {};
   // Tenant colours in configuration order (validated categorical slots).
   const SLOTS = ["--series-1", "--series-2", "--series-3", "--series-4", "--series-5", "--series-6", "--series-7", "--series-8"];
   const STATUS_TEXT = {
-    pending: "waiting", starting: "starting replicas", running: "replaying traffic", draining: "draining",
-    stopping: "stopping", done: "✓ done", stopped: "stopped", skipped: "not run", error: "error",
+    pending: "Waiting", starting: "Starting replicas", running: "Replaying traffic", draining: "Draining",
+    stopping: "Stopping", done: "✓ Done", stopped: "Stopped", skipped: "Not run", error: "Error",
   };
+  // What an empty chart says before any run.
+  const WAITING = "Waiting for a run: press Run A/B";
 
   let config = null;
   let timer = 0;
@@ -37,8 +39,13 @@ window.TS = window.TS || {};
         ttftLegend: q("ttft-legend"), replicasLegend: q("replicas-legend"),
         ttft: new TS.LineChart(q("ttft"), { title: root.querySelector("h2").textContent + " p99 TTFT", yFormat: U.sec,
           yTick: (v) => (Number.isInteger(v) ? String(v) : v.toFixed(1)) + " s" }),
-        replicas: new TS.LineChart(q("replicas"), { title: root.querySelector("h2").textContent + " replicas", yFormat: (v) => String(v) }),
+        replicas: new TS.LineChart(q("replicas"), { title: root.querySelector("h2").textContent + " replicas", yFormat: (v) => String(v),
+          yIntegers: true }),
       };
+      // Until the first state arrives, the charts say what to do.
+      const empty = { xs: [], xMax: 1, yMax: 1, series: [], empty: WAITING };
+      panels[root.dataset.key].ttft.update(empty);
+      panels[root.dataset.key].replicas.update(empty);
     }
   }
 
@@ -57,25 +64,36 @@ window.TS = window.TS || {};
         TS.Results.load($("results-body"));
       }
     };
+    // Switching views plays the comic glitch (none under reduced motion or
+    // Calm); selecting the tab already shown does nothing.
+    const go = (tab) => {
+      if (tab.getAttribute("aria-selected") !== "true") TS.Comic.glitch(() => select(tab));
+    };
     tabs.forEach((tab, i) => {
-      tab.addEventListener("click", () => select(tab));
+      tab.addEventListener("click", () => go(tab));
       tab.addEventListener("keydown", (e) => {
         const moves = { ArrowLeft: i - 1, ArrowRight: i + 1, Home: 0, End: tabs.length - 1 };
         if (!(e.key in moves)) return;
         e.preventDefault();
         const next = tabs[(moves[e.key] + tabs.length) % tabs.length];
         next.focus();
-        select(next);
+        go(next);
       });
     });
     $("results-refresh").addEventListener("click", () => TS.Results.load($("results-body")));
     if (location.hash === "#results") select($("tab-results"));
   }
 
-  function renderConfig(c) {
+  // renderBadge shows the backend (REAL or SIMULATED) in the header pill.
+  function renderBadge(c) {
     const badge = $("backend-badge");
     badge.className = "badge " + (c.backend.simulated ? "badge-sim" : "badge-real");
     U.setText(badge, c.backend.label);
+  }
+
+  function renderConfig(c) {
+    renderBadge(c);
+    TS.Comic.configure(c);
     U.setText($("backend-detail"), c.backend.detail + " Config: " + c.backend.configPath + ".");
     const sc = c.scenario;
     const kinds = sc.tenants.map((t) => t.name + " (" + t.kind + ")").join(", ");
@@ -131,7 +149,7 @@ window.TS = window.TS || {};
     return groups.map((g) => {
       const v = g.items[0].ttftSeconds;
       const who = groups.length > 1 ? " (" + g.items.map((t) => t.name).join(", ") + ")" : "";
-      return { y: v, label: "SLO " + (v < 1 ? U.sec(v) : v + " s") + who };
+      return { y: v, label: "SLO" + who };
     });
   }
 
@@ -146,10 +164,28 @@ window.TS = window.TS || {};
     }
   }
 
+  // showConnError says the backend is unreachable and how to start it, and
+  // puts the page in one consistent offline state: the header pill and both
+  // panel badges say Offline, no "Loading…" anywhere, Run and Stop disabled.
   function showConnError(err) {
     const b = $("conn-error");
-    U.setText(b, "Cannot reach the demo server (" + err.message + "). Retrying every few seconds.");
+    U.clear(b);
+    b.append("Cannot reach the demo server (" + err.message + "). Start it from the project folder with ",
+      U.el("code", {}, ".\\scripts\\run-demo.ps1"), " (builds if needed, then runs ", U.el("code", {}, "bin\\tenantscaler.exe demo"),
+      "). Retrying every few seconds.");
     b.hidden = false;
+    const badge = $("backend-badge");
+    badge.className = "badge badge-offline";
+    U.setText(badge, "Offline");
+    for (const p of Object.values(panels)) {
+      U.setText(p.status, "Offline");
+      p.status.className = "status status-offline";
+    }
+    U.setText($("phase-text"), "Offline: start the backend to run the A/B comparison.");
+    U.setText($("phase-detail"), "");
+    $("run-btn").disabled = true;
+    $("stop-btn").disabled = true;
+    TS.Decor.setActivity({ running: false });
   }
 
   async function poll() {
@@ -157,6 +193,7 @@ window.TS = window.TS || {};
     let running = false;
     try {
       const state = await U.getJSON("/api/state", 8000);
+      if (!$("conn-error").hidden) renderBadge(config); // back online
       $("conn-error").hidden = true;
       render(state);
       running = state.phase === "running";
@@ -187,6 +224,14 @@ window.TS = window.TS || {};
       U.setText(err, state.phase === "error" ? "The A/B run failed: " + state.error : state.message + ". Cause: " + state.error);
     }
 
+    // Decoration: the webs tremble with each running stack's request rate
+    // (Calm comes on by itself during runs on real replicas).
+    const rates = {};
+    for (const s of state.stacks) {
+      const last = s.status === "running" && s.samples.length ? s.samples[s.samples.length - 1] : null;
+      rates[s.key] = last && last.tenants ? Object.values(last.tenants).reduce((sum, tw) => sum + (tw.rps || 0), 0) : 0;
+    }
+    TS.Decor.setActivity({ running, real: !!config && !config.backend.simulated, rates });
     const shared = sharedScales(state);
     renderLive(state);
     for (const s of state.stacks) if (panels[s.key]) renderPanel(panels[s.key], s, state, shared);
@@ -202,6 +247,7 @@ window.TS = window.TS || {};
     if (live || key !== decisionKey) {
       decisionKey = key;
       decisions.refresh();
+      TS.Comic.update(); // captions from the same decisions
     }
   }
 
@@ -227,29 +273,30 @@ window.TS = window.TS || {};
     const active = state.stacks.find((s) => ["starting", "running", "draining", "stopping"].includes(s.status));
     if (!active) return "Between stacks.";
     const title = active.key === "baseline" ? "Baseline" : "TenantScaler";
-    return title + ": " + (STATUS_TEXT[active.status] || active.status) + ".";
+    const text = STATUS_TEXT[active.status] || active.status;
+    return title + ": " + text.charAt(0).toLowerCase() + text.slice(1) + ".";
   }
 
   // sharedScales gives both panels the same axes, so they compare at a
-  // glance: x up to the longest run, y up to the largest p99 seen (at
-  // least 1.5 x the SLO).
+  // glance: x is the run time in seconds, up to the latest sample of
+  // either stack; y is max(1.25 x the TTFT SLO, the largest p99 seen).
   function sharedScales(state) {
-    let xMax = state.scenario.durationSeconds;
+    let xMax = 0;
     let yMax = 0;
-    for (const t of state.scenario.tenants) yMax = Math.max(yMax, 1.5 * t.ttftSeconds);
+    for (const t of state.scenario.tenants) yMax = Math.max(yMax, 1.25 * t.ttftSeconds);
     for (const s of state.stacks) {
       for (const smp of s.samples) {
         xMax = Math.max(xMax, smp.t);
         for (const tw of Object.values(smp.tenants || {})) {
-          if (U.isNum(tw.p99TtftSeconds)) yMax = Math.max(yMax, 1.1 * tw.p99TtftSeconds);
+          if (U.isNum(tw.p99TtftSeconds)) yMax = Math.max(yMax, tw.p99TtftSeconds);
         }
       }
     }
-    return { xMax, yMax };
+    return { xMax: Math.max(xMax, 1), yMax };
   }
 
-  function emptyText(s) {
-    if (s.status === "pending") return "Not run yet";
+  function emptyText(s, state) {
+    if (s.status === "pending") return state.phase === "running" ? "Starts after the baseline" : WAITING;
     if (s.status === "starting") return "Starting warm replicas…";
     if (s.status === "skipped") return "Not run";
     if (s.status === "stopped" || s.status === "error") return "No samples";
@@ -267,7 +314,7 @@ window.TS = window.TS || {};
 
     const xs = s.samples.map((x) => x.t);
     p.ttft.update({
-      xs, xMax: shared.xMax, yMax: shared.yMax, empty: emptyText(s),
+      xs, xMax: shared.xMax, yMax: shared.yMax, empty: emptyText(s, state),
       series: sc.tenants.map((t, i) => ({ name: t.name, colorVar: tenantColor(i),
         ys: s.samples.map((x) => (x.tenants && x.tenants[t.name] ? x.tenants[t.name].p99TtftSeconds : null)) }))
         .filter((x) => x.colorVar),
@@ -276,12 +323,14 @@ window.TS = window.TS || {};
     });
     const cap = config ? config.capacityReplicas : 1;
     p.replicas.update({
-      xs, xMax: shared.xMax, yMax: cap * 1.15, empty: emptyText(s),
+      // Whole-replica ticks from 0 to the budget; a little headroom keeps
+      // the dashed budget line off the plot's top edge.
+      xs, xMax: shared.xMax, yMax: cap + 0.25, yTickMax: cap, empty: emptyText(s, state),
       series: [
         { name: "ready", colorVar: "--rep-ready", step: true, ys: s.samples.map((x) => x.ready) },
         { name: "starting", colorVar: "--rep-starting", step: true, dash: "dot", ys: s.samples.map((x) => x.starting) },
       ],
-      thresholds: [{ y: cap, label: "budget " + cap }],
+      thresholds: [{ y: cap, label: "budget" }],
     });
     renderTenantTable(p, s, sc, state.windowSeconds);
     renderEngine(p, s, state);
@@ -293,13 +342,46 @@ window.TS = window.TS || {};
     return t;
   }
 
+  // SLO status icons (16 x 16, stroked): a check, a cross, a slashed circle.
+  const ICONS = {
+    met: "M3 8.5 6.5 12 13 4.5",
+    missed: "M4 4 12 12M12 4 4 12",
+    shed: "M8 2.2a5.8 5.8 0 1 0 0 11.6 5.8 5.8 0 1 0 0-11.6M3.9 12.1 12.1 3.9",
+  };
+
+  function chip(kind, text) {
+    const NS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("viewBox", "0 0 16 16");
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("focusable", "false");
+    const path = document.createElementNS(NS, "path");
+    for (const [k, v] of Object.entries({ d: ICONS[kind], fill: "none", stroke: "currentColor", "stroke-width": "2",
+      "stroke-linecap": "round", "stroke-linejoin": "round" })) path.setAttribute(k, v);
+    svg.appendChild(path);
+    return U.el("span", { class: "slo slo-" + kind }, [svg, text]);
+  }
+
+  // sloStatus labels a tenant MET when its attainment (a fraction) reaches
+  // its SLO target, MISSED when it does not, and adds SHED when some of its
+  // requests were shed. Each label has text and an icon; colour only
+  // repeats them.
+  function sloStatus(attainment, target, shed) {
+    const chips = [];
+    if (U.isNum(attainment) && U.isNum(target)) chips.push(attainment >= target ? chip("met", "MET") : chip("missed", "MISSED"));
+    if (U.isNum(shed) && shed > 0) chips.push(chip("shed", "SHED"));
+    return chips.length ? U.el("span", { class: "slo-cell" }, chips) : "—";
+  }
+
   function renderTenantTable(p, s, sc, windowSeconds) {
     U.clear(p.rows);
     const row = (cells) => p.rows.appendChild(U.el("tr", {}, cells.map((c, i) => U.el(i ? "td" : "th", i ? {} : { scope: "row" }, c))));
+    const target = (name) => (sc.tenants.find((t) => t.name === name) || {}).targetFraction;
     if (s.metrics && s.tenants) {
       U.setText(p.scope, "(whole run, client-measured)");
       for (const t of s.tenants) {
-        row([tenantName(t.tenant, sc), U.pct(t.attainmentPct), U.sec(t.p99TtftSeconds), t.shed + " (" + U.pct(t.shedPct) + ")"]);
+        row([tenantName(t.tenant, sc), U.pct(t.attainmentPct), U.sec(t.p99TtftSeconds), t.shed + " (" + U.pct(t.shedPct) + ")",
+          sloStatus(U.isNum(t.attainmentPct) ? t.attainmentPct / 100 : null, target(t.tenant), t.shed)]);
       }
       return;
     }
@@ -309,12 +391,13 @@ window.TS = window.TS || {};
       for (const t of sc.tenants) {
         const tw = last.tenants[t.name] || {};
         row([tenantName(t.name, sc), U.isNum(tw.attainment) ? U.pct(tw.attainment * 100) : "no completions",
-          U.sec(tw.p99TtftSeconds), U.isNum(tw.shed) ? tw.shed + " in " + windowSeconds + " s" : "—"]);
+          U.sec(tw.p99TtftSeconds), U.isNum(tw.shed) ? tw.shed + " in " + windowSeconds + " s" : "—",
+          sloStatus(tw.attainment, t.targetFraction, tw.shed)]);
       }
       return;
     }
     U.setText(p.scope, "(no data yet)");
-    for (const t of sc.tenants) row([tenantName(t.name, sc), "—", "—", "—"]);
+    for (const t of sc.tenants) row([tenantName(t.name, sc), "—", "—", "—", "—"]);
   }
 
   function renderEngine(p, s, state) {

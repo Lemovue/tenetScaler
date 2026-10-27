@@ -100,6 +100,8 @@ window.TS = window.TS || {};
       const flags = [];
       if (r.final.shedding) flags.push(el("span", { class: "flag flag-warn" }, "sheddable requests get 429"));
       if (r.failStatic) flags.push(el("span", { class: "flag flag-warn" }, "fail-static"));
+      // Comic captions made from this record (comic.js) are listed here too.
+      for (const c of TS.Comic ? TS.Comic.captionsFor(key) : []) flags.push(el("span", { class: "flag flag-caption" }, "Caption: " + c));
       const summary = el("summary", {}, [head, title].concat(flags, [el("span", { class: "dec-reason" }, r.reason)]));
       const details = el("details", {}, [summary, this.body(r, pool)]);
       if (this.open.has(key)) details.open = true;

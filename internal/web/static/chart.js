@@ -11,7 +11,9 @@ window.TS = window.TS || {};
 
 (function () {
   const PAD = { left: 46, right: 34, top: 14, bottom: 24 };
-  const FONT = '12px system-ui, -apple-system, "Segoe UI", sans-serif';
+  // Canvas text: the page font (--font) at 12px.
+  const FONT_SIZE = "12px ";
+  const FONT_FALLBACK = 'system-ui, -apple-system, "Segoe UI", sans-serif';
 
   // niceStep picks a 1-2-5 step giving about target intervals over range.
   function niceStep(range, target) {
@@ -59,8 +61,7 @@ window.TS = window.TS || {};
       canvas.addEventListener("blur", () => this.setHover(-1));
       canvas.addEventListener("keydown", (e) => this.onKey(e));
       if (window.ResizeObserver) new ResizeObserver(() => this.draw()).observe(canvas);
-      const mq = window.matchMedia("(prefers-color-scheme: dark)");
-      if (mq.addEventListener) mq.addEventListener("change", () => this.draw());
+      document.addEventListener("ts:theme", () => this.draw()); // theme.js: toggle or system change
       this.updateAria();
     }
 
@@ -103,20 +104,22 @@ window.TS = window.TS || {};
       const ctx = c.getContext("2d");
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       const color = (name) => TS.util.cssVar(c, name);
-      ctx.fillStyle = color("--surface");
-      ctx.fillRect(0, 0, w, h);
-      ctx.font = FONT;
+      // Transparent: the card's plate shows through (a web behind it at <= 8.4%).
+      ctx.clearRect(0, 0, w, h);
+      ctx.font = FONT_SIZE + (color("--font") || FONT_FALLBACK);
       const d = this.data;
+      if (!d.xs.length) {
+        // No data: no axes to invent, just what to do.
+        ctx.fillStyle = color("--ink-2");
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(d.empty || "No data yet", w / 2, h / 2);
+        return;
+      }
       const g = this.geometry();
       this.drawBand(ctx, g, color);
       this.drawAxes(ctx, g, color);
       for (const t of d.thresholds || []) this.drawThreshold(ctx, g, color, t);
-      if (!d.xs.length) {
-        ctx.fillStyle = color("--ink-2");
-        ctx.textAlign = "center";
-        ctx.fillText(d.empty || "No data yet", PAD.left + (w - PAD.left - PAD.right) / 2, PAD.top + (h - PAD.top - PAD.bottom) / 2);
-        return;
-      }
       for (const s of d.series) this.drawSeries(ctx, g, color(s.colorVar), s);
       this.drawLabels(ctx, g, color);
       if (this.hover >= 0) this.drawCrosshair(ctx, g, color);
@@ -124,7 +127,7 @@ window.TS = window.TS || {};
 
     drawBand(ctx, g, color) {
       const b = this.data.band;
-      if (!b || !(b.x1 > b.x0)) return;
+      if (!b || !(b.x1 > b.x0) || b.x0 >= g.xMax) return; // not reached yet on the auto-ranged x axis
       const x0 = g.x(b.x0);
       const x1 = g.x(Math.min(b.x1, g.xMax));
       ctx.fillStyle = color("--band");
@@ -135,12 +138,15 @@ window.TS = window.TS || {};
       ctx.fillText(b.label, x0 + 4, PAD.top + 2);
     }
 
+    // drawAxes draws the y grid with its ticks (whole numbers only, up to
+    // data.yTickMax, when opts.yIntegers) and the x ticks in seconds.
     drawAxes(ctx, g, color) {
-      const yStep = niceStep(g.yMax, 4);
+      const top = this.opts.yIntegers && this.data.yTickMax >= 0 ? this.data.yTickMax : g.yMax;
+      const yStep = this.opts.yIntegers ? Math.max(1, Math.round(niceStep(top, 4))) : niceStep(g.yMax, 4);
       ctx.lineWidth = 1;
       ctx.textBaseline = "middle";
       ctx.textAlign = "right";
-      for (let v = 0; v <= g.yMax + 1e-9; v += yStep) {
+      for (let v = 0; v <= top + 1e-9; v += yStep) {
         const y = Math.round(g.y(v)) + 0.5;
         ctx.strokeStyle = v === 0 ? color("--axis") : color("--grid");
         ctx.beginPath();
@@ -329,7 +335,7 @@ window.TS = window.TS || {};
     // same information as the lines (the tables below hold the details).
     updateAria() {
       const d = this.data;
-      let text = this.opts.title + ": no data yet.";
+      let text = this.opts.title + ": " + (d && d.empty ? d.empty : "no data yet") + ".";
       if (d && d.xs.length) {
         const last = d.xs.length - 1;
         const parts = d.series.map((s) => (s.label || s.name) + " " + this.value(s.ys[last]));
