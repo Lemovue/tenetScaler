@@ -1,0 +1,110 @@
+# The TenantScaler controller: each cycle it reads the TenantScalers of pool
+# shared-llm-pool, the gateway's per-tenant stats and the model-pool
+# Deployment, then scales the Deployment, pushes the policy to the gateway
+# and writes each tenant's status. Exactly one replica (single writer; there
+# is no leader election), recreated rather than rolled.
+# It serves /decisions, /status, /healthz and /metrics on :8090 (Service
+# tenantscaler-controller). /healthz answers as soon as the process listens,
+# also while it waits (retrying every cycle) for its first TenantScalers; the
+# other endpoints answer 503 until then. A cycle whose gateway stats or
+# Deployment status cannot be read fails static: nothing is scaled (see the
+# errors in /status and tenantscaler_controller_failstatic_total).
+# After a restart (Recreate) it continues the policy versions the gateway
+# (GET /policy) and the TenantScaler statuses already hold, so the gateway
+# applies its policies instead of ignoring them as older.
+# The root filesystem is read-only, so the decision
+# log is not written to a file (-decisions-file ""): read it from /decisions,
+# and each tenant's latest outcome from its TenantScaler status.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tenantscaler-controller
+  namespace: tenantscaler
+  labels:
+    app.kubernetes.io/name: tenantscaler-controller
+    app.kubernetes.io/part-of: tenantscaler
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tenantscaler-controller
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: tenantscaler-controller
+        app.kubernetes.io/part-of: tenantscaler
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8090"
+        prometheus.io/path: /metrics
+    spec:
+      serviceAccountName: tenantscaler-controller
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: controller
+          image: tenantscaler:dev
+          imagePullPolicy: IfNotPresent
+          args:
+            - controller
+            - -addr
+            - :8090
+            - -k8s
+            - -namespace
+            - tenantscaler
+            - -deployment
+            - model-pool
+            - -pool
+            - shared-llm-pool
+            - -capacity
+            - "10"
+            - -gateway
+            - http://gateway:8080
+            - -decisions-file
+            - ""
+          ports:
+            - name: http
+              containerPort: 8090
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tenantscaler-controller
+  namespace: tenantscaler
+  labels:
+    app.kubernetes.io/name: tenantscaler-controller
+    app.kubernetes.io/part-of: tenantscaler
+spec:
+  selector:
+    app.kubernetes.io/name: tenantscaler-controller
+  ports:
+    - name: http
+      port: 8090
+      targetPort: http

@@ -1,0 +1,155 @@
+# TenantScaler: one tenant's promise on a shared model pool. The controller
+# reads every TenantScaler of its pool each cycle, arbitrates the pool's
+# replicas between them and writes the outcome to .status.
+# Must match internal/k8s (Group, Version, Resource, Kind and JSON tags);
+# internal/k8s/manifests_test.go enforces it.
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: tenantscalers.scaling.tenantscaler.dev
+  labels:
+    app.kubernetes.io/part-of: tenantscaler
+spec:
+  group: scaling.tenantscaler.dev
+  scope: Namespaced
+  names:
+    plural: tenantscalers
+    singular: tenantscaler
+    kind: TenantScaler
+    listKind: TenantScalerList
+    shortNames:
+      - tsc
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: Pool
+          type: string
+          jsonPath: .spec.pool
+        - name: Guaranteed
+          type: integer
+          jsonPath: .spec.guaranteedReplicas
+        - name: Max
+          type: integer
+          jsonPath: .spec.maxReplicas
+        - name: Grant
+          type: integer
+          jsonPath: .status.grant
+        - name: Demand
+          type: integer
+          jsonPath: .status.demand
+        - name: Shedding
+          type: boolean
+          jsonPath: .status.shedding
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+      schema:
+        openAPIV3Schema:
+          type: object
+          description: TenantScaler is one tenant sharing a fixed pool of model replicas.
+          required:
+            - spec
+          x-kubernetes-validations:
+            # The tenant name is the gateway's fairness id; the controller
+            # accepts at most 63 characters.
+            - rule: self.metadata.name.size() <= 63
+              message: metadata.name must be at most 63 characters
+          properties:
+            apiVersion:
+              type: string
+            kind:
+              type: string
+            metadata:
+              type: object
+            spec:
+              type: object
+              description: The tenant's guaranteed share, cap and latency SLO.
+              required:
+                - pool
+                - guaranteedReplicas
+                - maxReplicas
+                - slo
+              x-kubernetes-validations:
+                - rule: self.maxReplicas >= self.guaranteedReplicas
+                  message: maxReplicas must be >= guaranteedReplicas
+              properties:
+                pool:
+                  type: string
+                  minLength: 1
+                  description: Name of the shared pool; must match the controller's -pool flag.
+                guaranteedReplicas:
+                  type: integer
+                  format: int32
+                  minimum: 0
+                  description: Replicas the tenant always gets when its demand needs them.
+                maxReplicas:
+                  type: integer
+                  format: int32
+                  minimum: 1
+                  description: Upper bound on the tenant's grant, borrowing included.
+                priority:
+                  type: integer
+                  format: int32
+                  default: 0
+                  description: Order in which spare capacity is lent; higher first.
+                slo:
+                  type: object
+                  description: TargetFraction of requests must meet both latency bounds.
+                  required:
+                    - ttftSeconds
+                    - tpotMillis
+                    - targetFraction
+                  properties:
+                    ttftSeconds:
+                      type: number
+                      minimum: 0
+                      exclusiveMinimum: true
+                      description: Time-to-first-token bound in seconds.
+                    tpotMillis:
+                      type: number
+                      minimum: 0
+                      exclusiveMinimum: true
+                      description: Time-per-output-token bound in milliseconds.
+                    targetFraction:
+                      type: number
+                      minimum: 0
+                      exclusiveMinimum: true
+                      maximum: 1
+                      description: Fraction of requests that must meet the SLO, in (0, 1].
+            status:
+              type: object
+              description: Written by the controller every control cycle.
+              properties:
+                grant:
+                  type: integer
+                  format: int32
+                  description: Replicas granted this cycle.
+                demand:
+                  type: integer
+                  format: int32
+                  description: Replicas the tenant needs (reactive or forecast).
+                shedding:
+                  type: boolean
+                  description: True when the gateway sheds the tenant's sheddable requests.
+                sloSlack:
+                  type: number
+                  description: Distance from the SLO target; negative means missing it.
+                reason:
+                  type: string
+                  description: Human-readable explanation of the decision.
+                policyVersion:
+                  type: integer
+                  format: int64
+                  description: Gateway policy version that enforces the grant.
+                observedGeneration:
+                  type: integer
+                  format: int64
+                  description: metadata.generation the decision was based on.
+                lastUpdate:
+                  type: string
+                  format: date-time
+                  description: When the controller wrote this status.

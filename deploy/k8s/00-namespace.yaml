@@ -1,0 +1,17 @@
+# Everything TenantScaler runs in one namespace. On a fresh cluster the CRD
+# must be established before the TenantScalers in 40-tenants.yaml can be
+# created, so apply in two steps:
+#   kubectl apply -f deploy/k8s/00-namespace.yaml -f deploy/k8s/01-crd.yaml
+#   kubectl wait --for=condition=Established crd/tenantscalers.scaling.tenantscaler.dev
+#   kubectl apply -f deploy/k8s/
+# (baselines/ is not applied by that command; see the files there.)
+# Pods here must meet the "restricted" Pod Security Standard; every
+# Deployment in this directory does (internal/k8s tests check the fields).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tenantscaler
+  labels:
+    app.kubernetes.io/part-of: tenantscaler
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest

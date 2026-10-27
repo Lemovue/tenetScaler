@@ -1,0 +1,45 @@
+# BASELINE, not part of TenantScaler: the queue-based KEDA autoscaler the
+# evaluation compares against. It scales model-pool on the total number of
+# waiting requests, with no notion of tenants. Apply it INSTEAD of the
+# TenantScaler controller, never together (both would set the replica count):
+#   kubectl -n tenantscaler scale deployment tenantscaler-controller --replicas=0
+#   kubectl apply -f deploy/k8s/baselines/gateway-passthrough.yaml
+#   kubectl apply -f deploy/k8s/baselines/keda-scaledobject.yaml
+# The passthrough gateway makes requests queue at the replicas, as in the
+# simulated baseline; see gateway-passthrough.yaml. Back to TenantScaler:
+#   kubectl delete -f deploy/k8s/baselines/keda-scaledobject.yaml
+#   kubectl apply -f deploy/k8s/20-gateway.yaml
+#   kubectl -n tenantscaler scale deployment tenantscaler-controller --replicas=1
+# Requires KEDA and a Prometheus that scrapes the model-pool pods (via the
+# prometheus.io/* annotations). Adjust serverAddress to your Prometheus.
+# Same settings as the simulated baseline (autoscale.DefaultKEDAConfig): 4
+# waiting requests per replica (AverageValue), activation 0, 1..10 replicas
+# (the pool capacity), 15 s polling (one control cycle) and a 300 s scale-down
+# window. With minReplicaCount >= 1, KEDA's cooldownPeriod never applies
+# (it only governs scaling to zero); the HPA behavior below does.
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: model-pool-queue
+  namespace: tenantscaler
+  labels:
+    app.kubernetes.io/part-of: tenantscaler
+spec:
+  scaleTargetRef:
+    name: model-pool
+  minReplicaCount: 1
+  maxReplicaCount: 10
+  pollingInterval: 15
+  advanced:
+    horizontalPodAutoscalerConfig:
+      behavior:
+        scaleDown:
+          stabilizationWindowSeconds: 300
+  triggers:
+    - type: prometheus
+      metricType: AverageValue
+      metadata:
+        serverAddress: http://prometheus-server.monitoring.svc.cluster.local
+        query: sum(vllm:num_requests_waiting)
+        threshold: "4"
+        activationThreshold: "0"

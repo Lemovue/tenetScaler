@@ -1,0 +1,89 @@
+# The shared model pool: identical SIMULATED engine replicas of one model.
+# spec.replicas is deliberately omitted: the TenantScaler controller owns the
+# replica count (through deployments/scale), so re-applying this file must not
+# reset it. The readiness probe stays false while a replica cold-starts
+# (simulated model load), which is what the controller counts as "starting".
+# Scale-down is graceful: the preStop sleep keeps the pod serving while its
+# endpoint turns not-ready and the gateway's EndpointSlice discovery drops it;
+# then SIGTERM drains in-flight requests (up to 30 s, see `tenantscaler
+# replica`) inside the 45 s grace period. preStop sleep needs Kubernetes 1.30+.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: model-pool
+  namespace: tenantscaler
+  labels:
+    app.kubernetes.io/name: model-pool
+    app.kubernetes.io/part-of: tenantscaler
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: model-pool
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: model-pool
+        app.kubernetes.io/part-of: tenantscaler
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: /metrics
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 45
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: replica
+          image: tenantscaler:dev
+          imagePullPolicy: IfNotPresent
+          args: ["replica", "-addr", ":8000"]
+          ports:
+            - name: http
+              containerPort: 8000
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: http
+            periodSeconds: 2
+            failureThreshold: 1
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: http
+            periodSeconds: 10
+          lifecycle:
+            preStop:
+              sleep:
+                seconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: model-pool
+  namespace: tenantscaler
+  labels:
+    app.kubernetes.io/name: model-pool
+    app.kubernetes.io/part-of: tenantscaler
+spec:
+  selector:
+    app.kubernetes.io/name: model-pool
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http

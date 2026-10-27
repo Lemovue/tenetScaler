@@ -1,0 +1,50 @@
+# The worked example: three tenants share a 10-replica pool with guarantees
+# 3/3/3 (9 <= 10, so the promise is keepable) and may borrow up to 8 each.
+# Each tenant's name is its fairness id: requests carry
+#   x-llm-d-inference-fairness-id: a | b | c
+# The gateway's tenant list (ConfigMap gateway-config in 20-gateway.yaml)
+# must list the same tenants with the same specs; change both together.
+apiVersion: scaling.tenantscaler.dev/v1alpha1
+kind: TenantScaler
+metadata:
+  name: a
+  namespace: tenantscaler
+spec:
+  pool: shared-llm-pool
+  guaranteedReplicas: 3
+  maxReplicas: 8
+  priority: 100
+  slo:
+    ttftSeconds: 2
+    tpotMillis: 100
+    targetFraction: 0.99
+---
+apiVersion: scaling.tenantscaler.dev/v1alpha1
+kind: TenantScaler
+metadata:
+  name: b
+  namespace: tenantscaler
+spec:
+  pool: shared-llm-pool
+  guaranteedReplicas: 3
+  maxReplicas: 8
+  priority: 100
+  slo:
+    ttftSeconds: 2
+    tpotMillis: 100
+    targetFraction: 0.99
+---
+apiVersion: scaling.tenantscaler.dev/v1alpha1
+kind: TenantScaler
+metadata:
+  name: c
+  namespace: tenantscaler
+spec:
+  pool: shared-llm-pool
+  guaranteedReplicas: 3
+  maxReplicas: 8
+  priority: 100
+  slo:
+    ttftSeconds: 2
+    tpotMillis: 100
+    targetFraction: 0.99
