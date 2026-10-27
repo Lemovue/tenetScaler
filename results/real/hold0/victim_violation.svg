@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="420" viewBox="0 0 960 420" role="img" aria-label="Victim SLO violation during the spike (real llama.cpp replicas, mean ± 95% CI over runs)">
+<style>
+text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:12px;fill:#52514e}
+.title{font-size:14px;font-weight:600;fill:#0b0b0b}.bg{fill:#fcfcfb}
+.grid{stroke:#e1e0d9;stroke-width:1}.axis{stroke:#c3c2b7;stroke-width:1}.err{stroke:#52514e;stroke-width:1.5}
+.line{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.k1{stroke:#2a78d6}.f1{fill:#2a78d6}
+.k2{stroke:#eb6834}.f2{fill:#eb6834}
+.k3{stroke:#1baf7a}.f3{fill:#1baf7a}
+.k4{stroke:#eda100}.f4{fill:#eda100}
+.k5{stroke:#e87ba4}.f5{fill:#e87ba4}
+.k6{stroke:#008300}.f6{fill:#008300}
+.k7{stroke:#6250d6}.f7{fill:#6250d6}
+.k8{stroke:#e34948}.f8{fill:#e34948}
+@media (prefers-color-scheme:dark){
+text{fill:#c3c2b7}.title{fill:#f0efec}.bg{fill:#1a1a19}
+.grid{stroke:#2c2c2a}.axis{stroke:#383835}.err{stroke:#c3c2b7}
+.k1{stroke:#3987e5}.f1{fill:#3987e5}
+.k2{stroke:#d95926}.f2{fill:#d95926}
+.k3{stroke:#199e70}.f3{fill:#199e70}
+.k4{stroke:#c98500}.f4{fill:#c98500}
+.k5{stroke:#d55181}.f5{fill:#d55181}
+.k6{stroke:#008300}.f6{fill:#008300}
+.k7{stroke:#9085e9}.f7{fill:#9085e9}
+.k8{stroke:#e66767}.f8{fill:#e66767}
+}
+</style>
+<rect class="bg" width="960" height="420"/>
+<text class="title" x="16.0" y="24">Victim SLO violation during the spike (real llama.cpp replicas, mean ± 95% CI over runs)</text>
+<rect class="f1" x="19.0" y="41.0" width="10" height="10" rx="2"/>
+<text x="38.0" y="46.0" dy=".32em">served requests</text>
+<rect class="f2" x="162.0" y="41.0" width="10" height="10" rx="2"/>
+<text x="181.0" y="46.0" dy=".32em">shed counted as miss</text>
+<line class="grid" x1="72.0" y1="370.0" x2="936.0" y2="370.0"/>
+<text x="64.0" y="370.0" dy=".32em" text-anchor="end">0</text>
+<line class="grid" x1="72.0" y1="269.3" x2="936.0" y2="269.3"/>
+<text x="64.0" y="269.3" dy=".32em" text-anchor="end">50</text>
+<line class="grid" x1="72.0" y1="168.7" x2="936.0" y2="168.7"/>
+<text x="64.0" y="168.7" dy=".32em" text-anchor="end">100</text>
+<line class="grid" x1="72.0" y1="68.0" x2="936.0" y2="68.0"/>
+<text x="64.0" y="68.0" dy=".32em" text-anchor="end">150</text>
+<text transform="translate(18 219.0) rotate(-90)" text-anchor="middle" dy=".32em">% of victim requests</text>
+<path class="f1" d="M133.4 370.0 V187.3 Q133.4 183.3 137.4 183.3 H153.4 Q157.4 183.3 157.4 187.3 V370.0 Z"><title>served requests, S2-keda-queue (N=5): 92.715 ± 9.370</title></path>
+<line class="err" x1="145.4" y1="202.2" x2="145.4" y2="164.5"/>
+<line class="err" x1="141.4" y1="202.2" x2="149.4" y2="202.2"/>
+<line class="err" x1="141.4" y1="164.5" x2="149.4" y2="164.5"/>
+<path class="f2" d="M159.4 370.0 V187.3 Q159.4 183.3 163.4 183.3 H179.4 Q183.4 183.3 183.4 187.3 V370.0 Z"><title>shed counted as miss, S2-keda-queue (N=5): 92.715 ± 9.370</title></path>
+<line class="err" x1="171.4" y1="202.2" x2="171.4" y2="164.5"/>
+<line class="err" x1="167.4" y1="202.2" x2="175.4" y2="202.2"/>
+<line class="err" x1="167.4" y1="164.5" x2="175.4" y2="164.5"/>
+<text x="158.4" y="388.0" text-anchor="middle">S2-keda-queue (N=5)</text>
+<path class="f1" d="M306.2 370.0 V332.8 Q306.2 328.8 310.2 328.8 H326.2 Q330.2 328.8 330.2 332.8 V370.0 Z"><title>served requests, S3-static-partition (N=5): 20.440 ± 6.365</title></path>
+<line class="err" x1="318.2" y1="341.7" x2="318.2" y2="316.0"/>
+<line class="err" x1="314.2" y1="341.7" x2="322.2" y2="341.7"/>
+<line class="err" x1="314.2" y1="316.0" x2="322.2" y2="316.0"/>
+<path class="f2" d="M332.2 370.0 V332.8 Q332.2 328.8 336.2 328.8 H352.2 Q356.2 328.8 356.2 332.8 V370.0 Z"><title>shed counted as miss, S3-static-partition (N=5): 20.440 ± 6.365</title></path>
+<line class="err" x1="344.2" y1="341.7" x2="344.2" y2="316.0"/>
+<line class="err" x1="340.2" y1="341.7" x2="348.2" y2="341.7"/>
+<line class="err" x1="340.2" y1="316.0" x2="348.2" y2="316.0"/>
+<text x="331.2" y="388.0" text-anchor="middle">S3-static-partition</text>
+<text x="331.2" y="402.0" text-anchor="middle">(N=5)</text>
+<path class="f1" d="M479.0 370.0 V273.0 Q479.0 269.0 483.0 269.0 H499.0 Q503.0 269.0 503.0 273.0 V370.0 Z"><title>served requests, S4-flowcontrol-equiv (N=5): 50.166 ± 16.670</title></path>
+<line class="err" x1="491.0" y1="302.6" x2="491.0" y2="235.4"/>
+<line class="err" x1="487.0" y1="302.6" x2="495.0" y2="302.6"/>
+<line class="err" x1="487.0" y1="235.4" x2="495.0" y2="235.4"/>
+<path class="f2" d="M505.0 370.0 V269.2 Q505.0 265.2 509.0 265.2 H525.0 Q529.0 265.2 529.0 269.2 V370.0 Z"><title>shed counted as miss, S4-flowcontrol-equiv (N=5): 52.066 ± 13.859</title></path>
+<line class="err" x1="517.0" y1="293.1" x2="517.0" y2="237.3"/>
+<line class="err" x1="513.0" y1="293.1" x2="521.0" y2="293.1"/>
+<line class="err" x1="513.0" y1="237.3" x2="521.0" y2="237.3"/>
+<text x="504.0" y="388.0" text-anchor="middle">S4-flowcontrol-equiv</text>
+<text x="504.0" y="402.0" text-anchor="middle">(N=5)</text>
+<path class="f1" d="M651.8 370.0 V193.8 Q651.8 189.8 655.8 189.8 H671.8 Q675.8 189.8 675.8 193.8 V370.0 Z"><title>served requests, S5-ts-no-gateway (N=5): 89.522 ± 7.358</title></path>
+<line class="err" x1="663.8" y1="204.6" x2="663.8" y2="174.9"/>
+<line class="err" x1="659.8" y1="204.6" x2="667.8" y2="204.6"/>
+<line class="err" x1="659.8" y1="174.9" x2="667.8" y2="174.9"/>
+<path class="f2" d="M677.8 370.0 V193.8 Q677.8 189.8 681.8 189.8 H697.8 Q701.8 189.8 701.8 193.8 V370.0 Z"><title>shed counted as miss, S5-ts-no-gateway (N=5): 89.522 ± 7.358</title></path>
+<line class="err" x1="689.8" y1="204.6" x2="689.8" y2="174.9"/>
+<line class="err" x1="685.8" y1="204.6" x2="693.8" y2="204.6"/>
+<line class="err" x1="685.8" y1="174.9" x2="693.8" y2="174.9"/>
+<text x="676.8" y="388.0" text-anchor="middle">S5-ts-no-gateway (N=5)</text>
+<path class="f1" d="M824.6 370.0 V328.5 Q824.6 324.5 828.6 324.5 H844.6 Q848.6 324.5 848.6 328.5 V370.0 Z"><title>served requests, S7-ts-full (N=5): 22.600 ± 14.937</title></path>
+<line class="err" x1="836.6" y1="354.6" x2="836.6" y2="294.4"/>
+<line class="err" x1="832.6" y1="354.6" x2="840.6" y2="354.6"/>
+<line class="err" x1="832.6" y1="294.4" x2="840.6" y2="294.4"/>
+<path class="f2" d="M850.6 370.0 V328.1 Q850.6 324.1 854.6 324.1 H870.6 Q874.6 324.1 874.6 328.1 V370.0 Z"><title>shed counted as miss, S7-ts-full (N=5): 22.793 ± 15.448</title></path>
+<line class="err" x1="862.6" y1="355.2" x2="862.6" y2="293.0"/>
+<line class="err" x1="858.6" y1="355.2" x2="866.6" y2="355.2"/>
+<line class="err" x1="858.6" y1="293.0" x2="866.6" y2="293.0"/>
+<text x="849.6" y="388.0" text-anchor="middle">S7-ts-full (N=5)</text>
+<line class="axis" x1="72.0" y1="370.0" x2="936.0" y2="370.0"/>
+</svg>

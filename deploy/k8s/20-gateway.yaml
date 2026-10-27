@@ -1,0 +1,144 @@
+# The tenant-fair gateway. It discovers ready model-pool replicas from the
+# Service's EndpointSlices and dispatches to pods directly, enforcing the
+# controller's per-tenant policy. One replica: fairness state (virtual token
+# counters, queues) lives in memory.
+#
+# The gateway answers 400 to a tenant it does not know. With -k8s-service it
+# reads its tenants from the TenantScalers of its pool (tenant = resource
+# name; re-read every 30 s) when its Role may list them, and otherwise falls
+# back to the config file below; it logs which source it uses. The file
+# therefore lists the same tenants as 40-tenants.yaml (lower-case names,
+# because a TenantScaler's name is its fairness id and Kubernetes names are
+# lower case) with the same guarantees, caps, priorities and SLOs;
+# internal/k8s tests enforce it. Its pool name selects the TenantScalers.
+# Every other setting stays at the built-in default, which is what the
+# controller runs with (it has no -config), so both agree on the dispatch
+# window per replica. After editing the file's tenants:
+#   kubectl -n tenantscaler rollout restart deployment gateway
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gateway-config
+  namespace: tenantscaler
+  labels:
+    app.kubernetes.io/name: gateway
+    app.kubernetes.io/part-of: tenantscaler
+data:
+  config.yaml: |
+    pool:
+      name: shared-llm-pool
+      capacityReplicas: 10
+      minReplicas: 1
+    tenants:
+      - name: a
+        guaranteedReplicas: 3
+        maxReplicas: 8
+        priority: 100
+        slo: {ttftSeconds: 2, tpotMillis: 100, targetFraction: 0.99}
+      - name: b
+        guaranteedReplicas: 3
+        maxReplicas: 8
+        priority: 100
+        slo: {ttftSeconds: 2, tpotMillis: 100, targetFraction: 0.99}
+      - name: c
+        guaranteedReplicas: 3
+        maxReplicas: 8
+        priority: 100
+        slo: {ttftSeconds: 2, tpotMillis: 100, targetFraction: 0.99}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway
+  namespace: tenantscaler
+  labels:
+    app.kubernetes.io/name: gateway
+    app.kubernetes.io/part-of: tenantscaler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: gateway
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: gateway
+        app.kubernetes.io/part-of: tenantscaler
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: /metrics
+    spec:
+      serviceAccountName: gateway
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: gateway
+          image: tenantscaler:dev
+          imagePullPolicy: IfNotPresent
+          args:
+            - gateway
+            - -addr
+            - :8080
+            - -config
+            - /etc/tenantscaler/config.yaml
+            - -mode
+            - fair
+            - -namespace
+            - tenantscaler
+            - -k8s-service
+            - model-pool
+            - -k8s-port
+            - "8000"
+          ports:
+            - name: http
+              containerPort: 8080
+          volumeMounts:
+            - name: config
+              mountPath: /etc/tenantscaler
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 200m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+      volumes:
+        - name: config
+          configMap:
+            name: gateway-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway
+  namespace: tenantscaler
+  labels:
+    app.kubernetes.io/name: gateway
+    app.kubernetes.io/part-of: tenantscaler
+spec:
+  selector:
+    app.kubernetes.io/name: gateway
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

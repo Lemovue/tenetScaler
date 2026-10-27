@@ -1,0 +1,4762 @@
+{
+  "simulated": true,
+  "disclaimer": "SIMULATED: these numbers come from the discrete-event simulator (internal/sim), which runs the real fairq gateway scheduler, control.Core controller and autoscale HPA/KEDA code in virtual time, with replica compute replaced by the simulated engine latency model (the config's engine parameters: illustrative unless calibrated by `tenantscaler profile`; not measured inference). Real-replica results are reported separately.",
+  "scenario": "reclaim",
+  "scenarioSeconds": 480,
+  "noisy": "C",
+  "victims": [
+    "A",
+    "B"
+  ],
+  "spikeStartSeconds": 60,
+  "spikeEndSeconds": 480,
+  "runs": 10,
+  "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "defaultColdStartSeconds": 30,
+  "coldStartsSeconds": [
+    10,
+    30,
+    60,
+    120
+  ],
+  "setups": [
+    {
+      "name": "S1-cpu-hpa",
+      "gateway": "passthrough",
+      "controlPlane": "CPU-style HPA on engine slot occupancy (target 0.7)"
+    },
+    {
+      "name": "S2-keda-queue",
+      "gateway": "passthrough",
+      "controlPlane": "KEDA on total queued requests (4 per replica)"
+    },
+    {
+      "name": "S3-static-partition",
+      "gateway": "partition",
+      "controlPlane": "none: pool fixed at capacity, guarantees as shares"
+    },
+    {
+      "name": "S4-flowcontrol-equiv",
+      "gateway": "roundrobin",
+      "controlPlane": "KEDA on the gateway queue length (4 per replica)"
+    },
+    {
+      "name": "S5-ts-no-gateway",
+      "gateway": "passthrough",
+      "controlPlane": "TenantScaler controller, no gateway policy"
+    },
+    {
+      "name": "S6-ts-no-borrowing",
+      "gateway": "fair",
+      "controlPlane": "TenantScaler controller without borrowing"
+    },
+    {
+      "name": "S7-ts-full",
+      "gateway": "fair",
+      "controlPlane": "TenantScaler controller"
+    },
+    {
+      "name": "S7F-ts-full-forecast",
+      "gateway": "fair",
+      "controlPlane": "TenantScaler controller + Holt-Winters forecaster"
+    },
+    {
+      "name": "S4b-flowcontrol-outstanding",
+      "gateway": "roundrobin",
+      "controlPlane": "sensitivity variant of S4: KEDA on outstanding requests, gateway queue + dispatched (4 per replica)"
+    },
+    {
+      "name": "S7nr-ts-no-reservation",
+      "gateway": "fair",
+      "controlPlane": "sensitivity variant of S7: TenantScaler controller without slot reservation"
+    }
+  ],
+  "parameters": {
+    "capacityReplicas": 10,
+    "minReplicas": 1,
+    "initialReplicas": 6,
+    "slotsPerReplica": 8,
+    "tenants": [
+      {
+        "name": "A",
+        "guaranteedReplicas": 3,
+        "maxReplicas": 8,
+        "priority": 100,
+        "slo": {
+          "ttftSeconds": 2,
+          "tpotMillis": 100,
+          "targetFraction": 0.99
+        }
+      },
+      {
+        "name": "B",
+        "guaranteedReplicas": 3,
+        "maxReplicas": 8,
+        "priority": 100,
+        "slo": {
+          "ttftSeconds": 2,
+          "tpotMillis": 100,
+          "targetFraction": 0.99
+        }
+      },
+      {
+        "name": "C",
+        "guaranteedReplicas": 3,
+        "maxReplicas": 8,
+        "priority": 100,
+        "slo": {
+          "ttftSeconds": 2,
+          "tpotMillis": 100,
+          "targetFraction": 0.99
+        }
+      }
+    ],
+    "controller": {
+      "cycleSeconds": 15,
+      "headroom": 0.2,
+      "replicaCapacityTokensPerSec": 400,
+      "scaleDownWindowSeconds": 120,
+      "maxStepPerCycle": 4,
+      "retryAfterSeconds": 2,
+      "disableBorrowing": false,
+      "disableGatewayCoupling": false,
+      "disableSlotReservation": false,
+      "forecast": {
+        "enabled": false,
+        "bucketSeconds": 15,
+        "seasonBuckets": 8,
+        "alpha": 0.5,
+        "beta": 0.1,
+        "gamma": 0.3
+      }
+    },
+    "forecastS7F": {
+      "enabled": true,
+      "bucketSeconds": 15,
+      "seasonBuckets": 8,
+      "alpha": 0.5,
+      "beta": 0.1,
+      "gamma": 0.3
+    },
+    "engine": {
+      "prefillOverhead": "40ms",
+      "prefillPerToken": "200µs",
+      "interTokenLatency": "25ms",
+      "maxNumSeqs": 8,
+      "timeFactorUnderLoad": 2,
+      "startupDuration": "30s",
+      "jitterFraction": 0.05
+    },
+    "hpa": {
+      "target": 0.7,
+      "tolerance": 0.1,
+      "scaleDownWindowSeconds": 300,
+      "min": 1,
+      "max": 10
+    },
+    "keda": {
+      "target": 4,
+      "tolerance": 0.1,
+      "scaleDownWindowSeconds": 300,
+      "min": 1,
+      "max": 10
+    },
+    "policyDelayMs": 20,
+    "dispatchTimeoutSeconds": 120,
+    "sampleEverySeconds": 1,
+    "drainLimitSeconds": 300
+  },
+  "results": [
+    {
+      "coldStartSeconds": 10,
+      "setups": [
+        {
+          "setup": "S1-cpu-hpa",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 3505.6,
+              "Std": 91.48065976539037,
+              "CI95": 65.44131701638028,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 0.999261488608257,
+              "Std": 0.0007575562292951828,
+              "CI95": 0.0005419230412874163,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "noisy_shed_pct": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.05404337080000001,
+              "Std": 0.000668298492146668,
+              "CI95": 0.0004780719072020174,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.05447475189999999,
+              "Std": 0.00037545975538396683,
+              "CI95": 0.00026858770959881605,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.0544287446,
+              "Std": 0.00017367953121782848,
+              "CI95": 0.000124242843141171,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 2.9706440209000005,
+              "Std": 1.0727047130273428,
+              "CI95": 0.767366669307143,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 5.6248607353,
+              "Std": 1.9749657158723402,
+              "CI95": 1.4128052622307485,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 6.2687550863,
+              "Std": 2.1082016663631786,
+              "CI95": 1.508116512678774,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "reaction_time_s": {
+              "Mean": 28.5,
+              "Std": 4.743416490252569,
+              "CI95": 3.3932355000000003,
+              "N": 10
+            },
+            "reclaim_latency_s": {
+              "Mean": 57.3865743555,
+              "Std": 46.36422702612391,
+              "CI95": 33.16696760623821,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 72.3,
+              "Std": 1.3059692016106488,
+              "CI95": 0.9342340201241642,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 6.29713280611351,
+              "Std": 2.769038645555021,
+              "CI95": 1.980850775443696,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 6.29713280611351,
+              "Std": 2.769038645555021,
+              "CI95": 1.980850775443696,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S2-keda-queue",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 3505.6,
+              "Std": 91.48065976539037,
+              "CI95": 65.44131701638028,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 0.9985796337807725,
+              "Std": 0.0013481801503617157,
+              "CI95": 0.0009644299116477388,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "noisy_shed_pct": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.05469434000000001,
+              "Std": 0.0005746395605387982,
+              "CI95": 0.00041107234849217827,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.05473249429999999,
+              "Std": 0.00023011661161055307,
+              "CI95": 0.00016461549544747315,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.055059643299999995,
+              "Std": 0.00016174767202518442,
+              "CI95": 0.00011570730588091131,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 31.759483485600004,
+              "Std": 53.5196536635428,
+              "CI95": 38.2856510981115,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 29.371602371900003,
+              "Std": 47.63760160055676,
+              "CI95": 34.077884836391206,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 30.7979542831,
+              "Std": 51.41035741415556,
+              "CI95": 36.776751567963665,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "reaction_time_s": {
+              "Mean": 48,
+              "Std": 22.135943621178654,
+              "CI95": 15.835099,
+              "N": 10
+            },
+            "reclaim_latency_s": {
+              "Mean": 71.81337915840001,
+              "Std": 51.495991389843,
+              "CI95": 36.83801041944884,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 68.62,
+              "Std": 2.500256776936579,
+              "CI95": 1.7885758233650366,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 20.825544493424516,
+              "Std": 5.628826255821306,
+              "CI95": 4.0266194448314065,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 20.825544493424516,
+              "Std": 5.628826255821306,
+              "CI95": 4.0266194448314065,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S3-static-partition",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 3145.2,
+              "Std": 67.93428196916979,
+              "CI95": 48.597254261458005,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 360.4,
+              "Std": 100.69558083649949,
+              "CI95": 72.03327396817656,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 0.6807277288624485,
+              "Std": 0.00408494543424222,
+              "CI95": 0.0029221937166001547,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "noisy_shed_pct": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.036350726400000005,
+              "Std": 0.0011332232446139552,
+              "CI95": 0.0008106590157012565,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.0512666504,
+              "Std": 0.0008946333176544321,
+              "CI95": 0.0006399820760386479,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.055799422,
+              "Std": 0.00021606899722285231,
+              "CI95": 0.00015456643820600818,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 0.2895529823,
+              "Std": 0.014324567795404286,
+              "CI95": 0.010247177760039881,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 0.5528076183999999,
+              "Std": 0.21509065255898968,
+              "CI95": 0.15386657264466097,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 120.20888022669999,
+              "Std": 0.035547657019531435,
+              "CI95": 0.025429260109958347,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "reaction_time_s": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "reclaim_latency_s": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 80,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 0.033115740554190004,
+              "Std": 0.08055622289232513,
+              "CI95": 0.057626446217796834,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 0.033115740554190004,
+              "Std": 0.08055622289232513,
+              "CI95": 0.057626446217796834,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S4-flowcontrol-equiv",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 2878.5,
+              "Std": 148.6025646556015,
+              "CI95": 106.30386322108166,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 0.9976158643531929,
+              "Std": 0.001395253230930732,
+              "CI95": 0.0009981039624947139,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "noisy_shed_pct": {
+              "Mean": 28.08442223583618,
+              "Std": 6.662181163901211,
+              "CI95": 4.765836961446581,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.0555427606,
+              "Std": 0.0009126274945073218,
+              "CI95": 0.0006528543337912562,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.055094894400000004,
+              "Std": 0.0004096245923767546,
+              "CI95": 0.0002930277599241182,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.0549128856,
+              "Std": 0.0003186552182689693,
+              "CI95": 0.0002279521946075078,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 14.050810213699998,
+              "Std": 5.861132249497976,
+              "CI95": 4.192801129746972,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 13.2023558031,
+              "Std": 5.5109894027918145,
+              "CI95": 3.9423240443053054,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 7.652914976000001,
+              "Std": 2.46140008681527,
+              "CI95": 1.7607794237439895,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "reaction_time_s": {
+              "Mean": 275,
+              "Std": 15,
+              "CI95": 11.53002,
+              "N": 9
+            },
+            "reclaim_latency_s": {
+              "Mean": 100.51231932510001,
+              "Std": 35.587254044495104,
+              "CI95": 25.457586113183492,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 51.975,
+              "Std": 4.282805487003369,
+              "CI95": 3.0637342615724674,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 627.1,
+              "Std": 155.76010757286704,
+              "CI95": 111.42406060824928,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 11.425443360004168,
+              "Std": 2.4729402367907016,
+              "CI95": 1.7690347491307499,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 10.411789716116349,
+              "Std": 2.385178946975509,
+              "CI95": 1.706254108902625,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S5-ts-no-gateway",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 3505.6,
+              "Std": 91.48065976539037,
+              "CI95": 65.44131701638028,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 0.9999485080018694,
+              "Std": 0.00008372342400753154,
+              "CI95": 0.00005989212524510607,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "noisy_shed_pct": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.0539935028,
+              "Std": 0.0006116788964301084,
+              "CI95": 0.0004375686913077605,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.0537043959,
+              "Std": 0.0004619768784265793,
+              "CI95": 0.0003304783265980476,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.0536946705,
+              "Std": 0.0002977375379118886,
+              "CI95": 0.00021298858858405284,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 2.5674965643,
+              "Std": 1.2090334901194377,
+              "CI95": 0.8648903944641241,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 2.163939821,
+              "Std": 0.8745381153734502,
+              "CI95": 0.6256068353445974,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 2.2349797764,
+              "Std": 0.786614257832287,
+              "CI95": 0.562709901179381,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "reaction_time_s": {
+              "Mean": 13.5,
+              "Std": 4.743416490252569,
+              "CI95": 3.3932355000000003,
+              "N": 10
+            },
+            "reclaim_latency_s": {
+              "Mean": 52.9392493411,
+              "Std": 47.116850297828194,
+              "CI95": 33.705361822500066,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 76.925,
+              "Std": 0.6977145229644826,
+              "CI95": 0.49911486647941106,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 1.7227520747194056,
+              "Std": 1.6935152794178563,
+              "CI95": 1.2114677633140138,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 1.7227520747194056,
+              "Std": 1.6935152794178563,
+              "CI95": 1.2114677633140138,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S6-ts-no-borrowing",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 2973.1,
+              "Std": 59.789352452310986,
+              "CI95": 42.77072310224042,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 0.9999981320545739,
+              "Std": 0.0000030625878407083504,
+              "CI95": 0.0000021908432043264625,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": 245.6568887954767,
+              "Std": 408.8181320309323,
+              "CI95": 292.4508529878604,
+              "N": 10
+            },
+            "noisy_shed_pct": {
+              "Mean": 24.013500993400207,
+              "Std": 2.1130450325088406,
+              "CI95": 1.511581247849875,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.049757779099999996,
+              "Std": 0.0014349180290876428,
+              "CI95": 0.0010264784477381967,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.051427598500000005,
+              "Std": 0.001107344239685329,
+              "CI95": 0.0007921462921382001,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.05062113079999999,
+              "Std": 0.000994043640613407,
+              "CI95": 0.0007110959319743507,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 0.399601757,
+              "Std": 0.03437440439798673,
+              "CI95": 0.02458996580508874,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 0.5566681520000001,
+              "Std": 0.3093280258684544,
+              "CI95": 0.22127992359065848,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 2.0326800995,
+              "Std": 0.2389607598783308,
+              "CI95": 0.17094221753294808,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": 20,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "reaction_time_s": {
+              "Mean": 13.516,
+              "Std": 4.742018323222483,
+              "CI95": 3.392235311631307,
+              "N": 10
+            },
+            "reclaim_latency_s": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 62.45,
+              "Std": 0.6324555320336759,
+              "CI95": 0.45243140000000004,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 532.5,
+              "Std": 70.42766186347205,
+              "CI95": 50.38091065969307,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 0.574712621895302,
+              "Std": 0.20056931033885533,
+              "CI95": 0.14347863095110222,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 0.016863406408094438,
+              "Std": 0.05332677335865733,
+              "CI95": 0.03814767284991569,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S7-ts-full",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 3322.2,
+              "Std": 73.05370931338425,
+              "CI95": 52.25947170320203,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 1,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "noisy_shed_pct": {
+              "Mean": 8.285286675018307,
+              "Std": 1.9698749011492018,
+              "CI95": 1.4091635130236164,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.0466158228,
+              "Std": 0.0012467367342279153,
+              "CI95": 0.0008918616685736088,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.047350883899999995,
+              "Std": 0.0014015086128340776,
+              "CI95": 0.001002578792816721,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.047155726800000006,
+              "Std": 0.0010577142081027373,
+              "CI95": 0.00075664310885707,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 0.37698589039999997,
+              "Std": 0.035529339936807174,
+              "CI95": 0.025416156859277294,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 0.38184385630000006,
+              "Std": 0.03223861623987308,
+              "CI95": 0.023062115106444948,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 0.8965968750000002,
+              "Std": 0.12984424718319132,
+              "CI95": 0.09288497223850564,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": 20,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "reaction_time_s": {
+              "Mean": 13.5,
+              "Std": 4.743416490252569,
+              "CI95": 3.3932355000000003,
+              "N": 10
+            },
+            "reclaim_latency_s": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 76.925,
+              "Std": 0.6977145229644826,
+              "CI95": 0.49911486647941106,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 183.4,
+              "Std": 52.29234063310695,
+              "CI95": 37.40768430918512,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 0.10134507506472908,
+              "Std": 0.07818594016038503,
+              "CI95": 0.05593084821842575,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S7F-ts-full-forecast",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 3311.6,
+              "Std": 68.83506858184036,
+              "CI95": 49.24163813926414,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 1,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "noisy_shed_pct": {
+              "Mean": 8.728630698454271,
+              "Std": 1.811374214283192,
+              "CI95": 1.2957789602327456,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.0463573902,
+              "Std": 0.0013129804968032587,
+              "CI95": 0.0009392495981990459,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.0472554743,
+              "Std": 0.0014265763044675286,
+              "CI95": 0.0010205111378529354,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.0471624308,
+              "Std": 0.00106827937347013,
+              "CI95": 0.000764200972321448,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 0.37131818110000003,
+              "Std": 0.03859809034360216,
+              "CI95": 0.027611408497495077,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 0.3844400501,
+              "Std": 0.04013756391845455,
+              "CI95": 0.028712681471570956,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 0.8954642080000002,
+              "Std": 0.13178870183123678,
+              "CI95": 0.09427595119922864,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": 20,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "reaction_time_s": {
+              "Mean": 13.5,
+              "Std": 4.743416490252569,
+              "CI95": 3.3932355000000003,
+              "N": 10
+            },
+            "reclaim_latency_s": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 76.925,
+              "Std": 0.6977145229644826,
+              "CI95": 0.49911486647941106,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 194,
+              "Std": 50.1021179414825,
+              "CI95": 35.84089349387345,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 0.17717801386110263,
+              "Std": 0.12098667575187179,
+              "CI95": 0.08654864780098216,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S4b-flowcontrol-outstanding",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 3475.2,
+              "Std": 85.45798187803564,
+              "CI95": 61.132953107279626,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 0.9999999871480988,
+              "Std": 4.064128015703895e-8,
+              "CI95": 2.9073018335559908e-8,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "noisy_shed_pct": {
+              "Mean": 1.3581881900941821,
+              "Std": 0.6971029412389492,
+              "CI95": 0.4986773672999703,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.0515617415,
+              "Std": 0.0012540537283989826,
+              "CI95": 0.0008970959305081405,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.0519555149,
+              "Std": 0.0006576581879641748,
+              "CI95": 0.00047046029267121915,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.05205931109999999,
+              "Std": 0.0007185866193644699,
+              "CI95": 0.0005140458637067044,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 0.44241402380000006,
+              "Std": 0.0704628530942545,
+              "CI95": 0.050406084947851204,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 0.5313572271999999,
+              "Std": 0.26647169176436486,
+              "CI95": 0.19062235123101223,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 0.4303374240999999,
+              "Std": 0.026170385723996877,
+              "CI95": 0.01872116481229145,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "reaction_time_s": {
+              "Mean": 15,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "reclaim_latency_s": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 74.975,
+              "Std": 0.07905694150420949,
+              "CI95": 0.056553925000000005,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 30.4,
+              "Std": 16.587813465178453,
+              "CI95": 11.866206063306178,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 0.10962728684263445,
+              "Std": 0.26167528091845593,
+              "CI95": 0.18719120585544421,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 0.07531380753138076,
+              "Std": 0.23816317105870638,
+              "CI95": 0.17037165690376568,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S7nr-ts-no-reservation",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 3492.5,
+              "Std": 85.09635062027566,
+              "CI95": 60.87425770824342,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 1,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": 63.389352431616445,
+              "Std": 117.00030956882486,
+              "CI95": 108.20724543928354,
+              "N": 7
+            },
+            "noisy_shed_pct": {
+              "Mean": 0.5859151548606999,
+              "Std": 0.5249292993855544,
+              "CI95": 0.3755117724377496,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.0514721883,
+              "Std": 0.001750688222853201,
+              "CI95": 0.0012523668202918195,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.05108088239999999,
+              "Std": 0.0013021586895203574,
+              "CI95": 0.0009315081441812597,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.0514884949,
+              "Std": 0.0012258889175908636,
+              "CI95": 0.0008769480400411567,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 0.4235696356,
+              "Std": 0.04075844548271265,
+              "CI95": 0.029156833354389063,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 0.38411011009999996,
+              "Std": 0.022588636787116794,
+              "CI95": 0.016158936159234333,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 0.4059555918,
+              "Std": 0.01853258590073313,
+              "CI95": 0.013257412355502167,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": 20,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "reaction_time_s": {
+              "Mean": 13.5,
+              "Std": 4.743416490252569,
+              "CI95": 3.3932355000000003,
+              "N": 10
+            },
+            "reclaim_latency_s": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 76.925,
+              "Std": 0.6977145229644826,
+              "CI95": 0.49911486647941106,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 13.1,
+              "Std": 12.114729327007957,
+              "CI95": 8.666354664358318,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            }
+          }
+        }
+      ]
+    },
+    {
+      "coldStartSeconds": 30,
+      "setups": [
+        {
+          "setup": "S1-cpu-hpa",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 3505.6,
+              "Std": 91.48065976539037,
+              "CI95": 65.44131701638028,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 0.9974811264338911,
+              "Std": 0.0026512312312174414,
+              "CI95": 0.0018965764340876411,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "noisy_shed_pct": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.054193084200000005,
+              "Std": 0.0007821104379314266,
+              "CI95": 0.000559488062741915,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.054576740400000004,
+              "Std": 0.00046083802211386833,
+              "CI95": 0.00032966363792847134,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.054675644499999995,
+              "Std": 0.00018815622036030924,
+              "CI95": 0.0001345988419495562,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 3.4018859640000003,
+              "Std": 1.4001750369197439,
+              "CI95": 1.0016248101454204,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 9.0473462418,
+              "Std": 4.241064951654979,
+              "CI95": 3.033874883500942,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 9.1569040577,
+              "Std": 4.342251772939256,
+              "CI95": 3.1062595696906383,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "reaction_time_s": {
+              "Mean": 28.5,
+              "Std": 4.743416490252569,
+              "CI95": 3.3932355000000003,
+              "N": 10
+            },
+            "reclaim_latency_s": {
+              "Mean": 55.8854935953,
+              "Std": 44.304594682142245,
+              "CI95": 31.693595491242952,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 71.85,
+              "Std": 1.1130538571375999,
+              "CI95": 0.7962307061191941,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 10.185861499038861,
+              "Std": 4.136580124999664,
+              "CI95": 2.9591309465629307,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 10.185861499038861,
+              "Std": 4.136580124999664,
+              "CI95": 2.9591309465629307,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S2-keda-queue",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 3505.6,
+              "Std": 91.48065976539037,
+              "CI95": 65.44131701638028,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 0.9954225625544136,
+              "Std": 0.0037305322079917947,
+              "CI95": 0.0026686617858802273,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "noisy_shed_pct": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.05482318469999999,
+              "Std": 0.0005698293460246681,
+              "CI95": 0.00040763132856793115,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.0548529069,
+              "Std": 0.00035108264989677974,
+              "CI95": 0.0002511493800959468,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.055132934099999996,
+              "Std": 0.00015027710628587294,
+              "CI95": 0.00010750175805442411,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 17.202721764699998,
+              "Std": 13.806376836356142,
+              "CI95": 9.876486305550381,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 19.357543467999996,
+              "Std": 10.722580181505858,
+              "CI95": 7.670471230651897,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 19.791543515100003,
+              "Std": 10.84657231464989,
+              "CI95": 7.759169852999237,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "reaction_time_s": {
+              "Mean": 48,
+              "Std": 22.135943621178654,
+              "CI95": 15.835099,
+              "N": 10
+            },
+            "reclaim_latency_s": {
+              "Mean": 73.5022200619,
+              "Std": 52.31622371280309,
+              "CI95": 37.42476923395206,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 68.89,
+              "Std": 2.767471993456826,
+              "CI95": 1.979730060126652,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 24.70025156209352,
+              "Std": 8.486803626684173,
+              "CI95": 6.071093147053616,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 24.70025156209352,
+              "Std": 8.486803626684173,
+              "CI95": 6.071093147053616,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S3-static-partition",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 3145.2,
+              "Std": 67.93428196916979,
+              "CI95": 48.597254261458005,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 360.4,
+              "Std": 100.69558083649949,
+              "CI95": 72.03327396817656,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 0.6807277288624485,
+              "Std": 0.00408494543424222,
+              "CI95": 0.0029221937166001547,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "noisy_shed_pct": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.036350726400000005,
+              "Std": 0.0011332232446139552,
+              "CI95": 0.0008106590157012565,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.0512666504,
+              "Std": 0.0008946333176544321,
+              "CI95": 0.0006399820760386479,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.055799422,
+              "Std": 0.00021606899722285231,
+              "CI95": 0.00015456643820600818,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 0.2895529823,
+              "Std": 0.014324567795404286,
+              "CI95": 0.010247177760039881,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 0.5528076183999999,
+              "Std": 0.21509065255898968,
+              "CI95": 0.15386657264466097,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 120.20888022669999,
+              "Std": 0.035547657019531435,
+              "CI95": 0.025429260109958347,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "reaction_time_s": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "reclaim_latency_s": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 80,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 0.033115740554190004,
+              "Std": 0.08055622289232513,
+              "CI95": 0.057626446217796834,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 0.033115740554190004,
+              "Std": 0.08055622289232513,
+              "CI95": 0.057626446217796834,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S4-flowcontrol-equiv",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 2858.9,
+              "Std": 106.79830418961613,
+              "CI95": 76.39889894988079,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 0.9936252297996034,
+              "Std": 0.0032639492571024343,
+              "CI95": 0.002334888473773655,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "noisy_shed_pct": {
+              "Mean": 28.91163398951607,
+              "Std": 4.826630310785655,
+              "CI95": 3.4527630769065896,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.0555484388,
+              "Std": 0.0007607294567312509,
+              "CI95": 0.0005441930312846613,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.05510546040000001,
+              "Std": 0.0003889282450653339,
+              "CI95": 0.0002782224860120011,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.05489607030000001,
+              "Std": 0.0002386408339567368,
+              "CI95": 0.00017071335633200697,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 26.124745588899998,
+              "Std": 12.146383738931497,
+              "CI95": 8.688998864902652,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 25.7949362483,
+              "Std": 11.041805707827136,
+              "CI95": 7.898831399033794,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 19.3382726681,
+              "Std": 9.13508382516454,
+              "CI95": 6.5348448306662625,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "reaction_time_s": {
+              "Mean": 275,
+              "Std": 15,
+              "CI95": 11.53002,
+              "N": 9
+            },
+            "reclaim_latency_s": {
+              "Mean": 107.2435027062,
+              "Std": 37.687707155679604,
+              "CI95": 26.960159643802807,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 54.675,
+              "Std": 4.279885844214325,
+              "CI95": 3.0616456750906647,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 646.7,
+              "Std": 122.95622527279102,
+              "CI95": 87.95757855102795,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 17.515475018387416,
+              "Std": 3.195912294170659,
+              "CI95": 2.2862177659817715,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 16.534299821875326,
+              "Std": 3.2982723018505054,
+              "CI95": 2.3594416991011324,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S5-ts-no-gateway",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 3505.6,
+              "Std": 91.48065976539037,
+              "CI95": 65.44131701638028,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 0.99995957574986,
+              "Std": 0.00006047296862478592,
+              "CI95": 0.00004325975261706014,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "noisy_shed_pct": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.0539935028,
+              "Std": 0.0006116788964301084,
+              "CI95": 0.0004375686913077605,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.0537831381,
+              "Std": 0.0002872188427088121,
+              "CI95": 0.00020546396787024778,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.0538064305,
+              "Std": 0.0003123703343708307,
+              "CI95": 0.00022345625983130455,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 2.5678112681000003,
+              "Std": 1.2086640938112319,
+              "CI95": 0.864626144283026,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 2.3365828467,
+              "Std": 0.8734748473807784,
+              "CI95": 0.6248462192978805,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 2.5132882595999995,
+              "Std": 0.7730458001146392,
+              "CI95": 0.5530036119462127,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "reaction_time_s": {
+              "Mean": 13.5,
+              "Std": 4.743416490252569,
+              "CI95": 3.3932355000000003,
+              "N": 10
+            },
+            "reclaim_latency_s": {
+              "Mean": 52.9392493411,
+              "Std": 47.116850297828194,
+              "CI95": 33.705361822500066,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 76.925,
+              "Std": 0.6977145229644826,
+              "CI95": 0.49911486647941106,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 1.941084210157038,
+              "Std": 1.689516815950305,
+              "CI95": 1.2086074350650757,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 1.941084210157038,
+              "Std": 1.689516815950305,
+              "CI95": 1.2086074350650757,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S6-ts-no-borrowing",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 2952.2,
+              "Std": 65.27514415491125,
+              "CI95": 46.69502179899633,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 0.9999938348474195,
+              "Std": 0.000010070727091244414,
+              "CI95": 0.0000072041636544133056,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": 528.9951909508934,
+              "Std": 624.3733940345498,
+              "CI95": 446.64978718339637,
+              "N": 10
+            },
+            "noisy_shed_pct": {
+              "Mean": 24.917075525878953,
+              "Std": 2.2601396254028647,
+              "CI95": 1.6168063731349358,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.0509477536,
+              "Std": 0.001398682076540563,
+              "CI95": 0.0010005568107046923,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.052041245500000013,
+              "Std": 0.0007325921309554419,
+              "CI95": 0.0005240648024239364,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.051002789400000005,
+              "Std": 0.0009889137474175264,
+              "CI95": 0.0007074262277138794,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 0.40364542800000003,
+              "Std": 0.03957459549905522,
+              "CI95": 0.028309958153892614,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 0.5805664482,
+              "Std": 0.2357134178230025,
+              "CI95": 0.16861920913479744,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 2.1695378888,
+              "Std": 0.47302705909388604,
+              "CI95": 0.33838314908175116,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": 20,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "reaction_time_s": {
+              "Mean": 13.516,
+              "Std": 4.742018323222483,
+              "CI95": 3.392235311631307,
+              "N": 10
+            },
+            "reclaim_latency_s": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 62.45,
+              "Std": 0.6324555320336759,
+              "CI95": 0.45243140000000004,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 553.4,
+              "Std": 71.44259544868486,
+              "CI95": 51.1069503567265,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 0.6730319690420128,
+              "Std": 0.16953393421752527,
+              "CI95": 0.12127726191105362,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 0.008424599831508003,
+              "Std": 0.02664092384303605,
+              "CI95": 0.019057767481044652,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S7-ts-full",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 3316.8,
+              "Std": 70.39223442018776,
+              "CI95": 50.35556739530262,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 1,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": 18.58227220088447,
+              "Std": 58.40179567863023,
+              "CI95": 41.77812485319476,
+              "N": 10
+            },
+            "noisy_shed_pct": {
+              "Mean": 8.525881039107698,
+              "Std": 2.041790387498056,
+              "CI95": 1.4606087491272048,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.046590354099999995,
+              "Std": 0.0011694344536437216,
+              "CI95": 0.0008365629522900466,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.0482776271,
+              "Std": 0.0016461315113840858,
+              "CI95": 0.0011775714600595227,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.048306945500000004,
+              "Std": 0.0016139913088569695,
+              "CI95": 0.001154579745877074,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 0.3887253189,
+              "Std": 0.046158429332723905,
+              "CI95": 0.033019748815626415,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 0.4103158711,
+              "Std": 0.04814589794946312,
+              "CI95": 0.034441498113693285,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 0.9596755503000001,
+              "Std": 0.19056492281149157,
+              "CI95": 0.13632192375843477,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": 20,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "reaction_time_s": {
+              "Mean": 13.5,
+              "Std": 4.743416490252569,
+              "CI95": 3.3932355000000003,
+              "N": 10
+            },
+            "reclaim_latency_s": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 76.925,
+              "Std": 0.6977145229644826,
+              "CI95": 0.49911486647941106,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 188.8,
+              "Std": 54.88533501765294,
+              "CI95": 39.26260061582249,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 0.10116370377178845,
+              "Std": 0.10212581953736675,
+              "CI95": 0.0730564050263979,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S7F-ts-full-forecast",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 3307.6,
+              "Std": 72.82429387078035,
+              "CI95": 52.09535779380963,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 1,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": 18.58227220088447,
+              "Std": 58.40179567863023,
+              "CI95": 41.77812485319476,
+              "N": 10
+            },
+            "noisy_shed_pct": {
+              "Mean": 8.915161697544399,
+              "Std": 1.9067580303347846,
+              "CI95": 1.3640124268526042,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.04652230519999999,
+              "Std": 0.0011875883764669944,
+              "CI95": 0.0008495494854175456,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.0482332632,
+              "Std": 0.0016969242886648902,
+              "CI95": 0.0012139064214458971,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.048255855800000004,
+              "Std": 0.0016716945553426924,
+              "CI95": 0.0011958581587769245,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 0.38696966769999996,
+              "Std": 0.04610543730990626,
+              "CI95": 0.032981840608870557,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 0.41624161149999994,
+              "Std": 0.05236273515743221,
+              "CI95": 0.03745804151467971,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 0.9888235619,
+              "Std": 0.18893844397364673,
+              "CI95": 0.1351584109731006,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": 20,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "reaction_time_s": {
+              "Mean": 13.5,
+              "Std": 4.743416490252569,
+              "CI95": 3.3932355000000003,
+              "N": 10
+            },
+            "reclaim_latency_s": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 76.925,
+              "Std": 0.6977145229644826,
+              "CI95": 0.49911486647941106,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 198,
+              "Std": 52.654006917275005,
+              "CI95": 37.66640476460243,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 0.1695574573102018,
+              "Std": 0.1473967416870499,
+              "CI95": 0.10544126949522757,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S4b-flowcontrol-outstanding",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 3451.3,
+              "Std": 80.19289245313452,
+              "CI95": 57.36653529767721,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 0.999999987582654,
+              "Std": 3.926709608712801e-8,
+              "CI95": 2.8089986341819035e-8,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "noisy_shed_pct": {
+              "Mean": 2.435425528577073,
+              "Std": 0.8790857575962547,
+              "CI95": 0.6288600223804458,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.0514006317,
+              "Std": 0.0013218347403555783,
+              "CI95": 0.000945583542015516,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.0525492783,
+              "Std": 0.0006127006886736139,
+              "CI95": 0.00043829963739301626,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.0526050421,
+              "Std": 0.0007056233988825375,
+              "CI95": 0.0005047725350786974,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 0.4321049062,
+              "Std": 0.06265648391897567,
+              "CI95": 0.0448217452496411,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 0.6710829442999999,
+              "Std": 0.3002990506973621,
+              "CI95": 0.21482098431300342,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 0.48472614849999995,
+              "Std": 0.05851817998006785,
+              "CI95": 0.04186138116098311,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "reaction_time_s": {
+              "Mean": 15,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "reclaim_latency_s": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 74.975,
+              "Std": 0.07905694150420949,
+              "CI95": 0.056553925000000005,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 54.3,
+              "Std": 20.987033033650935,
+              "CI95": 15.013217936016657,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 0.14193923110563755,
+              "Std": 0.22314756314967898,
+              "CI95": 0.15963013886171842,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 0.08367543595190935,
+              "Std": 0.23649064724204064,
+              "CI95": 0.16917520552721715,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S7nr-ts-no-reservation",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 3490.2,
+              "Std": 82.49013409021848,
+              "CI95": 59.00988284918356,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 1,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": 64.7459465045956,
+              "Std": 116.86290798525816,
+              "CI95": 108.08017016117925,
+              "N": 7
+            },
+            "noisy_shed_pct": {
+              "Mean": 0.6777673386387814,
+              "Std": 0.6154939111621772,
+              "CI95": 0.44029778824632376,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.0518318462,
+              "Std": 0.0010630251057013144,
+              "CI95": 0.0007604422958577033,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.0513704787,
+              "Std": 0.0009605622583916442,
+              "CI95": 0.0006871447957042348,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.051917991899999995,
+              "Std": 0.0009832259152840208,
+              "CI95": 0.0007033573980099912,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 0.4266678644999999,
+              "Std": 0.04557075889644065,
+              "CI95": 0.03259935474085044,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 0.42045943680000003,
+              "Std": 0.04950988856465931,
+              "CI95": 0.03541723814973302,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 0.4167939775000001,
+              "Std": 0.02387486359747348,
+              "CI95": 0.017079047324450966,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": 20,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "reaction_time_s": {
+              "Mean": 13.5,
+              "Std": 4.743416490252569,
+              "CI95": 3.3932355000000003,
+              "N": 10
+            },
+            "reclaim_latency_s": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 76.925,
+              "Std": 0.6977145229644826,
+              "CI95": 0.49911486647941106,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 15.4,
+              "Std": 14.299961149908377,
+              "CI95": 10.229575227518394,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 0.016528666394370978,
+              "Std": 0.03488106717144233,
+              "CI95": 0.02495241049299478,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            }
+          }
+        }
+      ]
+    },
+    {
+      "coldStartSeconds": 60,
+      "setups": [
+        {
+          "setup": "S1-cpu-hpa",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 3505.6,
+              "Std": 91.48065976539037,
+              "CI95": 65.44131701638028,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 0.9916300339738076,
+              "Std": 0.009744967438732155,
+              "CI95": 0.006971129254072592,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "noisy_shed_pct": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.054445266400000004,
+              "Std": 0.0010473297400532663,
+              "CI95": 0.0007492145084576553,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.05480710009999999,
+              "Std": 0.00042498969034853644,
+              "CI95": 0.00030401928807813274,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.0550282001,
+              "Std": 0.00017654146521706754,
+              "CI95": 0.00012629014724462278,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 4.9861903758,
+              "Std": 3.2796959083739528,
+              "CI95": 2.3461529486959893,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 12.3330368629,
+              "Std": 5.6163228546716475,
+              "CI95": 4.017675051114568,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 12.118507161500002,
+              "Std": 5.32832671620779,
+              "CI95": 3.8116550393979827,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "reaction_time_s": {
+              "Mean": 28.5,
+              "Std": 4.743416490252569,
+              "CI95": 3.3932355000000003,
+              "N": 10
+            },
+            "reclaim_latency_s": {
+              "Mean": 65.6409722106,
+              "Std": 47.41669892159031,
+              "CI95": 33.9198605908175,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 72,
+              "Std": 0.8819171036881969,
+              "CI95": 0.6308854452147482,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 15.649565270454763,
+              "Std": 6.6401200536153056,
+              "CI95": 4.750055394985913,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 15.649565270454763,
+              "Std": 6.6401200536153056,
+              "CI95": 4.750055394985913,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S2-keda-queue",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 3505.6,
+              "Std": 91.48065976539037,
+              "CI95": 65.44131701638028,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 0.989050666041113,
+              "Std": 0.009312554136192249,
+              "CI95": 0.006661799434128293,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "noisy_shed_pct": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.054430539,
+              "Std": 0.0008777337915027417,
+              "CI95": 0.0006278928841684142,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.0550411737,
+              "Std": 0.0003999013914229496,
+              "CI95": 0.0002860722014742364,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.05517738940000001,
+              "Std": 0.00021907444174181715,
+              "CI95": 0.00015671640354343713,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 13.8020137556,
+              "Std": 12.12662809799491,
+              "CI95": 8.674866531743833,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 20.0202445593,
+              "Std": 8.198992241310712,
+              "CI95": 5.865205299726634,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 19.691163165899997,
+              "Std": 7.839766531903384,
+              "CI95": 5.608230726193302,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "reaction_time_s": {
+              "Mean": 48,
+              "Std": 22.135943621178654,
+              "CI95": 15.835099,
+              "N": 10
+            },
+            "reclaim_latency_s": {
+              "Mean": 78.6451274133,
+              "Std": 45.39478681472153,
+              "CI95": 32.473471905993904,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 69.97333333333333,
+              "Std": 3.0151387577348845,
+              "CI95": 2.1569001775821595,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 25.888004095741145,
+              "Std": 12.268858856610501,
+              "CI95": 8.776612279838718,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 25.888004095741145,
+              "Std": 12.268858856610501,
+              "CI95": 8.776612279838718,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S3-static-partition",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 3145.2,
+              "Std": 67.93428196916979,
+              "CI95": 48.597254261458005,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 360.4,
+              "Std": 100.69558083649949,
+              "CI95": 72.03327396817656,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 0.6807277288624485,
+              "Std": 0.00408494543424222,
+              "CI95": 0.0029221937166001547,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "noisy_shed_pct": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.036350726400000005,
+              "Std": 0.0011332232446139552,
+              "CI95": 0.0008106590157012565,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.0512666504,
+              "Std": 0.0008946333176544321,
+              "CI95": 0.0006399820760386479,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.055799422,
+              "Std": 0.00021606899722285231,
+              "CI95": 0.00015456643820600818,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 0.2895529823,
+              "Std": 0.014324567795404286,
+              "CI95": 0.010247177760039881,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 0.5528076183999999,
+              "Std": 0.21509065255898968,
+              "CI95": 0.15386657264466097,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 120.20888022669999,
+              "Std": 0.035547657019531435,
+              "CI95": 0.025429260109958347,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "reaction_time_s": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "reclaim_latency_s": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 80,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 0.033115740554190004,
+              "Std": 0.08055622289232513,
+              "CI95": 0.057626446217796834,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 0.033115740554190004,
+              "Std": 0.08055622289232513,
+              "CI95": 0.057626446217796834,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S4-flowcontrol-equiv",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 2722.9,
+              "Std": 59.90817046855036,
+              "CI95": 42.85572038459407,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 0.9821378824277979,
+              "Std": 0.009604363415812927,
+              "CI95": 0.006870547202508544,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "noisy_shed_pct": {
+              "Mean": 34.91528194903618,
+              "Std": 3.0066048434643893,
+              "CI95": 2.1507953835131364,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.0556594649,
+              "Std": 0.0006673457730889265,
+              "CI95": 0.00047739037309365933,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.055222401600000005,
+              "Std": 0.000363817330090924,
+              "CI95": 0.00026025922086255767,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.0550674401,
+              "Std": 0.00020543591963727076,
+              "CI95": 0.00014695999327084532,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 42.1656448318,
+              "Std": 21.91917223845405,
+              "CI95": 15.68003010551082,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 43.194809404699996,
+              "Std": 20.16404204044528,
+              "CI95": 14.424485687843992,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 36.1601052035,
+              "Std": 18.606944696150567,
+              "CI95": 13.310605429495602,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "reaction_time_s": {
+              "Mean": 275,
+              "Std": 15,
+              "CI95": 11.53002,
+              "N": 9
+            },
+            "reclaim_latency_s": {
+              "Mean": 107.2567757005,
+              "Std": 37.69245713138262,
+              "CI95": 26.963557571480614,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 54.675,
+              "Std": 4.279885844214325,
+              "CI95": 3.0616456750906647,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 782.7,
+              "Std": 95.57550825278294,
+              "CI95": 68.37059494993191,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 26.663985867655253,
+              "Std": 5.689230064748536,
+              "CI95": 4.069829723584765,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 25.49434388875212,
+              "Std": 5.893704939357055,
+              "CI95": 4.216102226706821,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S5-ts-no-gateway",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 3505.6,
+              "Std": 91.48065976539037,
+              "CI95": 65.44131701638028,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 0.9994674336209435,
+              "Std": 0.000803175747650652,
+              "CI95": 0.0005745572764415041,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "noisy_shed_pct": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.054008296600000005,
+              "Std": 0.0006063028254879824,
+              "CI95": 0.00043372288210908965,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.05419106389999999,
+              "Std": 0.0003525616303300595,
+              "CI95": 0.00025220737888654915,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.0542169443,
+              "Std": 0.00032602883846441467,
+              "CI95": 0.00023322696435672073,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 2.6687127767000005,
+              "Std": 1.128574118029077,
+              "CI95": 0.8073332311313752,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 4.399031988,
+              "Std": 2.3727630708457013,
+              "CI95": 1.6973723268086764,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 4.4486294634,
+              "Std": 2.2348684474852707,
+              "CI95": 1.598728462790565,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "reaction_time_s": {
+              "Mean": 13.5,
+              "Std": 4.743416490252569,
+              "CI95": 3.3932355000000003,
+              "N": 10
+            },
+            "reclaim_latency_s": {
+              "Mean": 52.9392493411,
+              "Std": 47.116850297828194,
+              "CI95": 33.705361822500066,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 76.925,
+              "Std": 0.6977145229644826,
+              "CI95": 0.49911486647941106,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 4.600292926127386,
+              "Std": 3.524433904964664,
+              "CI95": 2.521227952111146,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 4.600292926127386,
+              "Std": 3.524433904964664,
+              "CI95": 2.521227952111146,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S6-ts-no-borrowing",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 2933.8,
+              "Std": 63.66544501445732,
+              "CI95": 45.54351248520699,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 0.9999926730396165,
+              "Std": 0.00001285405400862787,
+              "CI95": 0.00000919523564304828,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": 527.5467027009843,
+              "Std": 665.8873991314035,
+              "CI95": 476.3471152867365,
+              "N": 10
+            },
+            "noisy_shed_pct": {
+              "Mean": 25.749264277815335,
+              "Std": 2.2051030757400527,
+              "CI95": 1.5774356000861995,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.0521258906,
+              "Std": 0.0017658742830564263,
+              "CI95": 0.0012632302725508848,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.0522264975,
+              "Std": 0.0010371787782850867,
+              "CI95": 0.0007419529483771287,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.0517342773,
+              "Std": 0.0009375656997065502,
+              "CI95": 0.0006706940498191862,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 0.43762861309999995,
+              "Std": 0.0696738013110637,
+              "CI95": 0.04984163134619862,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 0.6115053860999999,
+              "Std": 0.19504931607508794,
+              "CI95": 0.13952986521777433,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 2.2334482486,
+              "Std": 0.5511004940224989,
+              "CI95": 0.3942335159114628,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": 20,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "reaction_time_s": {
+              "Mean": 13.516,
+              "Std": 4.742018323222483,
+              "CI95": 3.392235311631307,
+              "N": 10
+            },
+            "reclaim_latency_s": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 62.45,
+              "Std": 0.6324555320336759,
+              "CI95": 0.45243140000000004,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 571.8,
+              "Std": 70.08058853126798,
+              "CI95": 50.13262937249042,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 0.7062641447702972,
+              "Std": 0.2048600522992396,
+              "CI95": 0.1465480426233082,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 0.008445945945945946,
+              "Std": 0.026708426183854553,
+              "CI95": 0.01910605574324324,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S7-ts-full",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 3302.6,
+              "Std": 65.65431355888879,
+              "CI95": 46.9662632311443,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 1,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": 48.10556341061529,
+              "Std": 59.795590356544444,
+              "CI95": 42.77518542979147,
+              "N": 10
+            },
+            "noisy_shed_pct": {
+              "Mean": 9.144914837174545,
+              "Std": 2.1970417126169774,
+              "CI95": 1.5716688487195798,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.0470021742,
+              "Std": 0.0009030137438352147,
+              "CI95": 0.0006459770713506128,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.05097461630000001,
+              "Std": 0.0016122018185314865,
+              "CI95": 0.0011532996217066974,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.0505956454,
+              "Std": 0.001584180639496941,
+              "CI95": 0.0011332544792134619,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 0.38357730849999994,
+              "Std": 0.020571990480965266,
+              "CI95": 0.014716314401048206,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 0.6718542058,
+              "Std": 0.2772310463193982,
+              "CI95": 0.19831912926183656,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 1.0692933354,
+              "Std": 0.32585310710201193,
+              "CI95": 0.23310125372207718,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": 20,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "reaction_time_s": {
+              "Mean": 13.5,
+              "Std": 4.743416490252569,
+              "CI95": 3.3932355000000003,
+              "N": 10
+            },
+            "reclaim_latency_s": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 76.925,
+              "Std": 0.6977145229644826,
+              "CI95": 0.49911486647941106,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 203,
+              "Std": 59.52777129672801,
+              "CI95": 42.583599229588884,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 0.22930745605104388,
+              "Std": 0.22093937879951997,
+              "CI95": 0.15805049905085605,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 0.0857521955477037,
+              "Std": 0.13954621286659716,
+              "CI95": 0.0998253398921505,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S7F-ts-full-forecast",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 3294.6,
+              "Std": 69.77933473139132,
+              "CI95": 49.91712540180769,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 1,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": 48.10556341061529,
+              "Std": 59.795590356544444,
+              "CI95": 42.77518542979147,
+              "N": 10
+            },
+            "noisy_shed_pct": {
+              "Mean": 9.482535694812857,
+              "Std": 2.0832068334594624,
+              "CI95": 1.4902362876342845,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.04700865089999999,
+              "Std": 0.0008643624295067251,
+              "CI95": 0.0006183275887107052,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.05095447090000001,
+              "Std": 0.001656412437013295,
+              "CI95": 0.0011849259906788728,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.0506267259,
+              "Std": 0.0015924667799541168,
+              "CI95": 0.0011391820265867641,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 0.3827331547,
+              "Std": 0.02141774512350875,
+              "CI95": 0.015321330781807878,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 0.6678873123,
+              "Std": 0.2797216483782727,
+              "CI95": 0.20010079851645773,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 1.0447870547999998,
+              "Std": 0.2512009780295095,
+              "CI95": 0.17969834148783878,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": 20,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "reaction_time_s": {
+              "Mean": 13.5,
+              "Std": 4.743416490252569,
+              "CI95": 3.3932355000000003,
+              "N": 10
+            },
+            "reclaim_latency_s": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 76.925,
+              "Std": 0.6977145229644826,
+              "CI95": 0.49911486647941106,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 211,
+              "Std": 56.72545969648706,
+              "CI95": 40.5789464179415,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 0.2973074672692898,
+              "Std": 0.23888013324167545,
+              "CI95": 0.17088454071576226,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 0.08580346873305886,
+              "Std": 0.13963485110088872,
+              "CI95": 0.0998887478606208,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S4b-flowcontrol-outstanding",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 3422.6,
+              "Std": 70.04633387186577,
+              "CI95": 50.10812506708886,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 0.9999999867049997,
+              "Std": 4.204248226720736e-8,
+              "CI95": 3.0075377869593816e-8,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "noisy_shed_pct": {
+              "Mean": 3.7240087774410795,
+              "Std": 1.6841836046878664,
+              "CI95": 1.2047922858320506,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.05167938679999999,
+              "Std": 0.001588190148553014,
+              "CI95": 0.0011361227089998608,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.05328776440000001,
+              "Std": 0.0006213949027978549,
+              "CI95": 0.0004445191030611901,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.053018894000000004,
+              "Std": 0.0004734489308289883,
+              "CI95": 0.00033868493791917187,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 0.4316280894,
+              "Std": 0.04647960076045896,
+              "CI95": 0.03324950099792282,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 0.7703819763,
+              "Std": 0.4267846127623549,
+              "CI95": 0.3053032981301344,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 0.6060802637999999,
+              "Std": 0.3016417978997103,
+              "CI95": 0.2157815277280496,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "reaction_time_s": {
+              "Mean": 15,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "reclaim_latency_s": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 74.975,
+              "Std": 0.07905694150420949,
+              "CI95": 0.056553925000000005,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 83,
+              "Std": 39.78832883033806,
+              "CI95": 28.46285375745863,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 0.16644352652278535,
+              "Std": 0.2703792755882236,
+              "CI95": 0.1934176681039013,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 0.08380148425361857,
+              "Std": 0.2368867453539375,
+              "CI95": 0.1694585570266129,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S7nr-ts-no-reservation",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 3469.3,
+              "Std": 82.77821774678006,
+              "CI95": 59.215965467571245,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 1,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": 71.1706695799884,
+              "Std": 76.96193220314895,
+              "CI95": 59.1581745027301,
+              "N": 9
+            },
+            "noisy_shed_pct": {
+              "Mean": 1.6261285241037349,
+              "Std": 1.2047122162545112,
+              "CI95": 0.8617991415847233,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.051861500500000005,
+              "Std": 0.0013160225573209657,
+              "CI95": 0.0009414257570421591,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.0524791608,
+              "Std": 0.0008669623084919744,
+              "CI95": 0.0006201874299636461,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.0525556189,
+              "Std": 0.0004771016699878675,
+              "CI95": 0.0003412979499141378,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 0.4223342885,
+              "Std": 0.03745707409745731,
+              "CI95": 0.02679517470473165,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 0.6348086589,
+              "Std": 0.22834923928358367,
+              "CI95": 0.16335119353894081,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 0.5714173410999999,
+              "Std": 0.2865862329728552,
+              "CI95": 0.20501142615941434,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": 20,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "reaction_time_s": {
+              "Mean": 13.5,
+              "Std": 4.743416490252569,
+              "CI95": 3.3932355000000003,
+              "N": 10
+            },
+            "reclaim_latency_s": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 76.925,
+              "Std": 0.6977145229644826,
+              "CI95": 0.49911486647941106,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 36.3,
+              "Std": 27.8529870730033,
+              "CI95": 19.924825220676222,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 0.11135131919873505,
+              "Std": 0.18952474493630345,
+              "CI95": 0.1355778253855308,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 0.08562267449271314,
+              "Std": 0.13931574326468163,
+              "CI95": 0.09966047188266879,
+              "N": 10
+            }
+          }
+        }
+      ]
+    },
+    {
+      "coldStartSeconds": 120,
+      "setups": [
+        {
+          "setup": "S1-cpu-hpa",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 3505.6,
+              "Std": 91.48065976539037,
+              "CI95": 65.44131701638028,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 0.9805482149690411,
+              "Std": 0.016401940635289713,
+              "CI95": 0.011733240660381934,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "noisy_shed_pct": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.0547283647,
+              "Std": 0.00039254548773501834,
+              "CI95": 0.0002808101053501113,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.0551910954,
+              "Std": 0.00040673202124117677,
+              "CI95": 0.00029095853933518455,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.055408074200000004,
+              "Std": 0.0001527213263065919,
+              "CI95": 0.00010925024760012553,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 14.113082256700002,
+              "Std": 8.068873173179439,
+              "CI95": 5.77212373243916,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 19.2798571272,
+              "Std": 7.875659440861391,
+              "CI95": 5.633906964643974,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 19.6355419861,
+              "Std": 7.867277028745882,
+              "CI95": 5.62791054867999,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "reaction_time_s": {
+              "Mean": 28.5,
+              "Std": 4.743416490252569,
+              "CI95": 3.3932355000000003,
+              "N": 10
+            },
+            "reclaim_latency_s": {
+              "Mean": 110.8801025182,
+              "Std": 13.254185181221962,
+              "CI95": 9.481472220058325,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 71.475,
+              "Std": 0.4479893351905204,
+              "CI95": 0.3204722416666667,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 34.899464950481175,
+              "Std": 13.475528171151783,
+              "CI95": 9.639811445097791,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 34.899464950481175,
+              "Std": 13.475528171151783,
+              "CI95": 9.639811445097791,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S2-keda-queue",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 3505.6,
+              "Std": 91.48065976539037,
+              "CI95": 65.44131701638028,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 0.9761221353875046,
+              "Std": 0.019622208347665274,
+              "CI95": 0.014036881241720535,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "noisy_shed_pct": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.0550191711,
+              "Std": 0.0004516114788907368,
+              "CI95": 0.00032306336699056186,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.055338512799999996,
+              "Std": 0.00038580380913210815,
+              "CI95": 0.0002759873993507552,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.0553843737,
+              "Std": 0.000155046166567716,
+              "CI95": 0.00011091333801651346,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 22.701754083499996,
+              "Std": 7.468313993570632,
+              "CI95": 5.342509606779498,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 24.9324117271,
+              "Std": 6.78803513769318,
+              "CI95": 4.855867464263389,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 25.008505141600004,
+              "Std": 6.997278769897851,
+              "CI95": 5.005551330819249,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "reaction_time_s": {
+              "Mean": 48,
+              "Std": 22.135943621178654,
+              "CI95": 15.835099,
+              "N": 10
+            },
+            "reclaim_latency_s": {
+              "Mean": 103.629022682,
+              "Std": 20.709008152890313,
+              "CI95": 14.814330931845962,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 70.9,
+              "Std": 2.64365067451978,
+              "CI95": 1.8911536308931238,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 43.007712461365195,
+              "Std": 10.171648764778231,
+              "CI95": 7.27635866534226,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 43.007712461365195,
+              "Std": 10.171648764778231,
+              "CI95": 7.27635866534226,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S3-static-partition",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 3145.2,
+              "Std": 67.93428196916979,
+              "CI95": 48.597254261458005,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 360.4,
+              "Std": 100.69558083649949,
+              "CI95": 72.03327396817656,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 0.6807277288624485,
+              "Std": 0.00408494543424222,
+              "CI95": 0.0029221937166001547,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "noisy_shed_pct": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.036350726400000005,
+              "Std": 0.0011332232446139552,
+              "CI95": 0.0008106590157012565,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.0512666504,
+              "Std": 0.0008946333176544321,
+              "CI95": 0.0006399820760386479,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.055799422,
+              "Std": 0.00021606899722285231,
+              "CI95": 0.00015456643820600818,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 0.2895529823,
+              "Std": 0.014324567795404286,
+              "CI95": 0.010247177760039881,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 0.5528076183999999,
+              "Std": 0.21509065255898968,
+              "CI95": 0.15386657264466097,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 120.20888022669999,
+              "Std": 0.035547657019531435,
+              "CI95": 0.025429260109958347,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "reaction_time_s": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "reclaim_latency_s": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 80,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 0.033115740554190004,
+              "Std": 0.08055622289232513,
+              "CI95": 0.057626446217796834,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 0.033115740554190004,
+              "Std": 0.08055622289232513,
+              "CI95": 0.057626446217796834,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S4-flowcontrol-equiv",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 2551.4,
+              "Std": 62.22575386802835,
+              "CI95": 44.51361955526139,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 6,
+              "Std": 12.649110640673518,
+              "CI95": 9.048628,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 0.9513471832385096,
+              "Std": 0.024093304718945604,
+              "CI95": 0.01723531067799839,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "noisy_shed_pct": {
+              "Mean": 42.33391168013156,
+              "Std": 2.927871065771521,
+              "CI95": 2.094472635960702,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.05594931419999999,
+              "Std": 0.0006301587674241406,
+              "CI95": 0.00045078839369342046,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.0553028398,
+              "Std": 0.0003511503847890696,
+              "CI95": 0.00025119783471543445,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.055202963199999996,
+              "Std": 0.0002191059657430123,
+              "CI95": 0.00015673895445377298,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 74.34358789960001,
+              "Std": 39.946844438222094,
+              "CI95": 28.576248984102026,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 76.2094401822,
+              "Std": 37.053176159711214,
+              "CI95": 26.50624354645086,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 71.6980330453,
+              "Std": 39.89143087452835,
+              "CI95": 28.536608511482026,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "reaction_time_s": {
+              "Mean": 275,
+              "Std": 15,
+              "CI95": 11.53002,
+              "N": 9
+            },
+            "reclaim_latency_s": {
+              "Mean": 107.2567757005,
+              "Std": 37.69245713138262,
+              "CI95": 26.963557571480614,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 54.875,
+              "Std": 3.969655347791154,
+              "CI95": 2.8397201630027147,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 948.2,
+              "Std": 101.69649835553719,
+              "CI95": 72.74928717619865,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 38.4649191091375,
+              "Std": 9.297963354390046,
+              "CI95": 6.6513618183537275,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 37.29541011593859,
+              "Std": 9.502488921653855,
+              "CI95": 6.797670584814217,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S5-ts-no-gateway",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 3505.6,
+              "Std": 91.48065976539037,
+              "CI95": 65.44131701638028,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 0.9910263265325326,
+              "Std": 0.009194896695319853,
+              "CI95": 0.006577632377318548,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "noisy_shed_pct": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.054033056200000006,
+              "Std": 0.0006425288871714119,
+              "CI95": 0.0004596374436454851,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.05472793789999999,
+              "Std": 0.00032552776048047535,
+              "CI95": 0.00023286851478627603,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.0548627127,
+              "Std": 0.0002599520455832189,
+              "CI95": 0.00018595847764648412,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 3.8874798324999995,
+              "Std": 2.626723646888518,
+              "CI95": 1.8790447656509697,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 11.7593583198,
+              "Std": 5.762824358182958,
+              "CI95": 4.12247590584438,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 11.6760401716,
+              "Std": 5.368004427384403,
+              "CI95": 3.8400387620586223,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "reaction_time_s": {
+              "Mean": 13.5,
+              "Std": 4.743416490252569,
+              "CI95": 3.3932355000000003,
+              "N": 10
+            },
+            "reclaim_latency_s": {
+              "Mean": 53.03723340809999,
+              "Std": 47.18024788746131,
+              "CI95": 33.750713722802224,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 76.925,
+              "Std": 0.6977145229644826,
+              "CI95": 0.49911486647941106,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 14.12589516287235,
+              "Std": 6.8148031458355876,
+              "CI95": 4.875016142369087,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 14.12589516287235,
+              "Std": 6.8148031458355876,
+              "CI95": 4.875016142369087,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S6-ts-no-borrowing",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 2874,
+              "Std": 66.69499398172417,
+              "CI95": 47.71072110495247,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 0.9999777726994334,
+              "Std": 0.000032013823090153645,
+              "CI95": 0.0000229013077859509,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": 684.9453023235488,
+              "Std": 775.7508477216645,
+              "CI95": 554.9386862936183,
+              "N": 10
+            },
+            "noisy_shed_pct": {
+              "Mean": 28.47737949444384,
+              "Std": 2.3052279387249035,
+              "CI95": 1.6490606071272198,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.0533169966,
+              "Std": 0.001002730215076285,
+              "CI95": 0.0007173099325584026,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.0531711366,
+              "Std": 0.0008652398198659147,
+              "CI95": 0.0006189552359182144,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.0524469125,
+              "Std": 0.0007263133662842558,
+              "CI95": 0.0005195732450786779,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 0.5374287757999999,
+              "Std": 0.1626008951814683,
+              "CI95": 0.116317664914168,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 0.7660262238999999,
+              "Std": 0.3354132298350519,
+              "CI95": 0.23994015304891683,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 2.4482053407000004,
+              "Std": 0.45052342982378746,
+              "CI95": 0.32228502363249895,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": 20,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "reaction_time_s": {
+              "Mean": 13.516,
+              "Std": 4.742018323222483,
+              "CI95": 3.392235311631307,
+              "N": 10
+            },
+            "reclaim_latency_s": {
+              "Mean": 6.6197774776000005,
+              "Std": 20.93357443270026,
+              "CI95": 14.974975959395183,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 62.45,
+              "Std": 0.6324555320336759,
+              "CI95": 0.45243140000000004,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 631.6,
+              "Std": 74.65505862148778,
+              "CI95": 53.405007907185684,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 0.8238345268294038,
+              "Std": 0.31815826019790955,
+              "CI95": 0.22759669224498139,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 0.10128062956456163,
+              "Std": 0.18298902171117554,
+              "CI95": 0.13090245097739028,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S7-ts-full",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 3246.8,
+              "Std": 57.84615611929437,
+              "CI95": 41.380644285798404,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 0.9999998258911708,
+              "Std": 5.50580461187835e-7,
+              "CI95": 3.938615068586264e-7,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": 111.29566226974275,
+              "Std": 62.234796343675605,
+              "CI95": 44.52008815219721,
+              "N": 10
+            },
+            "noisy_shed_pct": {
+              "Mean": 11.689053074183278,
+              "Std": 2.0555537744108765,
+              "CI95": 1.4704544822962797,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.047772316599999996,
+              "Std": 0.001634173525881725,
+              "CI95": 0.0011690172331645246,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.053011375900000005,
+              "Std": 0.0007221321475886456,
+              "CI95": 0.0005165821816246541,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.0527526132,
+              "Std": 0.0006399298999428324,
+              "CI95": 0.0004577782403167904,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 0.3940156441,
+              "Std": 0.03014443002109624,
+              "CI95": 0.0215640246402658,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 1.1335992417000003,
+              "Std": 0.599193636097666,
+              "CI95": 0.4286372747488638,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 1.2116640055999999,
+              "Std": 0.35228189498146256,
+              "CI95": 0.2520072682874873,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": 20,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "reaction_time_s": {
+              "Mean": 13.5,
+              "Std": 4.743416490252569,
+              "CI95": 3.3932355000000003,
+              "N": 10
+            },
+            "reclaim_latency_s": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 76.925,
+              "Std": 0.6977145229644826,
+              "CI95": 0.49911486647941106,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 258.8,
+              "Std": 59.00809737278059,
+              "CI95": 42.211846925993726,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 0.4029006068547121,
+              "Std": 0.3968069912575236,
+              "CI95": 0.2838586011053659,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 0.23412529500809195,
+              "Std": 0.2785615470656695,
+              "CI95": 0.19927091209058495,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S7F-ts-full-forecast",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 3238.5,
+              "Std": 57.39773514695506,
+              "CI95": 41.059863269538695,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 0.9999998211243852,
+              "Std": 5.656543602033411e-7,
+              "CI95": 4.046447238432491e-7,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": 111.29566226974275,
+              "Std": 62.234796343675605,
+              "CI95": 44.52008815219721,
+              "N": 10
+            },
+            "noisy_shed_pct": {
+              "Mean": 12.059101895861644,
+              "Std": 2.004816055397967,
+              "CI95": 1.4341589072192402,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.047679273099999996,
+              "Std": 0.0016149556226736415,
+              "CI95": 0.001155269574375709,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.053011375900000005,
+              "Std": 0.0007221321475886456,
+              "CI95": 0.0005165821816246541,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.05276814,
+              "Std": 0.0006598539223452746,
+              "CI95": 0.0004720310263113768,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 0.4019797178,
+              "Std": 0.030703746117820792,
+              "CI95": 0.021964135243883937,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 1.1677339634000001,
+              "Std": 0.6031702845991005,
+              "CI95": 0.4314819975122598,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 1.2165610267999998,
+              "Std": 0.35082717167658706,
+              "CI95": 0.2509666219999592,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": 20,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "reaction_time_s": {
+              "Mean": 13.5,
+              "Std": 4.743416490252569,
+              "CI95": 3.3932355000000003,
+              "N": 10
+            },
+            "reclaim_latency_s": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 76.925,
+              "Std": 0.6977145229644826,
+              "CI95": 0.49911486647941106,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 267.1,
+              "Std": 58.232198042739974,
+              "CI95": 41.656802021855476,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 0.4282323159224698,
+              "Std": 0.39533632026484233,
+              "CI95": 0.2828065465300527,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 0.23418308696456283,
+              "Std": 0.2787488407149844,
+              "CI95": 0.19940489388642468,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S4b-flowcontrol-outstanding",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 3364.3,
+              "Std": 60.406125517202305,
+              "CI95": 43.21193594187483,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 0.9999999853238585,
+              "Std": 4.6410034936119685e-8,
+              "CI95": 3.319973660864351e-8,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "noisy_shed_pct": {
+              "Mean": 6.315744892141644,
+              "Std": 1.8122036378777477,
+              "CI95": 1.2963722940863864,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.05138852060000001,
+              "Std": 0.0012153620917769695,
+              "CI95": 0.0008694176030391721,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.0537771896,
+              "Std": 0.0005943057309954572,
+              "CI95": 0.00042514067832990533,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.0537273434,
+              "Std": 0.00039846876296704666,
+              "CI95": 0.0002850473608883697,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 0.436425234,
+              "Std": 0.051158066435012715,
+              "CI95": 0.036596273486708,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 1.0289777695999998,
+              "Std": 0.4148358871942147,
+              "CI95": 0.29675569539255314,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 0.7216383068,
+              "Std": 0.35093474767850397,
+              "CI95": 0.25104357723030907,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": null,
+              "Std": null,
+              "CI95": null,
+              "N": 0
+            },
+            "reaction_time_s": {
+              "Mean": 15,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "reclaim_latency_s": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 74.975,
+              "Std": 0.07905694150420949,
+              "CI95": 0.056553925000000005,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 141.3,
+              "Std": 44.17402454434556,
+              "CI95": 31.600191248178476,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 0.3179510100329187,
+              "Std": 0.32097282399744675,
+              "CI95": 0.22961010975137794,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 0.10169616253499689,
+              "Std": 0.23711604811326817,
+              "CI95": 0.16962259032725338,
+              "N": 10
+            }
+          }
+        },
+        {
+          "setup": "S7nr-ts-no-reservation",
+          "runs": 10,
+          "metrics": {
+            "completed": {
+              "Mean": 3412.4,
+              "Std": 70.51902816498064,
+              "CI95": 50.446270169746576,
+              "N": 10
+            },
+            "failed": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "jain_index": {
+              "Mean": 0.9999997779015566,
+              "Std": 7.023369464585821e-7,
+              "CI95": 5.024215488102678e-7,
+              "N": 10
+            },
+            "max_counter_gap": {
+              "Mean": 110.71505912870343,
+              "Std": 69.77691192721419,
+              "CI95": 49.91539223223249,
+              "N": 10
+            },
+            "noisy_shed_pct": {
+              "Mean": 4.21141316570886,
+              "Std": 1.6431106082322486,
+              "CI95": 1.1754104362831075,
+              "N": 10
+            },
+            "p99_tpot_s_A": {
+              "Mean": 0.051363304900000004,
+              "Std": 0.0015666516855024446,
+              "CI95": 0.0011207150218214704,
+              "N": 10
+            },
+            "p99_tpot_s_B": {
+              "Mean": 0.053533270900000006,
+              "Std": 0.0005287600875691165,
+              "CI95": 0.00037825215302295757,
+              "N": 10
+            },
+            "p99_tpot_s_C": {
+              "Mean": 0.053405985700000005,
+              "Std": 0.00035017677926157725,
+              "CI95": 0.0002505013593277741,
+              "N": 10
+            },
+            "p99_ttft_s_A": {
+              "Mean": 0.4323771032,
+              "Std": 0.04552676383231027,
+              "CI95": 0.03256788257016107,
+              "N": 10
+            },
+            "p99_ttft_s_B": {
+              "Mean": 1.0912368667999999,
+              "Std": 0.6180651374332883,
+              "CI95": 0.44213713258380616,
+              "N": 10
+            },
+            "p99_ttft_s_C": {
+              "Mean": 0.7131411401000001,
+              "Std": 0.34737263044873884,
+              "CI95": 0.24849539225350195,
+              "N": 10
+            },
+            "policy_latency_mean_ms": {
+              "Mean": 20,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "reaction_time_s": {
+              "Mean": 13.5,
+              "Std": 4.743416490252569,
+              "CI95": 3.3932355000000003,
+              "N": 10
+            },
+            "reclaim_latency_s": {
+              "Mean": 0,
+              "Std": 0,
+              "CI95": 0,
+              "N": 10
+            },
+            "replica_minutes": {
+              "Mean": 76.925,
+              "Std": 0.6977145229644826,
+              "CI95": 0.49911486647941106,
+              "N": 10
+            },
+            "shed": {
+              "Mean": 93.2,
+              "Std": 37.99356670689278,
+              "CI95": 27.178958370274188,
+              "N": 10
+            },
+            "victim_shed_aware_violation_pct": {
+              "Mean": 0.2592060954123124,
+              "Std": 0.29180903610753717,
+              "CI95": 0.20874759418145755,
+              "N": 10
+            },
+            "victim_violation_pct": {
+              "Mean": 0.21754093485624107,
+              "Std": 0.27919490159693,
+              "CI95": 0.19972398659584403,
+              "N": 10
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

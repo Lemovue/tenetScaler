@@ -1,0 +1,18 @@
+# Local cluster for a live run (needs Docker and kind; not available on the
+# development machine, so the live run is untested). kind's default node
+# image is Kubernetes 1.30+, which deploy/k8s/10-model-pool.yaml needs.
+#   kind create cluster --config deploy/kind/kind-config.yaml
+#   docker build -t tenantscaler:dev .
+#   kind load docker-image tenantscaler:dev --name tenantscaler
+#   kubectl apply -f deploy/k8s/00-namespace.yaml -f deploy/k8s/01-crd.yaml
+#   kubectl wait --for=condition=Established crd/tenantscalers.scaling.tenantscaler.dev
+#   kubectl apply -f deploy/k8s/
+#   kubectl -n tenantscaler port-forward svc/gateway 8080:8080
+#   kubectl -n tenantscaler port-forward svc/tenantscaler-controller 8090:8090
+#   kubectl -n tenantscaler get tenantscalers
+apiVersion: kind.x-k8s.io/v1alpha4
+kind: Cluster
+name: tenantscaler
+nodes:
+  - role: control-plane
+  - role: worker

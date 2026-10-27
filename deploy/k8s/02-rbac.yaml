@@ -1,0 +1,91 @@
+# Least-privilege, namespace-scoped access. The controller reads tenants,
+# writes their status and resizes the pool only through deployments/scale
+# (the same subresource HPA and KEDA use). The gateway only discovers ready
+# pool replicas.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tenantscaler-controller
+  namespace: tenantscaler
+  labels:
+    app.kubernetes.io/part-of: tenantscaler
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: tenantscaler-controller
+  namespace: tenantscaler
+  labels:
+    app.kubernetes.io/part-of: tenantscaler
+rules:
+  - apiGroups: ["scaling.tenantscaler.dev"]
+    resources: ["tenantscalers"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["scaling.tenantscaler.dev"]
+    resources: ["tenantscalers/status"]
+    verbs: ["get", "update", "patch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list"]
+  - apiGroups: ["apps"]
+    resources: ["deployments/scale"]
+    verbs: ["get", "update", "patch"]
+  - apiGroups: ["discovery.k8s.io"]
+    resources: ["endpointslices"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tenantscaler-controller
+  namespace: tenantscaler
+  labels:
+    app.kubernetes.io/part-of: tenantscaler
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: tenantscaler-controller
+subjects:
+  - kind: ServiceAccount
+    name: tenantscaler-controller
+    namespace: tenantscaler
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: gateway
+  namespace: tenantscaler
+  labels:
+    app.kubernetes.io/part-of: tenantscaler
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: gateway
+  namespace: tenantscaler
+  labels:
+    app.kubernetes.io/part-of: tenantscaler
+rules:
+  - apiGroups: ["discovery.k8s.io"]
+    resources: ["endpointslices"]
+    verbs: ["get", "list", "watch"]
+  # The gateway reads tenants and SLOs from TenantScaler CRs (read-only).
+  - apiGroups: ["scaling.tenantscaler.dev"]
+    resources: ["tenantscalers"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: gateway
+  namespace: tenantscaler
+  labels:
+    app.kubernetes.io/part-of: tenantscaler
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: gateway
+subjects:
+  - kind: ServiceAccount
+    name: gateway
+    namespace: tenantscaler

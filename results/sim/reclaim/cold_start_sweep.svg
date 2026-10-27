@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="420" viewBox="0 0 960 420" role="img" aria-label="Victim SLO violation vs replica cold start (simulated, mean over runs)">
+<style>
+text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:12px;fill:#52514e}
+.title{font-size:14px;font-weight:600;fill:#0b0b0b}.bg{fill:#fcfcfb}
+.grid{stroke:#e1e0d9;stroke-width:1}.axis{stroke:#c3c2b7;stroke-width:1}.err{stroke:#52514e;stroke-width:1.5}
+.line{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.k1{stroke:#2a78d6}.f1{fill:#2a78d6}
+.k2{stroke:#eb6834}.f2{fill:#eb6834}
+.k3{stroke:#1baf7a}.f3{fill:#1baf7a}
+.k4{stroke:#eda100}.f4{fill:#eda100}
+.k5{stroke:#e87ba4}.f5{fill:#e87ba4}
+.k6{stroke:#008300}.f6{fill:#008300}
+.k7{stroke:#6250d6}.f7{fill:#6250d6}
+.k8{stroke:#e34948}.f8{fill:#e34948}
+@media (prefers-color-scheme:dark){
+text{fill:#c3c2b7}.title{fill:#f0efec}.bg{fill:#1a1a19}
+.grid{stroke:#2c2c2a}.axis{stroke:#383835}.err{stroke:#c3c2b7}
+.k1{stroke:#3987e5}.f1{fill:#3987e5}
+.k2{stroke:#d95926}.f2{fill:#d95926}
+.k3{stroke:#199e70}.f3{fill:#199e70}
+.k4{stroke:#c98500}.f4{fill:#c98500}
+.k5{stroke:#d55181}.f5{fill:#d55181}
+.k6{stroke:#008300}.f6{fill:#008300}
+.k7{stroke:#9085e9}.f7{fill:#9085e9}
+.k8{stroke:#e66767}.f8{fill:#e66767}
+}
+</style>
+<rect class="bg" width="960" height="420"/>
+<text class="title" x="16.0" y="24">Victim SLO violation vs replica cold start (simulated, mean over runs)</text>
+<line class="line k1" x1="16.0" y1="46.0" x2="32.0" y2="46.0"/>
+<text x="38.0" y="46.0" dy=".32em">S1-cpu-hpa</text>
+<line class="line k2" x1="124.0" y1="46.0" x2="140.0" y2="46.0"/>
+<text x="146.0" y="46.0" dy=".32em">S2-keda-queue</text>
+<line class="line k3" x1="253.0" y1="46.0" x2="269.0" y2="46.0"/>
+<text x="275.0" y="46.0" dy=".32em">S3-static-partition</text>
+<line class="line k4" x1="424.0" y1="46.0" x2="440.0" y2="46.0"/>
+<text x="446.0" y="46.0" dy=".32em">S4-flowcontrol-equiv</text>
+<line class="line k5" x1="602.0" y1="46.0" x2="618.0" y2="46.0"/>
+<text x="624.0" y="46.0" dy=".32em">S5-ts-no-gateway</text>
+<line class="line k6" x1="752.0" y1="46.0" x2="768.0" y2="46.0"/>
+<text x="774.0" y="46.0" dy=".32em">S6-ts-no-borrowing</text>
+<line class="line k7" x1="16.0" y1="66.0" x2="32.0" y2="66.0"/>
+<text x="38.0" y="66.0" dy=".32em">S7-ts-full</text>
+<line class="line k8" x1="124.0" y1="66.0" x2="140.0" y2="66.0"/>
+<text x="146.0" y="66.0" dy=".32em">S7F-ts-full-forecast</text>
+<line class="grid" x1="72.0" y1="372.0" x2="936.0" y2="372.0"/>
+<text x="64.0" y="372.0" dy=".32em" text-anchor="end">0</text>
+<line class="grid" x1="72.0" y1="315.2" x2="936.0" y2="315.2"/>
+<text x="64.0" y="315.2" dy=".32em" text-anchor="end">10</text>
+<line class="grid" x1="72.0" y1="258.4" x2="936.0" y2="258.4"/>
+<text x="64.0" y="258.4" dy=".32em" text-anchor="end">20</text>
+<line class="grid" x1="72.0" y1="201.6" x2="936.0" y2="201.6"/>
+<text x="64.0" y="201.6" dy=".32em" text-anchor="end">30</text>
+<line class="grid" x1="72.0" y1="144.8" x2="936.0" y2="144.8"/>
+<text x="64.0" y="144.8" dy=".32em" text-anchor="end">40</text>
+<line class="grid" x1="72.0" y1="88.0" x2="936.0" y2="88.0"/>
+<text x="64.0" y="88.0" dy=".32em" text-anchor="end">50</text>
+<text transform="translate(18 230.0) rotate(-90)" text-anchor="middle" dy=".32em">victim violation %</text>
+<line class="axis" x1="72.0" y1="372.0" x2="936.0" y2="372.0"/>
+<text x="72.0" y="390.0" text-anchor="middle">0</text>
+<text x="216.0" y="390.0" text-anchor="middle">20</text>
+<text x="360.0" y="390.0" text-anchor="middle">40</text>
+<text x="504.0" y="390.0" text-anchor="middle">60</text>
+<text x="648.0" y="390.0" text-anchor="middle">80</text>
+<text x="792.0" y="390.0" text-anchor="middle">100</text>
+<text x="936.0" y="390.0" text-anchor="middle">120</text>
+<text x="504.0" y="410.0" text-anchor="middle">cold start (s)</text>
+<path class="line k1" d="M144.0 336.2 L288.0 314.1 L504.0 283.1 L936.0 173.8"><title>S1-cpu-hpa</title></path>
+<path class="line k2" d="M144.0 253.7 L288.0 231.7 L504.0 225.0 L936.0 127.7"><title>S2-keda-queue</title></path>
+<path class="line k3" d="M144.0 371.8 L288.0 371.8 L504.0 371.8 L936.0 371.8"><title>S3-static-partition</title></path>
+<path class="line k4" d="M144.0 312.9 L288.0 278.1 L504.0 227.2 L936.0 160.2"><title>S4-flowcontrol-equiv</title></path>
+<path class="line k5" d="M144.0 362.2 L288.0 361.0 L504.0 345.9 L936.0 291.8"><title>S5-ts-no-gateway</title></path>
+<path class="line k6" d="M144.0 371.9 L288.0 372.0 L504.0 372.0 L936.0 371.4"><title>S6-ts-no-borrowing</title></path>
+<path class="line k7" d="M144.0 372.0 L288.0 372.0 L504.0 371.5 L936.0 370.7"><title>S7-ts-full</title></path>
+<path class="line k8" d="M144.0 372.0 L288.0 372.0 L504.0 371.5 L936.0 370.7"><title>S7F-ts-full-forecast</title></path>
+</svg>

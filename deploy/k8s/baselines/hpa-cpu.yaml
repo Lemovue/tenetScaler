@@ -1,0 +1,40 @@
+# BASELINE, not part of TenantScaler: the classic CPU-utilisation HPA. It
+# scales model-pool to keep average CPU at 70% of the pods' CPU request, with
+# no notion of tenants or queues. Apply it INSTEAD of the TenantScaler
+# controller, never together (both would set the replica count):
+#   kubectl -n tenantscaler scale deployment tenantscaler-controller --replicas=0
+#   kubectl apply -f deploy/k8s/baselines/gateway-passthrough.yaml
+#   kubectl apply -f deploy/k8s/baselines/hpa-cpu.yaml
+# The passthrough gateway makes requests queue at the replicas, as in the
+# simulated baseline; see gateway-passthrough.yaml. Back to TenantScaler:
+#   kubectl delete -f deploy/k8s/baselines/hpa-cpu.yaml
+#   kubectl apply -f deploy/k8s/20-gateway.yaml
+#   kubectl -n tenantscaler scale deployment tenantscaler-controller --replicas=1
+# Requires metrics-server. Same settings as the simulated baseline
+# (autoscale.DefaultHPAConfig): 70% target, 1..10 replicas (the pool
+# capacity), 300 s scale-down window. SIMULATED replicas use little CPU, so
+# the simulator approximates CPU utilisation by engine slot occupancy.
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: model-pool-cpu
+  namespace: tenantscaler
+  labels:
+    app.kubernetes.io/part-of: tenantscaler
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: model-pool
+  minReplicas: 1
+  maxReplicas: 10
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
