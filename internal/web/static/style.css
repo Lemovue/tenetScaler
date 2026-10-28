@@ -463,6 +463,8 @@ td { font-variant-numeric: tabular-nums; }
 .slo-met { color: var(--met); }
 .slo-missed { color: var(--missed); }
 .slo-shed { color: var(--shed); border-style: dashed; }
+.slo-better { color: var(--met); }
+.slo-worse { color: var(--missed); }
 
 .summary, .decisions, .results-section, .results-head { margin-top: 16px; }
 .summary .lead { margin: 6px 0 10px; }

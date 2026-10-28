@@ -331,7 +331,8 @@ window.TS = window.TS || {};
       ],
       thresholds: [{ y: cap, label: "budget" }],
     });
-    renderTenantTable(p, s, sc, state.windowSeconds);
+    const base = s.key === "tenantscaler" ? tenantFigures(state.stacks.find((x) => x.key === "baseline")) : null;
+    renderTenantTable(p, s, sc, state.windowSeconds, base);
     renderEngine(p, s, state);
   }
 
@@ -346,6 +347,8 @@ window.TS = window.TS || {};
     met: "M3 8.5 6.5 12 13 4.5",
     missed: "M4 4 12 12M12 4 4 12",
     shed: "M8 2.2a5.8 5.8 0 1 0 0 11.6 5.8 5.8 0 1 0 0-11.6M3.9 12.1 12.1 3.9",
+    better: "M8 13V3M4 7l4-4 4 4",
+    worse: "M8 3v10M4 9l4 4 4-4",
   };
 
   function chip(kind, text) {
@@ -365,14 +368,76 @@ window.TS = window.TS || {};
   // its SLO target, MISSED when it does not, and adds SHED when some of its
   // requests were shed. Each label has text and an icon; colour only
   // repeats them.
-  function sloStatus(attainment, target, shed) {
+  function sloStatus(attainment, target, shed, versus) {
     const chips = [];
     if (U.isNum(attainment) && U.isNum(target)) chips.push(attainment >= target ? chip("met", "MET") : chip("missed", "MISSED"));
     if (U.isNum(shed) && shed > 0) chips.push(chip("shed", "SHED"));
+    if (versus) chips.push(versus);
     return chips.length ? U.el("span", { class: "slo-cell" }, chips) : "—";
   }
 
-  function renderTenantTable(p, s, sc, windowSeconds) {
+  // tenantFigures returns, per tenant of a stack, the share of its requests
+  // that met the SLO (shed ones count as missed, so shedding a tenant never
+  // raises it), its p99 TTFT and how many were shed, with what they cover:
+  // "run" (the whole run's metrics, once it finished) or "live" (its latest
+  // live window, while it runs: a stopped stack's last window is old and
+  // compares with nothing). A live window does not count its failed
+  // requests, so with shedding its share is unknown (null).
+  function tenantFigures(s) {
+    const out = { kind: null, by: {} };
+    if (!s) return out;
+    if (s.metrics && s.tenants) {
+      out.kind = "run";
+      for (const t of s.tenants) {
+        let att = null;
+        if (t.requests > 0 && U.isNum(t.attainmentPct)) att = (t.attainmentPct / 100) * (t.requests - t.shed) / t.requests;
+        else if (t.requests > 0 && t.shed === t.requests) att = 0;
+        out.by[t.tenant] = { att, p99: t.p99TtftSeconds, shed: t.shed };
+      }
+      return out;
+    }
+    const last = s.status === "running" && s.samples && s.samples.length ? s.samples[s.samples.length - 1] : null;
+    if (last && last.tenants) {
+      out.kind = "live";
+      for (const [name, tw] of Object.entries(last.tenants)) out.by[name] = { att: tw.shed > 0 ? null : tw.attainment, p99: tw.p99TtftSeconds, shed: tw.shed };
+    }
+    return out;
+  }
+
+  // versusChip compares a tenant on TenantScaler with the same tenant on the
+  // baseline: the SLO attainment difference in points, else, when neither
+  // shed any (a p99 over fewer, kept requests flatters), the p99 TTFT ratio.
+  // It says so whether TenantScaler did better or worse.
+  function versusChip(mine, base) {
+    if (!mine || !base) return null;
+    const why = "Same traffic on both stacks; shed requests count as missed";
+    if (U.isNum(mine.att) && U.isNum(base.att)) {
+      const pts = Math.round((mine.att - base.att) * 100);
+      if (pts !== 0) {
+        const c = chip(pts > 0 ? "better" : "worse", (pts > 0 ? "+" : "") + pts + " pts vs baseline");
+        c.title = "SLO attainment " + U.pct(mine.att * 100) + " on TenantScaler, " + U.pct(base.att * 100) + " on the baseline. " + why;
+        return c;
+      }
+    }
+    if (mine.shed > 0 || base.shed > 0) return null;
+    if (U.isNum(mine.p99) && U.isNum(base.p99) && mine.p99 > 0 && base.p99 > 0) {
+      const r = base.p99 / mine.p99;
+      const fmt = (x) => x.toFixed(x >= 10 ? 0 : 1) + "×";
+      const c = r >= 1.2 ? chip("better", "p99 " + fmt(r) + " lower vs baseline")
+        : r <= 1 / 1.2 ? chip("worse", "p99 " + fmt(1 / r) + " higher vs baseline") : null;
+      if (c) c.title = "p99 TTFT " + U.sec(mine.p99) + " on TenantScaler, " + U.sec(base.p99) + " on the baseline. " + why;
+      return c;
+    }
+    return null;
+  }
+
+  // renderTenantTable fills a panel's per-tenant table. base, for the
+  // TenantScaler panel, holds the baseline's figures; each row then also
+  // compares the tenant with the baseline, but only like with like (both
+  // whole runs, or both live windows of a side-by-side run).
+  function renderTenantTable(p, s, sc, windowSeconds, base) {
+    const mine = tenantFigures(s);
+    const versus = (name) => (base && base.kind && base.kind === mine.kind ? versusChip(mine.by[name], base.by[name]) : null);
     U.clear(p.rows);
     const row = (cells) => p.rows.appendChild(U.el("tr", {}, cells.map((c, i) => U.el(i ? "td" : "th", i ? {} : { scope: "row" }, c))));
     const target = (name) => (sc.tenants.find((t) => t.name === name) || {}).targetFraction;
@@ -380,7 +445,7 @@ window.TS = window.TS || {};
       U.setText(p.scope, "(whole run, client-measured)");
       for (const t of s.tenants) {
         row([tenantName(t.tenant, sc), U.pct(t.attainmentPct), U.sec(t.p99TtftSeconds), t.shed + " (" + U.pct(t.shedPct) + ")",
-          sloStatus(U.isNum(t.attainmentPct) ? t.attainmentPct / 100 : null, target(t.tenant), t.shed)]);
+          sloStatus(U.isNum(t.attainmentPct) ? t.attainmentPct / 100 : null, target(t.tenant), t.shed, versus(t.tenant))]);
       }
       return;
     }
@@ -391,7 +456,7 @@ window.TS = window.TS || {};
         const tw = last.tenants[t.name] || {};
         row([tenantName(t.name, sc), U.isNum(tw.attainment) ? U.pct(tw.attainment * 100) : "no completions",
           U.sec(tw.p99TtftSeconds), U.isNum(tw.shed) ? tw.shed + " in " + windowSeconds + " s" : "—",
-          sloStatus(tw.attainment, t.targetFraction, tw.shed)]);
+          sloStatus(tw.attainment, t.targetFraction, tw.shed, versus(t.name))]);
       }
       return;
     }
