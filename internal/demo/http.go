@@ -50,7 +50,8 @@ var staticTypes = map[string]string{
 // Handler serves the dashboard and its API:
 //
 //	GET  /healthz             {"status":"ok"}
-//	POST /api/ab/start        optional body {"seed": n}; 202 {"run","seed"}, 409 while a run is in progress
+//	POST /api/ab/start        optional body {"seed": n, "dataset": key}; 202 {"run","seed"}, 409 while a run is in progress,
+//	                          400 for a dataset that is unknown or whose file is missing (ConfigReply.Datasets)
 //	POST /api/ab/stop         200 once the stack has stopped, 409 when nothing runs
 //	POST /api/live/start      202 {"run"}: the live run of demo -live again; 409 while a run is in progress or without -live
 //	GET  /api/state           State
@@ -94,20 +95,26 @@ func (s *Server) Handler() http.Handler {
 // handleStart starts an A/B run.
 func (s *Server) handleStart(w http.ResponseWriter, r *http.Request) {
 	var body struct {
-		Seed *int64 `json:"seed"`
+		Seed    *int64 `json:"seed"`
+		Dataset string `json:"dataset"`
 	}
 	dec := json.NewDecoder(io.LimitReader(r.Body, 4096))
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(&body); err != nil && !errors.Is(err, io.EOF) {
-		writeError(w, http.StatusBadRequest, "invalid body: want nothing or {\"seed\": <integer>}: "+err.Error())
+		writeError(w, http.StatusBadRequest, "invalid body: want nothing or {\"seed\": <integer>, \"dataset\": <key>}: "+err.Error())
 		return
 	}
 	seed := s.opt.Seed
 	if body.Seed != nil {
 		seed = *body.Seed
 	}
-	run, err := s.StartAB(seed)
+	if body.Dataset == "" {
+		body.Dataset = DatasetSynthetic
+	}
+	run, err := s.StartABWith(seed, body.Dataset)
 	switch {
+	case errors.Is(err, ErrUnknownDataset):
+		writeError(w, http.StatusBadRequest, fmt.Sprintf("dataset %q is unknown or its file is missing on the server", body.Dataset))
 	case errors.Is(err, ErrBusy):
 		writeError(w, http.StatusConflict, "an A/B run is already in progress: stop it first")
 	case errors.Is(err, ErrClosed):
@@ -218,6 +225,8 @@ type ConfigReply struct {
 	// LiveAddress is the live run's public address the Go live button uses
 	// ("" without demo -live: no button).
 	LiveAddress string `json:"liveAddress,omitempty"`
+	// Datasets are the dataset buttons' choices for Run A/B.
+	Datasets []DatasetInfo `json:"datasets"`
 }
 
 // Config describes the comparison the server runs.
@@ -229,7 +238,7 @@ func (s *Server) Config() ConfigReply {
 		SlotsPerReplica: c.SlotsPerReplica(), CycleSeconds: c.Controller.CycleSeconds,
 		WindowSeconds: s.opt.Window.Seconds(), SampleEverySeconds: s.opt.SampleEvery.Seconds(),
 		CooldownSeconds: s.opt.Cooldown.Seconds(), Seed: s.opt.Seed, PoolRecordTenant: control.PoolRecordTenant,
-		LiveAddress: s.opt.LiveAddr,
+		LiveAddress: s.opt.LiveAddr, Datasets: s.Datasets(),
 	}
 	for _, p := range abStacks {
 		gw, ctl, _ := stack.Describe(p.setup)

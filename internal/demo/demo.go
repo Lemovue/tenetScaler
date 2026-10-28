@@ -115,6 +115,10 @@ type Options struct {
 	LiveAddr       string
 	LiveKeys       map[string]gateway.KeyGrant
 	LiveSideBySide bool
+	// BurstGPTPath and AzurePath are the trace files of the BurstGPT and
+	// Azure datasets (see Datasets); a missing file only disables that
+	// dataset.
+	BurstGPTPath, AzurePath string
 }
 
 // normalize validates o and applies the defaults.

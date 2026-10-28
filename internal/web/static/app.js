@@ -25,6 +25,11 @@ window.TS = window.TS || {};
   let resultsLoaded = false;
   const panels = {};
   let decisions = null;
+  // The dataset of the next Run A/B; until the viewer picks one, it
+  // follows the last run's.
+  let dataset = "synthetic";
+  let datasetChosen = false;
+  let lastState = null;
 
   function tenantColor(i) {
     return SLOTS[i] || null;
@@ -97,6 +102,7 @@ window.TS = window.TS || {};
     if (c.backend.kind === "kubernetes") U.setText($("run-btn"), "Watch cluster");
     // Go live returns to the teammates' traffic of demo -live after a stop or an A/B run.
     $("live-btn").hidden = !c.liveAddress;
+    renderDatasets(c);
     TS.Comic.configure(c);
     U.setText($("backend-detail"), c.backend.detail + " Config: " + c.backend.configPath + ".");
     const sc = c.scenario;
@@ -116,6 +122,57 @@ window.TS = window.TS || {};
         { name: "starting (cold start)", colorVar: "--rep-starting", dash: "dot" }, { name: "budget", colorVar: "--threshold", dash: true }]);
     }
     decisions.setTenants(sc.tenants.map((t) => t.name), c.poolRecordTenant);
+  }
+
+  // renderDatasets builds the dataset buttons of Run A/B; a dashboard that
+  // watches a cluster replays nothing, so it has none.
+  function renderDatasets(c) {
+    const list = c.datasets || [];
+    $("dataset-box").hidden = c.backend.kind === "kubernetes" || list.length < 2;
+    const holder = $("dataset-buttons");
+    U.clear(holder);
+    for (const d of list) {
+      const b = U.el("button", { type: "button", class: "btn btn-small", "data-dataset": d.key, "aria-pressed": "false" }, [d.name]);
+      b.title = !d.available ? "Not available: " + (d.file || "no trace file") + " is missing on the server"
+        : d.file ? d.file + " · " + d.credit : "The scenario's own synthetic request sizes";
+      b.addEventListener("click", () => {
+        dataset = d.key;
+        datasetChosen = true;
+        renderDatasetChoice(lastState);
+      });
+      holder.appendChild(b);
+    }
+    renderDatasetChoice(lastState);
+  }
+
+  // renderDatasetChoice marks the chosen dataset, locks the buttons during
+  // a run, and says where the current or last run's request sizes came
+  // from, or else what the next run will use.
+  function renderDatasetChoice(state) {
+    if (!config) return;
+    const list = config.datasets || [];
+    const running = !!state && state.phase === "running";
+    const used = state && state.dataset;
+    if (used && !datasetChosen) dataset = used.key;
+    for (const b of $("dataset-buttons").children) {
+      const d = list.find((x) => x.key === b.dataset.dataset);
+      b.setAttribute("aria-pressed", b.dataset.dataset === dataset ? "true" : "false");
+      b.disabled = running || starting || !d || !d.available;
+    }
+    let text = "";
+    const chosen = list.find((x) => x.key === dataset);
+    if ($("dataset-box").hidden) {
+      text = "";
+    } else if (used && (running || used.key === dataset)) {
+      const src = list.find((x) => x.key === used.key);
+      text = (running ? "This run: " : "Last run: ") + used.summary + (src && src.credit ? " Source: " + src.credit + "." : "");
+    } else if (chosen && chosen.key !== "synthetic") {
+      text = "Next Run A/B: request sizes from " + chosen.name + " (" + chosen.file + "), scaled to this machine; " +
+        "tenants and arrival times stay synthetic. Source: " + chosen.credit + ".";
+    } else if (chosen) {
+      text = "Next Run A/B: the scenario's own synthetic request sizes.";
+    }
+    U.setText($("dataset-text"), text);
   }
 
   // andList joins names as "A", "A and B", "A, B and C".
@@ -190,6 +247,7 @@ window.TS = window.TS || {};
     $("run-btn").disabled = true;
     $("live-btn").disabled = true;
     $("stop-btn").disabled = true;
+    for (const b of $("dataset-buttons").children) b.disabled = true;
     TS.Decor.setActivity({ running: false });
   }
 
@@ -221,6 +279,8 @@ window.TS = window.TS || {};
     $("run-btn").disabled = running || starting;
     $("live-btn").disabled = running || starting;
     $("stop-btn").disabled = !running;
+    lastState = state;
+    renderDatasetChoice(state);
     // The server's run error: a failed run, or a stop whose shutdown
     // reported an error. Errors of the user's own start and stop requests
     // live in #action-error, which only those actions change.
@@ -497,7 +557,7 @@ window.TS = window.TS || {};
     $("run-btn").disabled = true;
     showActionError("");
     try {
-      const r = await U.requestJSON("POST", "/api/ab/start", {});
+      const r = await U.requestJSON("POST", "/api/ab/start", { dataset });
       if (r.status !== 202) showActionError("Could not start: " + ((r.body && r.body.error) || "HTTP " + r.status));
     } catch (err) {
       showActionError("Could not start: " + err.message);

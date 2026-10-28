@@ -3,6 +3,7 @@ package demo
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -33,6 +34,9 @@ type Server struct {
 	runs      int    // A/B runs started
 	closed    bool
 	observing *ObserveTarget // set by StartObserve: this dashboard only watches a cluster
+
+	dsMu   sync.Mutex               // serializes reading trace files
+	loaded map[string]loadedDataset // fitted trace datasets by key
 }
 
 // New validates opt and returns an idle server.
@@ -45,16 +49,27 @@ func New(opt Options) (*Server, error) {
 	return &Server{opt: o, roles: roles, scenario: describeScenario(o.Scenario, roles, o.Config)}, nil
 }
 
-// StartAB begins an A/B run with seed in the background and returns its
-// number. It returns ErrBusy while another run is in progress and
-// ErrClosed after Close. A dashboard that watches a cluster (StartObserve)
-// never starts a stack of its own: StartAB starts watching again instead.
+// StartAB begins an A/B run with seed on the synthetic dataset in the
+// background and returns its number. It returns ErrBusy while another run
+// is in progress and ErrClosed after Close. A dashboard that watches a
+// cluster (StartObserve) never starts a stack of its own: StartAB starts
+// watching again instead.
 func (s *Server) StartAB(seed int64) (int, error) {
+	return s.StartABWith(seed, DatasetSynthetic)
+}
+
+// StartABWith is StartAB with the request sizes taken from a dataset (see
+// Datasets); it returns ErrUnknownDataset for one that is unknown or whose
+// file is missing.
+func (s *Server) StartABWith(seed int64, dataset string) (int, error) {
 	s.mu.Lock()
 	target := s.observing
 	s.mu.Unlock()
 	if target != nil {
 		return s.StartObserve(*target)
+	}
+	if !s.datasetAvailable(dataset) {
+		return 0, fmt.Errorf("%w: %q", ErrUnknownDataset, dataset)
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -67,6 +82,7 @@ func (s *Server) StartAB(seed int64) (int, error) {
 	s.runs++
 	ctx, cancel := context.WithCancel(context.Background())
 	s.run = newRun(s.runs, seed, &s.opt, s.roles, cancel)
+	s.run.dataset, s.run.loadDataset = dataset, s.datasetSamples
 	go s.run.execute(ctx)
 	return s.runs, nil
 }
@@ -122,6 +138,7 @@ func (s *Server) State() State {
 	defer run.mu.Unlock()
 	started := run.startedAt
 	st.Phase, st.Message, st.Error, st.Seed, st.StartedAt = run.phase, run.message, run.err, run.seed, &started
+	st.Dataset = run.datasetUse
 	if run.liveMode != nil || run.observe != nil {
 		st.Live = true
 		if run.liveMode != nil {

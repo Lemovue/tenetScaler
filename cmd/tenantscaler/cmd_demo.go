@@ -50,6 +50,10 @@ func runDemo(args []string) error {
 		"dashboard's labels: simulated (deploy/k8s) | llama (deploy/k3s/llama)")
 	observeKeys := fs.String("observe-keys", "", "with -observe-gateway: the env file holding the cluster's TS_ADMIN_KEY "+
 		"(scripts/k3s/keys.ps1 writes it); the key is not printed")
+	burstGPT := fs.String("trace-burstgpt", ".cache/traces/BurstGPT_1.csv", "BurstGPT trace CSV for the dashboard's BurstGPT "+
+		"dataset button (github.com/HPMLL/BurstGPT releases); missing: the button is disabled")
+	azure := fs.String("trace-azure", ".cache/traces/AzureLLMInferenceTrace_code_1week.csv", "Azure LLM inference trace CSV "+
+		"for the dashboard's Azure dataset button (scripts/get-trace.ps1); missing: the button is disabled")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -93,7 +97,8 @@ func runDemo(args []string) error {
 	}
 	logger := slog.New(slog.NewTextHandler(os.Stderr, nil))
 	opt := demo.Options{Config: cfg, Backend: info, Scenario: sc, Seed: *seed, LogDir: *logDir, Logger: logger,
-		LiveAddr: *live, LiveKeys: keys, LiveSideBySide: *sideBySide} // the dashboard's Go live button
+		LiveAddr: *live, LiveKeys: keys, LiveSideBySide: *sideBySide, // the dashboard's Go live button
+		BurstGPTPath: *burstGPT, AzurePath: *azure}
 	if !info.Simulated {
 		opt.Cooldown = demo.RealCooldown
 		opt.Guard = func(ctx context.Context) error { return realrun.DefaultGuard(ctx, logger) }

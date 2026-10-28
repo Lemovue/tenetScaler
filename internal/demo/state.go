@@ -64,6 +64,9 @@ type State struct {
 	// watches a TenantScaler running in a Kubernetes cluster.
 	Live        bool   `json:"live"`
 	LiveAddress string `json:"liveAddress,omitempty"`
+	// Dataset is where the current or last A/B run's request sizes come
+	// from (nil before it is known, and for live and observing runs).
+	Dataset *DatasetUse `json:"dataset,omitempty"`
 }
 
 // StackState is one side of the A/B comparison.

@@ -396,6 +396,13 @@ body > .banner { position: relative; z-index: 1; margin: 12px var(--gutter) 0; m
 /* Offline: the header pill and both panel badges. */
 .badge-offline, .status-offline { background: var(--error-bg); color: var(--error-ink); border-color: var(--error-ink); }
 .scenario { margin: 12px 0 0; }
+/* Dataset buttons: a segmented choice; the pressed one is filled. */
+.dataset { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin: 14px 0 0; }
+.dataset[hidden] { display: none; }
+.dataset-label { font-weight: 600; font-size: 0.9rem; }
+.dataset-buttons { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.dataset-buttons .btn[aria-pressed="true"] { background: var(--ink); color: var(--invert-ink); }
+.dataset-text { margin: 8px 0 0; font-size: 0.85rem; }
 
 .panels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
 @media (max-width: 980px) { .panels { grid-template-columns: minmax(0, 1fr); } }

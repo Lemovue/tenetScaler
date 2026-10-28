@@ -1,6 +1,7 @@
 package workload
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -32,6 +33,68 @@ func TestLoadBurstGPT(t *testing.T) {
 	want := []LengthSample{{In: 472, Out: 18}, {In: 30, Out: 256}, {In: 0, Out: 5}}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("LoadBurstGPT = %v, want %v", got, want)
+	}
+}
+
+// The release files (e.g. BurstGPT_1.csv of release v2.0) have no Session
+// ID and Elapsed time columns.
+func TestLoadBurstGPTReleaseLayout(t *testing.T) {
+	content := "Timestamp,Model,Request tokens,Response tokens,Total tokens,Log Type\n" +
+		"5,ChatGPT,472,18,490,Conversation log\n" +
+		"45,ChatGPT,1087,0,1087,Conversation log\n" + // failed request: skipped
+		"118,GPT-4,417,276,693,Conversation log\n"
+	got, err := LoadBurstGPT(writeCSV(t, content))
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []LengthSample{{In: 472, Out: 18}, {In: 417, Out: 276}}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("LoadBurstGPT = %v, want %v", got, want)
+	}
+}
+
+// SampleTrace keeps at most n usable rows, the same ones on every read,
+// counts the file's rows, and refuses a file of the other kind.
+func TestSampleTrace(t *testing.T) {
+	var b strings.Builder
+	b.WriteString("Timestamp,Model,Request tokens,Response tokens,Total tokens,Log Type\n")
+	for i := range 1000 {
+		out := i % 7 // every 7th row (out 0) is a failure
+		fmt.Fprintf(&b, "%d,ChatGPT,%d,%d,%d,API log\n", i, i+1, out, i+1+out)
+	}
+	path := writeCSV(t, b.String())
+	got, stats, err := SampleTrace(path, TraceBurstGPT, 50)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 50 || stats.Rows != 1000 || stats.Usable != 1000-143 {
+		t.Fatalf("got %d samples, stats %+v; want 50 of 857 usable in 1000 rows", len(got), stats)
+	}
+	again, _, err := SampleTrace(path, TraceBurstGPT, 50)
+	if err != nil || !reflect.DeepEqual(got, again) {
+		t.Fatalf("a second read gave other samples (%v)", err)
+	}
+	late := 0
+	for _, s := range got {
+		if s.Out == 0 {
+			t.Fatalf("a failed row was kept: %+v", s)
+		}
+		if s.In > 500 {
+			late++
+		}
+	}
+	if late == 0 || late == len(got) {
+		t.Errorf("%d of %d samples from the second half of the file: want rows from the whole file", late, len(got))
+	}
+	all, _, err := SampleTrace(path, TraceBurstGPT, 0)
+	if err != nil || len(all) != 857 {
+		t.Fatalf("n = 0 kept %d rows (%v), want all 857", len(all), err)
+	}
+	if _, _, err := SampleTrace(path, TraceAzure, 50); err == nil || !strings.Contains(err.Error(), "unexpected header") {
+		t.Errorf("a BurstGPT file read as Azure: %v, want a header error", err)
+	}
+	if _, _, err := SampleTrace(path, "other", 50); err == nil {
+		t.Error("an unknown trace kind was accepted")
 	}
 }
 
