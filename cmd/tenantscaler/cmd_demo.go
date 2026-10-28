@@ -92,7 +92,8 @@ func runDemo(args []string) error {
 		return err
 	}
 	logger := slog.New(slog.NewTextHandler(os.Stderr, nil))
-	opt := demo.Options{Config: cfg, Backend: info, Scenario: sc, Seed: *seed, LogDir: *logDir, Logger: logger}
+	opt := demo.Options{Config: cfg, Backend: info, Scenario: sc, Seed: *seed, LogDir: *logDir, Logger: logger,
+		LiveAddr: *live, LiveKeys: keys, LiveSideBySide: *sideBySide} // the dashboard's Go live button
 	if !info.Simulated {
 		opt.Cooldown = demo.RealCooldown
 		opt.Guard = func(ctx context.Context) error { return realrun.DefaultGuard(ctx, logger) }

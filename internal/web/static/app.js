@@ -95,6 +95,8 @@ window.TS = window.TS || {};
     renderBadge(c);
     // Watching a cluster: the button starts watching again, never a local stack.
     if (c.backend.kind === "kubernetes") U.setText($("run-btn"), "Watch cluster");
+    // Go live returns to the teammates' traffic of demo -live after a stop or an A/B run.
+    $("live-btn").hidden = !c.liveAddress;
     TS.Comic.configure(c);
     U.setText($("backend-detail"), c.backend.detail + " Config: " + c.backend.configPath + ".");
     const sc = c.scenario;
@@ -186,6 +188,7 @@ window.TS = window.TS || {};
     U.setText($("phase-text"), "Offline: start the backend to run the A/B comparison.");
     U.setText($("phase-detail"), "");
     $("run-btn").disabled = true;
+    $("live-btn").disabled = true;
     $("stop-btn").disabled = true;
     TS.Decor.setActivity({ running: false });
   }
@@ -216,6 +219,7 @@ window.TS = window.TS || {};
     if ($("phase-text").textContent !== phase) U.setText($("phase-text"), phase);
     U.setText($("phase-detail"), running ? pct + "% · " + state.message : state.phase === "stopped" && !state.error ? state.message : "");
     $("run-btn").disabled = running || starting;
+    $("live-btn").disabled = running || starting;
     $("stop-btn").disabled = !running;
     // The server's run error: a failed run, or a stop whose shutdown
     // reported an error. Errors of the user's own start and stop requests
@@ -438,6 +442,22 @@ window.TS = window.TS || {};
     }
   }
 
+  async function startLive() {
+    starting = true;
+    $("run-btn").disabled = true;
+    $("live-btn").disabled = true;
+    showActionError("");
+    try {
+      const r = await U.requestJSON("POST", "/api/live/start", {});
+      if (r.status !== 202) showActionError("Could not go live: " + ((r.body && r.body.error) || "HTTP " + r.status));
+    } catch (err) {
+      showActionError("Could not go live: " + err.message);
+    } finally {
+      starting = false;
+      poll();
+    }
+  }
+
   async function stopRun() {
     $("stop-btn").disabled = true;
     showActionError("");
@@ -459,6 +479,7 @@ window.TS = window.TS || {};
     decisions = new TS.DecisionLog({ select: $("dec-tenant"), list: $("dec-list"), status: $("dec-status") });
     setupTabs();
     $("run-btn").addEventListener("click", startRun);
+    $("live-btn").addEventListener("click", startLive);
     $("stop-btn").addEventListener("click", stopRun);
     loadConfig();
   }

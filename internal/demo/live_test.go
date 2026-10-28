@@ -127,6 +127,55 @@ func TestLiveRunSideBySide(t *testing.T) {
 	}
 }
 
+// Go live (POST /api/live/start) starts the live run of demo -live again,
+// after a stop, without restarting the server; without a live address it
+// answers 409 and the config has no liveAddress.
+func TestGoLive(t *testing.T) {
+	keys, err := gateway.ParseTenantKeys("B:standard=live-test-key-of-B-0001")
+	if err != nil {
+		t.Fatal(err)
+	}
+	opt := testOptions(t)
+	opt.LiveAddr, opt.LiveKeys = "127.0.0.1:0", keys
+	srv, ts := newTestServer(t, opt)
+	var cfg ConfigReply
+	getJSON(t, ts.URL+"/api/config", &cfg)
+	if cfg.LiveAddress != "127.0.0.1:0" {
+		t.Fatalf("config liveAddress = %q, want the -live address", cfg.LiveAddress)
+	}
+	for round := range 2 { // live, stop, live again
+		if status, _, body := do(t, http.MethodPost, ts.URL+"/api/live/start", nil, nil); status != http.StatusAccepted {
+			t.Fatalf("round %d: POST /api/live/start: %d %s", round, status, body)
+		}
+		deadline := time.Now().Add(30 * time.Second)
+		for st := srv.State(); !st.Live || st.LiveAddress == "" || st.Stacks[1].Status != StatusRunning; st = srv.State() {
+			if time.Now().After(deadline) {
+				t.Fatalf("round %d: live run never ran: %+v", round, st)
+			}
+			time.Sleep(50 * time.Millisecond)
+		}
+		if status, _, _ := do(t, http.MethodPost, ts.URL+"/api/live/start", nil, nil); status != http.StatusConflict {
+			t.Fatalf("round %d: Go live while live: %d, want 409", round, status)
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		err := srv.StopAB(ctx)
+		cancel()
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	plain, ts2 := newTestServer(t, testOptions(t))
+	var cfg2 ConfigReply
+	getJSON(t, ts2.URL+"/api/config", &cfg2)
+	if status, _, _ := do(t, http.MethodPost, ts2.URL+"/api/live/start", nil, nil); status != http.StatusConflict || cfg2.LiveAddress != "" {
+		t.Fatalf("Go live without -live: %d, liveAddress %q; want 409 and none", status, cfg2.LiveAddress)
+	}
+	if st := plain.State(); st.Run != 0 {
+		t.Fatalf("Go live without -live started run %d", st.Run)
+	}
+}
+
 // completedB is tenant B's completions in a stack's latest live sample.
 func completedB(s StackState) int {
 	if len(s.Samples) == 0 {

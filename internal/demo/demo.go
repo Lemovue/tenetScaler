@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"tenantscaler/internal/config"
+	"tenantscaler/internal/gateway"
 	"tenantscaler/internal/realrun"
 	"tenantscaler/internal/sim"
 	"tenantscaler/internal/workload"
@@ -108,6 +109,12 @@ type Options struct {
 	Guard func(ctx context.Context) error
 	// Logger receives progress; nil means slog.Default().
 	Logger *slog.Logger
+	// LiveAddr, LiveKeys and LiveSideBySide are the live run the
+	// dashboard's Go live button starts (GoLive), as `demo -live` started
+	// it; LiveAddr "" means the button is unavailable.
+	LiveAddr       string
+	LiveKeys       map[string]gateway.KeyGrant
+	LiveSideBySide bool
 }
 
 // normalize validates o and applies the defaults.

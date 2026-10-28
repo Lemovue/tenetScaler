@@ -63,6 +63,21 @@ func (s *Server) StartLive(addr string, keys map[string]gateway.KeyGrant, baseli
 	return s.runs, nil
 }
 
+// ErrNoLive is returned by GoLive when the server was not given a live
+// address (demo -live).
+var ErrNoLive = errors.New("demo: no live address: start the dashboard with -live to enable Go live")
+
+// GoLive starts the live run the server was configured with
+// (Options.LiveAddr), as `demo -live` did at start: after a stop or an A/B
+// run, the dashboard's Go live button returns to the teammates' traffic
+// without restarting the server.
+func (s *Server) GoLive() (int, error) {
+	if s.opt.LiveAddr == "" {
+		return 0, ErrNoLive
+	}
+	return s.StartLive(s.opt.LiveAddr, s.opt.LiveKeys, s.opt.LiveSideBySide)
+}
+
 // executeLive runs the live stack until the run is stopped.
 func (r *abRun) executeLive(ctx context.Context) {
 	defer close(r.done)
