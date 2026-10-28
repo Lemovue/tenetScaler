@@ -9,7 +9,7 @@ import (
 	"tenantscaler/internal/model"
 )
 
-var t0 = time.Date(2026, 10, 26, 12, 0, 0, 0, time.UTC)
+var t0 = time.Date(2026, 1, 15, 12, 0, 0, 0, time.UTC)
 
 // rateFor returns a weighted token rate that the default config (C = 400,
 // headroom 0.2) turns into exactly the given replica demand.

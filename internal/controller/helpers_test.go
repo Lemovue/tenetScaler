@@ -16,7 +16,7 @@ import (
 )
 
 // t0 is the fixed start of the fake clock.
-var t0 = time.Date(2026, 10, 26, 12, 0, 0, 0, time.UTC)
+var t0 = time.Date(2026, 1, 15, 12, 0, 0, 0, time.UTC)
 
 // fakeClock advances by step on every call.
 type fakeClock struct {

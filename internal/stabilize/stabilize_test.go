@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-var t0 = time.Date(2026, 10, 26, 12, 0, 0, 0, time.UTC)
+var t0 = time.Date(2026, 1, 15, 12, 0, 0, 0, time.UTC)
 
 type call struct {
 	at      time.Duration // offset from t0

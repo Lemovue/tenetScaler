@@ -609,7 +609,7 @@ records), `GET /api/results` (real + simulated summaries if present), `GET /api/
 UI under `internal/web/static`: two panels (baseline | TenantScaler) filled as each run
 progresses, Run A/B button, decision log with plain-English reasons, results tab.
 
-## 19. Findings from the real runs (2026-10-26) and the changes they caused
+## 19. Findings from the real runs and the changes they caused
 
 Every change below was found on real llama.cpp replicas or by the calibrated simulator, fixed
 with a regression test that fails without the fix, and re-measured.

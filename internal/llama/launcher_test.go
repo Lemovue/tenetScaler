@@ -148,8 +148,8 @@ llamacpp:requests_deferred 2
 
 func TestReadPIDs(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "pids")
-	data := "12 r-1 2026-10-26T10:00:00Z\n\nnot-a-pid\n-4 bad\n0 zero\n34 r-2\n12 r-1-again\n" +
-		"56 r-5 not-a-time\n34 r-2-reused 2026-10-26T11:00:00.5+05:30\n"
+	data := "12 r-1 2026-01-15T10:00:00Z\n\nnot-a-pid\n-4 bad\n0 zero\n34 r-2\n12 r-1-again\n" +
+		"56 r-5 not-a-time\n34 r-2-reused 2026-01-15T11:00:00.5+05:30\n"
 	if err := os.WriteFile(path, []byte(data), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -162,8 +162,8 @@ func TestReadPIDs(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := []time.Time{
-		time.Date(2026, 10, 26, 10, 0, 0, 0, time.UTC),                         // a later line without a time keeps it
-		time.Date(2026, 10, 26, 5, 30, 0, 500*int(time.Millisecond), time.UTC), // the last timed line wins
+		time.Date(2026, 1, 15, 10, 0, 0, 0, time.UTC),                         // a later line without a time keeps it
+		time.Date(2026, 1, 15, 5, 30, 0, 500*int(time.Millisecond), time.UTC), // the last timed line wins
 		{}, // no valid time: checked by image name only
 	}
 	for i, e := range entries {

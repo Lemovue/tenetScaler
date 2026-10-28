@@ -98,7 +98,7 @@ func TestRoundTripThroughUnstructured(t *testing.T) {
 		Status: TenantScalerStatus{
 			Grant: 4, Demand: 6, Shedding: true, SLOSlack: -0.25, Reason: "borrowed 2",
 			PolicyVersion: 9, ObservedGeneration: 3,
-			LastUpdate: metav1.NewTime(time.Date(2026, 10, 26, 12, 0, 0, 0, time.UTC)),
+			LastUpdate: metav1.NewTime(time.Date(2026, 1, 15, 12, 0, 0, 0, time.UTC)),
 		},
 	}
 	m, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&in)

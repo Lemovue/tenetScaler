@@ -33,7 +33,7 @@ func statsServer(t *testing.T, body string, windows *[]string) *httptest.Server 
 // gatewayStatsJSON is a full gateway.Stats answer, including fields the
 // controller ignores.
 const gatewayStatsJSON = `{
- "time": "2026-10-26T12:00:00Z", "mode": "fair", "policyVersion": 7, "policyLatencyMs": 1.5,
+ "time": "2026-01-15T12:00:00Z", "mode": "fair", "policyVersion": 7, "policyLatencyMs": 1.5,
  "endpoints": 4, "slots": 16, "inFlight": 5, "queued": 3,
  "tenants": [
   {"tenant": "B", "arrivalWeightedTokensPerSec": 100, "arrivalRequestsPerSec": 1, "queueLength": 0,
