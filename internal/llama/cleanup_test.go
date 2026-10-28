@@ -84,7 +84,7 @@ func TestCleanupSkipsReusedPID(t *testing.T) {
 }
 
 func TestSameLaunch(t *testing.T) {
-	launched := time.Date(2026, 10, 26, 10, 0, 0, 0, time.UTC)
+	launched := time.Date(2026, 1, 15, 10, 0, 0, 0, time.UTC)
 	tests := []struct {
 		name    string
 		created time.Time

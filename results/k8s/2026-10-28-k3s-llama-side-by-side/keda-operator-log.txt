@@ -1,0 +1,11 @@
+2026-10-27T23:20:38Z	INFO	setup	Outbound filter mode off allows tenant-selected Vault addresses without destination restrictions; allowedEndpoints is ignored. Configure KEDA_OUTBOUND_FILTER.hashiCorpVault with mode enforce and trusted allowedEndpoints to restrict destinations
+2026-10-27T23:20:38Z	INFO	setup	Starting manager
+2026-10-27T23:20:38Z	INFO	setup	KEDA Version: 2.21.0
+2026-10-27T23:20:38Z	INFO	setup	Git Commit: 626ded5d783108bedf647e20bbc83f8e458e02e4
+2026-10-27T23:20:38Z	INFO	setup	Go Version: go1.26.8
+2026-10-27T23:20:38Z	INFO	setup	Go OS/Arch: linux/amd64
+2026-10-27T23:20:38Z	INFO	setup	Running on Kubernetes 1.36	{"version": "v1.36.5+k3s1"}
+2026-10-27T23:20:39Z	INFO	controller-runtime.metrics	Starting metrics server
+2026-10-27T23:20:39Z	INFO	starting server	{"name": "health probe", "addr": "[::]:8081"}
+I1027 23:20:39.022311       1 leaderelection.go:258] "Attempting to acquire leader lease..." lock="keda/operator.keda.sh"
+2026-10-27T23:20:39Z	INFO	controller-runtime.metrics	Serving metrics server	{"bindAddress": ":8080", "secure": false}

@@ -259,6 +259,7 @@ func TestKeysComeFromTheSecret(t *testing.T) {
 	}
 	want := map[string][]string{
 		"gateway":                 {"TS_TENANT_KEYS", "TS_ADMIN_KEY"},
+		"gateway-baseline":        {"TS_TENANT_KEYS", "TS_ADMIN_KEY"},
 		"tenantscaler-controller": {"TS_ADMIN_KEY"},
 	}
 	for _, m := range byKind(ms, "Deployment") {

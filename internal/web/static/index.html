@@ -73,6 +73,7 @@
     <div class="card">
       <div class="controls">
         <button id="run-btn" class="btn btn-primary" type="button" disabled>Run A/B</button>
+        <button id="live-btn" class="btn" type="button" hidden disabled>Go live</button>
         <button id="stop-btn" class="btn" type="button" disabled>Stop</button>
         <div class="phase">
           <div class="progress" id="progress" role="progressbar" aria-label="A/B run progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="progress-bar"></span></div>
@@ -80,6 +81,11 @@
           <p id="phase-detail" class="muted"></p>
         </div>
       </div>
+      <div id="dataset-box" class="dataset" hidden>
+        <span id="dataset-label" class="dataset-label">Dataset for Run A/B</span>
+        <div id="dataset-buttons" class="dataset-buttons" role="group" aria-labelledby="dataset-label"></div>
+      </div>
+      <p id="dataset-text" class="dataset-text muted"></p>
       <p id="scenario-text" class="scenario"></p>
       <details class="backend-more">
         <summary>Backend details</summary>

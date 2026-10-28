@@ -25,6 +25,11 @@ window.TS = window.TS || {};
   let resultsLoaded = false;
   const panels = {};
   let decisions = null;
+  // The dataset of the next Run A/B; until the viewer picks one, it
+  // follows the last run's.
+  let dataset = "synthetic";
+  let datasetChosen = false;
+  let lastState = null;
 
   function tenantColor(i) {
     return SLOTS[i] || null;
@@ -93,6 +98,11 @@ window.TS = window.TS || {};
 
   function renderConfig(c) {
     renderBadge(c);
+    // Watching a cluster: the button starts watching again, never a local stack.
+    if (c.backend.kind === "kubernetes") U.setText($("run-btn"), "Watch cluster");
+    // Go live returns to the teammates' traffic of demo -live after a stop or an A/B run.
+    $("live-btn").hidden = !c.liveAddress;
+    renderDatasets(c);
     TS.Comic.configure(c);
     U.setText($("backend-detail"), c.backend.detail + " Config: " + c.backend.configPath + ".");
     const sc = c.scenario;
@@ -112,6 +122,57 @@ window.TS = window.TS || {};
         { name: "starting (cold start)", colorVar: "--rep-starting", dash: "dot" }, { name: "budget", colorVar: "--threshold", dash: true }]);
     }
     decisions.setTenants(sc.tenants.map((t) => t.name), c.poolRecordTenant);
+  }
+
+  // renderDatasets builds the dataset buttons of Run A/B; a dashboard that
+  // watches a cluster replays nothing, so it has none.
+  function renderDatasets(c) {
+    const list = c.datasets || [];
+    $("dataset-box").hidden = c.backend.kind === "kubernetes" || list.length < 2;
+    const holder = $("dataset-buttons");
+    U.clear(holder);
+    for (const d of list) {
+      const b = U.el("button", { type: "button", class: "btn btn-small", "data-dataset": d.key, "aria-pressed": "false" }, [d.name]);
+      b.title = !d.available ? "Not available: " + (d.file || "no trace file") + " is missing on the server"
+        : d.file ? d.file + " · " + d.credit : "The scenario's own synthetic request sizes";
+      b.addEventListener("click", () => {
+        dataset = d.key;
+        datasetChosen = true;
+        renderDatasetChoice(lastState);
+      });
+      holder.appendChild(b);
+    }
+    renderDatasetChoice(lastState);
+  }
+
+  // renderDatasetChoice marks the chosen dataset, locks the buttons during
+  // a run, and says where the current or last run's request sizes came
+  // from, or else what the next run will use.
+  function renderDatasetChoice(state) {
+    if (!config) return;
+    const list = config.datasets || [];
+    const running = !!state && state.phase === "running";
+    const used = state && state.dataset;
+    if (used && !datasetChosen) dataset = used.key;
+    for (const b of $("dataset-buttons").children) {
+      const d = list.find((x) => x.key === b.dataset.dataset);
+      b.setAttribute("aria-pressed", b.dataset.dataset === dataset ? "true" : "false");
+      b.disabled = running || starting || !d || !d.available;
+    }
+    let text = "";
+    const chosen = list.find((x) => x.key === dataset);
+    if ($("dataset-box").hidden) {
+      text = "";
+    } else if (used && (running || used.key === dataset)) {
+      const src = list.find((x) => x.key === used.key);
+      text = (running ? "This run: " : "Last run: ") + used.summary + (src && src.credit ? " Source: " + src.credit + "." : "");
+    } else if (chosen && chosen.key !== "synthetic") {
+      text = "Next Run A/B: request sizes from " + chosen.name + " (" + chosen.file + "), scaled to this machine; " +
+        "tenants and arrival times stay synthetic. Source: " + chosen.credit + ".";
+    } else if (chosen) {
+      text = "Next Run A/B: the scenario's own synthetic request sizes.";
+    }
+    U.setText($("dataset-text"), text);
   }
 
   // andList joins names as "A", "A and B", "A, B and C".
@@ -184,7 +245,9 @@ window.TS = window.TS || {};
     U.setText($("phase-text"), "Offline: start the backend to run the A/B comparison.");
     U.setText($("phase-detail"), "");
     $("run-btn").disabled = true;
+    $("live-btn").disabled = true;
     $("stop-btn").disabled = true;
+    for (const b of $("dataset-buttons").children) b.disabled = true;
     TS.Decor.setActivity({ running: false });
   }
 
@@ -214,7 +277,10 @@ window.TS = window.TS || {};
     if ($("phase-text").textContent !== phase) U.setText($("phase-text"), phase);
     U.setText($("phase-detail"), running ? pct + "% · " + state.message : state.phase === "stopped" && !state.error ? state.message : "");
     $("run-btn").disabled = running || starting;
+    $("live-btn").disabled = running || starting;
     $("stop-btn").disabled = !running;
+    lastState = state;
+    renderDatasetChoice(state);
     // The server's run error: a failed run, or a stop whose shutdown
     // reported an error. Errors of the user's own start and stop requests
     // live in #action-error, which only those actions change.
@@ -294,7 +360,11 @@ window.TS = window.TS || {};
   function renderPanel(p, s, state, shared) {
     const sc = state.scenario;
     let status = STATUS_TEXT[s.status] || s.status;
-    if (s.status === "running") status += " · " + Math.round(s.elapsedSeconds) + " / " + sc.durationSeconds + " s";
+    if (s.status === "running") {
+      // Live traffic (teammates, or a watched cluster) is not the replayed trace.
+      status = state.live ? "Live · " + Math.round(s.elapsedSeconds) + " s"
+        : status + " · " + Math.round(s.elapsedSeconds) + " / " + sc.durationSeconds + " s";
+    }
     U.setText(p.status, status);
     p.status.className = "status" + (s.status === "done" ? " status-done" : s.status === "error" ? " status-error" : "");
     p.error.hidden = !s.error;
@@ -307,7 +377,8 @@ window.TS = window.TS || {};
         ys: s.samples.map((x) => (x.tenants && x.tenants[t.name] ? x.tenants[t.name].p99TtftSeconds : null)) }))
         .filter((x) => x.colorVar),
       thresholds: sloThresholds(sc.tenants),
-      band: sc.noisy ? { x0: sc.spikeStartSeconds, x1: sc.spikeEndSeconds, label: sc.noisy + " spike" } : null,
+      // The replayed trace's spike window; live traffic spikes whenever it does.
+      band: sc.noisy && !state.live ? { x0: sc.spikeStartSeconds, x1: sc.spikeEndSeconds, label: sc.noisy + " spike" } : null,
     });
     const cap = config ? config.capacityReplicas : 1;
     p.replicas.update({
@@ -320,7 +391,8 @@ window.TS = window.TS || {};
       ],
       thresholds: [{ y: cap, label: "budget" }],
     });
-    renderTenantTable(p, s, sc, state.windowSeconds);
+    const base = s.key === "tenantscaler" ? tenantFigures(state.stacks.find((x) => x.key === "baseline")) : null;
+    renderTenantTable(p, s, sc, state.windowSeconds, base);
     renderEngine(p, s, state);
   }
 
@@ -335,6 +407,8 @@ window.TS = window.TS || {};
     met: "M3 8.5 6.5 12 13 4.5",
     missed: "M4 4 12 12M12 4 4 12",
     shed: "M8 2.2a5.8 5.8 0 1 0 0 11.6 5.8 5.8 0 1 0 0-11.6M3.9 12.1 12.1 3.9",
+    better: "M8 13V3M4 7l4-4 4 4",
+    worse: "M8 3v10M4 9l4 4 4-4",
   };
 
   function chip(kind, text) {
@@ -354,14 +428,76 @@ window.TS = window.TS || {};
   // its SLO target, MISSED when it does not, and adds SHED when some of its
   // requests were shed. Each label has text and an icon; colour only
   // repeats them.
-  function sloStatus(attainment, target, shed) {
+  function sloStatus(attainment, target, shed, versus) {
     const chips = [];
     if (U.isNum(attainment) && U.isNum(target)) chips.push(attainment >= target ? chip("met", "MET") : chip("missed", "MISSED"));
     if (U.isNum(shed) && shed > 0) chips.push(chip("shed", "SHED"));
+    if (versus) chips.push(versus);
     return chips.length ? U.el("span", { class: "slo-cell" }, chips) : "—";
   }
 
-  function renderTenantTable(p, s, sc, windowSeconds) {
+  // tenantFigures returns, per tenant of a stack, the share of its requests
+  // that met the SLO (shed ones count as missed, so shedding a tenant never
+  // raises it), its p99 TTFT and how many were shed, with what they cover:
+  // "run" (the whole run's metrics, once it finished) or "live" (its latest
+  // live window, while it runs: a stopped stack's last window is old and
+  // compares with nothing). A live window does not count its failed
+  // requests, so with shedding its share is unknown (null).
+  function tenantFigures(s) {
+    const out = { kind: null, by: {} };
+    if (!s) return out;
+    if (s.metrics && s.tenants) {
+      out.kind = "run";
+      for (const t of s.tenants) {
+        let att = null;
+        if (t.requests > 0 && U.isNum(t.attainmentPct)) att = (t.attainmentPct / 100) * (t.requests - t.shed) / t.requests;
+        else if (t.requests > 0 && t.shed === t.requests) att = 0;
+        out.by[t.tenant] = { att, p99: t.p99TtftSeconds, shed: t.shed };
+      }
+      return out;
+    }
+    const last = s.status === "running" && s.samples && s.samples.length ? s.samples[s.samples.length - 1] : null;
+    if (last && last.tenants) {
+      out.kind = "live";
+      for (const [name, tw] of Object.entries(last.tenants)) out.by[name] = { att: tw.shed > 0 ? null : tw.attainment, p99: tw.p99TtftSeconds, shed: tw.shed };
+    }
+    return out;
+  }
+
+  // versusChip compares a tenant on TenantScaler with the same tenant on the
+  // baseline: the SLO attainment difference in points, else, when neither
+  // shed any (a p99 over fewer, kept requests flatters), the p99 TTFT ratio.
+  // It says so whether TenantScaler did better or worse.
+  function versusChip(mine, base) {
+    if (!mine || !base) return null;
+    const why = "Same traffic on both stacks; shed requests count as missed";
+    if (U.isNum(mine.att) && U.isNum(base.att)) {
+      const pts = Math.round((mine.att - base.att) * 100);
+      if (pts !== 0) {
+        const c = chip(pts > 0 ? "better" : "worse", (pts > 0 ? "+" : "") + pts + " pts vs baseline");
+        c.title = "SLO attainment " + U.pct(mine.att * 100) + " on TenantScaler, " + U.pct(base.att * 100) + " on the baseline. " + why;
+        return c;
+      }
+    }
+    if (mine.shed > 0 || base.shed > 0) return null;
+    if (U.isNum(mine.p99) && U.isNum(base.p99) && mine.p99 > 0 && base.p99 > 0) {
+      const r = base.p99 / mine.p99;
+      const fmt = (x) => x.toFixed(x >= 10 ? 0 : 1) + "×";
+      const c = r >= 1.2 ? chip("better", "p99 " + fmt(r) + " lower vs baseline")
+        : r <= 1 / 1.2 ? chip("worse", "p99 " + fmt(1 / r) + " higher vs baseline") : null;
+      if (c) c.title = "p99 TTFT " + U.sec(mine.p99) + " on TenantScaler, " + U.sec(base.p99) + " on the baseline. " + why;
+      return c;
+    }
+    return null;
+  }
+
+  // renderTenantTable fills a panel's per-tenant table. base, for the
+  // TenantScaler panel, holds the baseline's figures; each row then also
+  // compares the tenant with the baseline, but only like with like (both
+  // whole runs, or both live windows of a side-by-side run).
+  function renderTenantTable(p, s, sc, windowSeconds, base) {
+    const mine = tenantFigures(s);
+    const versus = (name) => (base && base.kind && base.kind === mine.kind ? versusChip(mine.by[name], base.by[name]) : null);
     U.clear(p.rows);
     const row = (cells) => p.rows.appendChild(U.el("tr", {}, cells.map((c, i) => U.el(i ? "td" : "th", i ? {} : { scope: "row" }, c))));
     const target = (name) => (sc.tenants.find((t) => t.name === name) || {}).targetFraction;
@@ -369,7 +505,7 @@ window.TS = window.TS || {};
       U.setText(p.scope, "(whole run, client-measured)");
       for (const t of s.tenants) {
         row([tenantName(t.tenant, sc), U.pct(t.attainmentPct), U.sec(t.p99TtftSeconds), t.shed + " (" + U.pct(t.shedPct) + ")",
-          sloStatus(U.isNum(t.attainmentPct) ? t.attainmentPct / 100 : null, target(t.tenant), t.shed)]);
+          sloStatus(U.isNum(t.attainmentPct) ? t.attainmentPct / 100 : null, target(t.tenant), t.shed, versus(t.tenant))]);
       }
       return;
     }
@@ -380,7 +516,7 @@ window.TS = window.TS || {};
         const tw = last.tenants[t.name] || {};
         row([tenantName(t.name, sc), U.isNum(tw.attainment) ? U.pct(tw.attainment * 100) : "no completions",
           U.sec(tw.p99TtftSeconds), U.isNum(tw.shed) ? tw.shed + " in " + windowSeconds + " s" : "—",
-          sloStatus(tw.attainment, t.targetFraction, tw.shed)]);
+          sloStatus(tw.attainment, t.targetFraction, tw.shed, versus(t.name))]);
       }
       return;
     }
@@ -421,10 +557,26 @@ window.TS = window.TS || {};
     $("run-btn").disabled = true;
     showActionError("");
     try {
-      const r = await U.requestJSON("POST", "/api/ab/start", {});
+      const r = await U.requestJSON("POST", "/api/ab/start", { dataset });
       if (r.status !== 202) showActionError("Could not start: " + ((r.body && r.body.error) || "HTTP " + r.status));
     } catch (err) {
       showActionError("Could not start: " + err.message);
+    } finally {
+      starting = false;
+      poll();
+    }
+  }
+
+  async function startLive() {
+    starting = true;
+    $("run-btn").disabled = true;
+    $("live-btn").disabled = true;
+    showActionError("");
+    try {
+      const r = await U.requestJSON("POST", "/api/live/start", {});
+      if (r.status !== 202) showActionError("Could not go live: " + ((r.body && r.body.error) || "HTTP " + r.status));
+    } catch (err) {
+      showActionError("Could not go live: " + err.message);
     } finally {
       starting = false;
       poll();
@@ -452,6 +604,7 @@ window.TS = window.TS || {};
     decisions = new TS.DecisionLog({ select: $("dec-tenant"), list: $("dec-list"), status: $("dec-status") });
     setupTabs();
     $("run-btn").addEventListener("click", startRun);
+    $("live-btn").addEventListener("click", startLive);
     $("stop-btn").addEventListener("click", stopRun);
     loadConfig();
   }

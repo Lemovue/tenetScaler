@@ -1,0 +1,11 @@
+live demo traffic (not the experiment): profile steady (A pattern) -> http://127.0.0.1:8081; Ctrl+C stops
+   10s  answered   0  429   0  failed   2  p95 time-to-first-token -
+   20s  answered   2  429   0  failed   0  p95 time-to-first-token 0.49 s
+   30s  answered   0  429   0  failed   0  p95 time-to-first-token -
+   40s  answered   0  429   0  failed   0  p95 time-to-first-token -
+   50s  answered   2  429   0  failed   0  p95 time-to-first-token 1.18 s
+  1m0s  answered   1  429   0  failed   0  p95 time-to-first-token 3.26 s
+ 1m10s  answered   6  429   0  failed   0  p95 time-to-first-token 2.62 s
+ 1m20s  answered   4  429   0  failed   0  p95 time-to-first-token 4.12 s
+ 1m30s  answered   5  429   0  failed   0  p95 time-to-first-token 1.40 s
+total after 1m40s: 25 answered, 0 rejected with 429, 3 failed

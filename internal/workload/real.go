@@ -19,7 +19,7 @@ func RealLengths() (in, out LengthDist) {
 // llama.cpp replicas, 2 threads and 4 slots each) on the development
 // machine (Intel Core i5-14450HX). Derivation:
 //
-//   - `tenantscaler profile -config config/real.yaml` (2026-10-26, llama.cpp
+//   - `tenantscaler profile -config config/real.yaml` (llama.cpp
 //     b11898, Qwen2.5-0.5B-Instruct Q4_K_M, RealLengths, results/real/profile.md)
 //     measured, with every replica pinned to its own P-core, C = 117
 //     weighted tokens/s per replica while all 4 replicas are busy (prompt

@@ -1,6 +1,6 @@
 # TenantScaler — Build Plan
 
-## Machine resources (detected 2026-10-26, Section 1.1)
+## Machine resources (detected, Section 1.1)
 
 | Item | Detected |
 |---|---|
@@ -210,14 +210,14 @@ After each milestone: guard → build → tests → smoke run → update this ma
 | D2 | Controller→gateway mechanism (decided, FW 3.4) | HTTP push of a versioned policy every cycle; gateway keeps last-known-good | measurable propagation latency; avoids ConfigMap volume delay |
 | D3 | E2E smoke test style (decided) | Go test driving the same HTTP API the dashboard buttons call, headless, `-p 1` | no browser download needed (Playwright not installed) |
 | D4 | Lint (decided) | `gofmt -l` empty + `go vet ./...` + `node --check` on JS + `python -m py_compile` | no golangci-lint installed; these are available offline |
-| U1 | User (2026-10-26): "we need real implementation… if we want real metrics" | Clarified: **real metrics from real inference** (supersedes Q2's simulated-only replicas and changes Q3) | All code was already real; what changes is the model compute and where the headline numbers come from |
+| U1 | User: "we need real implementation… if we want real metrics" | Clarified: **real metrics from real inference** (supersedes Q2's simulated-only replicas and changes Q3) | All code was already real; what changes is the model compute and where the headline numbers come from |
 | Q5 | Which real inference engine? | **llama.cpp on GPU (Recommended)** | Replica = real `llama-server` process with Qwen2.5-0.5B-Instruct Q4 GGUF on the RTX 3050; real streaming, batching and model-load cold start; replica budget = what fits in ≤ 70% of free VRAM (measured) |
 | Q6 | What should the evaluation report? | **Real core + labelled sim (Recommended)** | Headline numbers from REAL runs: S2 KEDA, S3 static partition, S5 no-gateway ablation, S7 TenantScaler, 5 runs each; the 7-setup / cold-start sweep stays as a clearly labelled simulated appendix |
 | Q7 | How should the live demo compare stacks with ~4 real replicas? | **Sequential A/B (Recommended)** | Same recorded traffic runs on the baseline, then on TenantScaler, each with the full replica budget; dashboard shows both panels side by side |
 | D5 | Model and cache location (decided) | Qwen2.5-0.5B-Instruct Q4_K_M (Apache-2.0); downloads in `.cache/` (gitignored), pinned versions + SHA-256 check in `scripts/setup-llama.*` | smallest instruct model that streams real tokens fast; leaves VRAM for several replicas |
-| M1 | Measured 2026-10-26 (real llama.cpp b11898, Qwen2.5-0.5B Q4_K_M, unique prompts, 4 slots/replica) | GPU: 549 MiB/replica, cold start 3.9 s first then ~0.6 s; aggregate **flat ~630 tok/s for 1→6 replicas** (TPOT 5.6→34.3 ms). CPU pinned 1 physical core/replica: **66→127→169→214 tok/s for 1→4 replicas**, TPOT 59–67 ms | on one GPU a replica adds no capacity, so GPU replicas would make every autoscaling result an artifact |
+| M1 | Measured (real llama.cpp b11898, Qwen2.5-0.5B Q4_K_M, unique prompts, 4 slots/replica) | GPU: 549 MiB/replica, cold start 3.9 s first then ~0.6 s; aggregate **flat ~630 tok/s for 1→6 replicas** (TPOT 5.6→34.3 ms). CPU pinned 1 physical core/replica: **66→127→169→214 tok/s for 1→4 replicas**, TPOT 59–67 ms | on one GPU a replica adds no capacity, so GPU replicas would make every autoscaling result an artifact |
 | Q8 | Flagged per §0.1: the GPU choice (Q5) is worse given M1. Where should real replicas run? | **CPU-pinned replicas (Recommended)** | Real llama.cpp + Qwen 0.5B, each replica pinned to one physical core (2 threads), budget **4 replicas** (= the N = 8 thread cap); GPU unused. Guarantees 1/1/1 of 4. Simulated engine parameters are calibrated from the real profile. |
-| D6 | Fixes found on real replicas (2026-10-26, `docs/DESIGN.md` §19) | Gateway weight = max(grant, guarantee); over-share shedding only under contention; slot reservation for shedding tenants (+ S7nr ablation); upstream keep-alive retry; separate prefill load factor | Each has a regression test that fails without it; committed in 8ed96d9 |
+| D6 | Fixes found on real replicas (`docs/DESIGN.md` §19) | Gateway weight = max(grant, guarantee); over-share shedding only under contention; slot reservation for shedding tenants (+ S7nr ablation); upstream keep-alive retry; separate prefill load factor | Each has a regression test that fails without it; committed in 8ed96d9 |
 | U2 | User (2026-10-27): stopped the build, then proposed a Kaggle GPU tier with tunnels and three teammate APIs | Explained feasibility; started gateway API keys | Superseded by BRIEF-v2 (Q9 cuts the GPU tier); API keys kept for Q16 |
 | Q9 | BRIEF-v2: GPU/Kaggle tier | **Cut.** M1 measured flat aggregate throughput on one shared GPU (~630 tok/s for 1–6 replicas); a T4 would repeat that. No tunnels anywhere | Real replicas stay CPU-pinned; the per-GPU replica option was reverted before commit |
 | Q10 | BRIEF-v2: real headline set | **S2, S3, S4, S5, S7** (S4 vs S7 is the novelty test); simulated appendix S1–S7 + S8 | R27, R30 |

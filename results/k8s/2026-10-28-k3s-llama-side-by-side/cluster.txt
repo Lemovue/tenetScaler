@@ -1,0 +1,60 @@
+# kubectl version
+Client Version: v1.36.5+k3s1
+Kustomize Version: v5.8.1
+Server Version: v1.36.5+k3s1
+
+# node
+NAME    STATUS   ROLES           AGE    VERSION        INTERNAL-IP     EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION                              CONTAINER-RUNTIME
+nilay   Ready    control-plane   3h4m   v1.36.5+k3s1   10.239.70.243   <none>        Ubuntu 24.04.5 LTS   6.18.54.1-microsoft-standard-WSL2 (amd64)   containerd://2.3.4-k3s1.36
+
+# images
+docker.io/library/tenantscaler               dev                 d30e152d34db2       32MB
+ghcr.io/ggml-org/llama.cpp                   <none>              f8f0ed009458f       309MB
+ghcr.io/kedacore/keda-metrics-apiserver      2.21.0              3e9e8f2d3a5aa       72.9MB
+ghcr.io/kedacore/keda                        2.21.0              bf4f1bf7e1b1b       98.9MB
+
+# deployments
+NAME                      READY   UP-TO-DATE   AVAILABLE   AGE    CONTAINERS   IMAGES                                                                                               SELECTOR
+gateway                   0/1     1            0           3h3m   gateway      tenantscaler:dev                                                                                     app.kubernetes.io/name=gateway
+gateway-baseline          0/1     1            0           41m    gateway      tenantscaler:dev                                                                                     app.kubernetes.io/name=gateway-baseline
+model-pool                0/1     1            0           3h3m   replica      ghcr.io/ggml-org/llama.cpp@sha256:989a1a193343d5e361e14b666e316186ab48be0152cf0a34b30e3c0648ee944f   app.kubernetes.io/name=model-pool
+model-pool-baseline       0/2     2            0           41m    replica      ghcr.io/ggml-org/llama.cpp@sha256:989a1a193343d5e361e14b666e316186ab48be0152cf0a34b30e3c0648ee944f   app.kubernetes.io/name=model-pool-baseline
+tenantscaler-controller   0/1     1            0           3h3m   controller   tenantscaler:dev                                                                                     app.kubernetes.io/name=tenantscaler-controller
+
+# pods
+NAME                                      READY   STATUS    RESTARTS        AGE   IP           NODE    NOMINATED NODE   READINESS GATES
+gateway-57dfb4f98b-vr694                  0/1     Running   1 (4m36s ago)   22m   10.42.0.53   nilay   <none>           <none>
+gateway-baseline-fb459dd6c-89pg4          0/1     Running   1 (4m36s ago)   22m   10.42.0.56   nilay   <none>           <none>
+model-pool-55d5c44b9c-dzl6c               0/1     Running   1 (4m36s ago)   21m   10.42.0.58   nilay   <none>           <none>
+model-pool-baseline-64c9dbb4fd-lq2k5      0/1     Running   1 (4m36s ago)   22m   10.42.0.54   nilay   <none>           <none>
+model-pool-baseline-64c9dbb4fd-wjqkw      0/1     Running   1 (4m36s ago)   21m   10.42.0.57   nilay   <none>           <none>
+tenantscaler-controller-c6698db8b-7xqbm   0/1     Running   1 (4m36s ago)   22m   10.42.0.52   nilay   <none>           <none>
+
+# pod CPU and memory now (metrics-server)
+error: Metrics API not available
+
+# KEDA
+NAME                                      READY   STATUS    RESTARTS        AGE
+keda-metrics-apiserver-54cb8564f9-czn5p   0/1     Running   1 (4m36s ago)   42m
+keda-operator-67f644ffd5-6bv8f            0/1     Running   2 (8m10s ago)   42m
+NAME                                       SCALETARGETKIND      SCALETARGETNAME       MIN   MAX   READY   ACTIVE   FALLBACK   PAUSED   TRIGGERS      AUTHENTICATIONS          AGE
+scaledobject.keda.sh/model-pool-baseline   apps/v1.Deployment   model-pool-baseline   1     2     True    False    False      False    metrics-api   gateway-baseline-admin   41m
+
+NAME                                                               REFERENCE                        TARGETS             MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/keda-hpa-model-pool-baseline   Deployment/model-pool-baseline   <unknown>/8 (avg)   1         2         2          41m
+
+# TenantScalers
+NAME   POOL              GUARANTEED   MAX   GRANT   DEMAND   SHEDDING   AGE
+a      shared-llm-pool   1            2     0       0        false      3h3m
+b      shared-llm-pool   1            2     0       0        false      3h3m
+c      shared-llm-pool   0            2     0       0        false      3h3m
+
+# llama pod args and resources
+ghcr.io/ggml-org/llama.cpp@sha256:989a1a193343d5e361e14b666e316186ab48be0152cf0a34b30e3c0648ee944f
+["-m","/models/qwen2.5-0.5b-instruct-q4_k_m.gguf","-ngl","0","-t","2","-c","4096","-np","4","--metrics","--host","0.0.0.0","--port","8000","--cache-ram","0"]
+{"limits":{"cpu":"2","memory":"1Gi"},"requests":{"cpu":"2","memory":"1Gi"}}
+
+# model file on the node
+total 479888
+-rw-r--r-- 1 root root 491400032 Oct 27 22:57 qwen2.5-0.5b-instruct-q4_k_m.gguf
+74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db  /var/lib/tenantscaler/models/qwen2.5-0.5b-instruct-q4_k_m.gguf

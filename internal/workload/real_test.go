@@ -54,7 +54,7 @@ func TestRealScenarios(t *testing.T) {
 
 // measuredC is the per-replica capacity C in weighted tokens/s that
 // `tenantscaler profile -config config/real.yaml` measured on the
-// development machine (results/real/profile.md, 2026-10-26); the rate
+// development machine (results/real/profile.md); the rate
 // derivation in real.go uses the same value. Update both after
 // re-profiling.
 const measuredC = 117

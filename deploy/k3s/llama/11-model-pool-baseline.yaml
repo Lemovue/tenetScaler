@@ -1,0 +1,94 @@
+# REAL llama.cpp replicas: the side-by-side baseline's pool, the same
+# Deployment as 10-model-pool.yaml under the name and labels of
+# deploy/k3s/side-by-side/10-model-pool-baseline.yaml (its Service and the
+# baseline gateway's discovery are unchanged). KEDA owns spec.replicas.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: model-pool-baseline
+  namespace: tenantscaler
+  labels:
+    app.kubernetes.io/name: model-pool-baseline
+    app.kubernetes.io/part-of: tenantscaler
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: model-pool-baseline
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: model-pool-baseline
+        app.kubernetes.io/part-of: tenantscaler
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: /metrics
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: replica
+          image: ghcr.io/ggml-org/llama.cpp@sha256:989a1a193343d5e361e14b666e316186ab48be0152cf0a34b30e3c0648ee944f
+          imagePullPolicy: IfNotPresent
+          args: ["-m", "/models/qwen2.5-0.5b-instruct-q4_k_m.gguf", "-ngl", "0", "-t", "2", "-c", "4096", "-np", "4",
+                 "--metrics", "--host", "0.0.0.0", "--port", "8000", "--cache-ram", "0"]
+          ports:
+            - name: http
+              containerPort: 8000
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 2
+            timeoutSeconds: 2
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 2
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          lifecycle:
+            preStop:
+              sleep:
+                seconds: 20
+          resources:
+            requests:
+              cpu: "2"
+              memory: 1Gi
+            limits:
+              cpu: "2"
+              memory: 1Gi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: models
+              mountPath: /models
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: models
+          persistentVolumeClaim:
+            claimName: llama-models
+            readOnly: true
+        - name: tmp
+          emptyDir: {}

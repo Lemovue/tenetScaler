@@ -25,9 +25,10 @@ const (
 	// defaultDecisionLimit is GET /api/decisions' default limit.
 	defaultDecisionLimit = 200
 	// pathStart and pathStop are the POST-only endpoints that start and
-	// stop an A/B run.
+	// stop an A/B run; pathLive starts the configured live run.
 	pathStart = "/api/ab/start"
 	pathStop  = "/api/ab/stop"
+	pathLive  = "/api/live/start"
 )
 
 // contentSecurityPolicy allows the dashboard's own files only: no inline
@@ -49,8 +50,10 @@ var staticTypes = map[string]string{
 // Handler serves the dashboard and its API:
 //
 //	GET  /healthz             {"status":"ok"}
-//	POST /api/ab/start        optional body {"seed": n}; 202 {"run","seed"}, 409 while a run is in progress
+//	POST /api/ab/start        optional body {"seed": n, "dataset": key}; 202 {"run","seed"}, 409 while a run is in progress,
+//	                          400 for a dataset that is unknown or whose file is missing (ConfigReply.Datasets)
 //	POST /api/ab/stop         200 once the stack has stopped, 409 when nothing runs
+//	POST /api/live/start      202 {"run"}: the live run of demo -live again; 409 while a run is in progress or without -live
 //	GET  /api/state           State
 //	GET  /api/decisions       ?limit=&tenant= DecisionsReply (TenantScaler controller records)
 //	GET  /api/results         Results (real and simulated evaluation summaries)
@@ -69,6 +72,7 @@ func (s *Server) Handler() http.Handler {
 	})
 	mux.HandleFunc("POST "+pathStart, s.handleStart)
 	mux.HandleFunc("POST "+pathStop, s.handleStop)
+	mux.HandleFunc("POST "+pathLive, s.handleLive)
 	mux.HandleFunc("GET /api/state", func(w http.ResponseWriter, _ *http.Request) { writeJSON(w, http.StatusOK, s.State()) })
 	mux.HandleFunc("GET /api/decisions", s.handleDecisions)
 	mux.HandleFunc("GET /api/results", func(w http.ResponseWriter, _ *http.Request) {
@@ -77,7 +81,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/config", func(w http.ResponseWriter, _ *http.Request) { writeJSON(w, http.StatusOK, s.Config()) })
 	mux.HandleFunc("GET /api/", func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
-		case pathStart, pathStop:
+		case pathStart, pathStop, pathLive:
 			w.Header().Set("Allow", http.MethodPost)
 			writeError(w, http.StatusMethodNotAllowed, r.URL.Path+" accepts POST only")
 		default:
@@ -91,20 +95,26 @@ func (s *Server) Handler() http.Handler {
 // handleStart starts an A/B run.
 func (s *Server) handleStart(w http.ResponseWriter, r *http.Request) {
 	var body struct {
-		Seed *int64 `json:"seed"`
+		Seed    *int64 `json:"seed"`
+		Dataset string `json:"dataset"`
 	}
 	dec := json.NewDecoder(io.LimitReader(r.Body, 4096))
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(&body); err != nil && !errors.Is(err, io.EOF) {
-		writeError(w, http.StatusBadRequest, "invalid body: want nothing or {\"seed\": <integer>}: "+err.Error())
+		writeError(w, http.StatusBadRequest, "invalid body: want nothing or {\"seed\": <integer>, \"dataset\": <key>}: "+err.Error())
 		return
 	}
 	seed := s.opt.Seed
 	if body.Seed != nil {
 		seed = *body.Seed
 	}
-	run, err := s.StartAB(seed)
+	if body.Dataset == "" {
+		body.Dataset = DatasetSynthetic
+	}
+	run, err := s.StartABWith(seed, body.Dataset)
 	switch {
+	case errors.Is(err, ErrUnknownDataset):
+		writeError(w, http.StatusBadRequest, fmt.Sprintf("dataset %q is unknown or its file is missing on the server", body.Dataset))
 	case errors.Is(err, ErrBusy):
 		writeError(w, http.StatusConflict, "an A/B run is already in progress: stop it first")
 	case errors.Is(err, ErrClosed):
@@ -113,6 +123,23 @@ func (s *Server) handleStart(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, err.Error())
 	default:
 		writeJSON(w, http.StatusAccepted, map[string]int64{"run": int64(run), "seed": seed})
+	}
+}
+
+// handleLive starts the configured live run (Go live).
+func (s *Server) handleLive(w http.ResponseWriter, _ *http.Request) {
+	run, err := s.GoLive()
+	switch {
+	case errors.Is(err, ErrNoLive):
+		writeError(w, http.StatusConflict, "this dashboard was started without -live: no live address to use")
+	case errors.Is(err, ErrBusy):
+		writeError(w, http.StatusConflict, "a run is already in progress: stop it first")
+	case errors.Is(err, ErrClosed):
+		writeError(w, http.StatusServiceUnavailable, "the demo server is shutting down")
+	case err != nil:
+		writeError(w, http.StatusInternalServerError, err.Error())
+	default:
+		writeJSON(w, http.StatusAccepted, map[string]int{"run": run})
 	}
 }
 
@@ -195,6 +222,11 @@ type ConfigReply struct {
 	// PoolRecordTenant is the tenant name of the controller's pool-level
 	// decision records (sum of grants, budget clamp, stabilizer).
 	PoolRecordTenant string `json:"poolRecordTenant"`
+	// LiveAddress is the live run's public address the Go live button uses
+	// ("" without demo -live: no button).
+	LiveAddress string `json:"liveAddress,omitempty"`
+	// Datasets are the dataset buttons' choices for Run A/B.
+	Datasets []DatasetInfo `json:"datasets"`
 }
 
 // Config describes the comparison the server runs.
@@ -206,6 +238,7 @@ func (s *Server) Config() ConfigReply {
 		SlotsPerReplica: c.SlotsPerReplica(), CycleSeconds: c.Controller.CycleSeconds,
 		WindowSeconds: s.opt.Window.Seconds(), SampleEverySeconds: s.opt.SampleEvery.Seconds(),
 		CooldownSeconds: s.opt.Cooldown.Seconds(), Seed: s.opt.Seed, PoolRecordTenant: control.PoolRecordTenant,
+		LiveAddress: s.opt.LiveAddr, Datasets: s.Datasets(),
 	}
 	for _, p := range abStacks {
 		gw, ctl, _ := stack.Describe(p.setup)

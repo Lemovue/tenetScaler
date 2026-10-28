@@ -8,7 +8,7 @@ import (
 )
 
 // t0 is the injected clock origin; at(s) is s seconds after it.
-var t0 = time.Date(2026, 10, 26, 12, 0, 0, 0, time.UTC)
+var t0 = time.Date(2026, 1, 15, 12, 0, 0, 0, time.UTC)
 
 func at(sec int) time.Time { return t0.Add(time.Duration(sec) * time.Second) }
 

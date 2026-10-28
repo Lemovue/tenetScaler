@@ -121,10 +121,16 @@ func inSet(ms []manifest, set string) []manifest {
 // deployed returns the manifests `kubectl apply -f deploy/k8s/` applies.
 func deployed(ms []manifest) []manifest { return inSet(ms, "k8s") }
 
-// overlays are objects a baseline file deliberately re-applies with a
-// change, keyed by identity, with the set that may hold the second copy.
-// TestPassthroughGatewayOverlay checks what the change is.
-var overlays = map[string]string{"apps/v1/Deployment/tenantscaler/gateway": "k8s/baselines"}
+// overlays are objects another apply set deliberately re-applies with a
+// change, keyed by identity, with every set that may hold a copy (the
+// original's first). TestPassthroughGatewayOverlay checks the gateway's
+// change; k3s/llama swaps the simulated pools for llama.cpp ones under the
+// same names.
+var overlays = map[string][]string{
+	"apps/v1/Deployment/tenantscaler/gateway":             {"k8s", "k8s/baselines"},
+	"apps/v1/Deployment/tenantscaler/model-pool":          {"k8s", "k3s/llama"},
+	"apps/v1/Deployment/tenantscaler/model-pool-baseline": {"k3s/side-by-side", "k3s/llama"},
+}
 
 func byKind(ms []manifest, kind string) []manifest {
 	var out []manifest
@@ -159,7 +165,7 @@ func find(t *testing.T, ms []manifest, kind, name string) *unstructured.Unstruct
 
 func TestManifestsParseAndAreComplete(t *testing.T) {
 	ms := loadManifests(t)
-	clusterScoped := map[string]bool{"Namespace": true, "CustomResourceDefinition": true}
+	clusterScoped := map[string]bool{"Namespace": true, "CustomResourceDefinition": true, "PersistentVolume": true}
 	seen := map[string][]manifest{}
 	for _, m := range ms {
 		u := m.obj
@@ -182,12 +188,11 @@ func TestManifestsParseAndAreComplete(t *testing.T) {
 			t.Errorf("%v: namespace = %q, want %q", m, ns, testNamespace)
 		}
 		// Within one apply set every object is unique. Across sets only a
-		// listed overlay may repeat a deployed object.
+		// listed overlay may repeat an object, in its listed sets.
 		id := u.GetAPIVersion() + "/" + u.GetKind() + "/" + u.GetNamespace() + "/" + u.GetName()
 		for _, prev := range seen[id] {
-			sets := []string{applySet(prev.file), applySet(m.file)}
-			slices.Sort(sets)
-			if o := overlays[id]; o == "" || sets[0] != "k8s" || sets[1] != o {
+			allowed, a, b := overlays[id], applySet(prev.file), applySet(m.file)
+			if a == b || !slices.Contains(allowed, a) || !slices.Contains(allowed, b) {
 				t.Errorf("%v duplicates %v", m, prev)
 			}
 		}
@@ -246,11 +251,13 @@ func flagValues(args []string) map[string]string {
 
 // externalKinds are the manifests whose Go types client-go's scheme does
 // not hold: the CRD (k8s.io/apiextensions-apiserver is not a dependency),
-// KEDA's ScaledObject, kind's cluster config and the TenantScaler itself
-// (checked against the CRD schema by TestSampleTenantsAreValid).
+// KEDA's ScaledObject and TriggerAuthentication, kind's cluster config and
+// the TenantScaler itself (checked against the CRD schema by
+// TestSampleTenantsAreValid).
 var externalKinds = map[string]bool{
 	"apiextensions.k8s.io/v1/CustomResourceDefinition": true,
 	"keda.sh/v1alpha1/ScaledObject":                    true,
+	"keda.sh/v1alpha1/TriggerAuthentication":           true,
 	"kind.x-k8s.io/v1alpha4/Cluster":                   true,
 	Group + "/" + Version + "/" + Kind:                 true,
 }

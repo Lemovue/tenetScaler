@@ -131,7 +131,7 @@ func TestUpdateStatusWritesStatusOnly(t *testing.T) {
 	st := TenantScalerStatus{
 		Grant: 5, Demand: 6, Shedding: true, SLOSlack: -0.5, Reason: "reclaimed 1",
 		PolicyVersion: 7, ObservedGeneration: 4,
-		LastUpdate: metav1.NewTime(time.Date(2026, 10, 26, 9, 30, 0, 0, time.UTC)),
+		LastUpdate: metav1.NewTime(time.Date(2026, 1, 15, 9, 30, 0, 0, time.UTC)),
 	}
 	if err := c.UpdateStatus(context.Background(), "a", st); err != nil {
 		t.Fatalf("UpdateStatus: %v", err)

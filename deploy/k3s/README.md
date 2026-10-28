@@ -74,6 +74,19 @@ The replicas are the **simulated** engine (`tenantscaler replica`), not llama.cp
   - It reconnects by itself when `up.sh` replaces the pods.
   - In mirrored mode Windows and WSL share ports, so first stop a Windows `demo -live`, which also uses 8081.
 
+- **Dashboard.** The dashboard can watch the cluster instead of starting its own stack. With `expose.sh` running, in Windows PowerShell:
+  ```powershell
+  bin\tenantscaler.exe demo -config config/live-demo.yaml -observe-gateway http://127.0.0.1:8081 -observe-controller http://127.0.0.1:18090 -observe-keys $env:USERPROFILE\.tenantscaler\k8s.env
+  ```
+  Then open http://127.0.0.1:8080.
+  - The badge reads "KUBERNETES (k3s): SIMULATED replicas".
+  - The TenantScaler panel shows:
+    - the cluster's ready and desired replicas;
+    - the gateway's per-tenant statistics, with the cluster's a, b, c shown as A, B, C;
+    - the controller's decision log.
+  - The admin key is read from the key file and never printed.
+  - Stop only stops watching; the cluster keeps running.
+
 - **Traffic from this laptop.** Use one Windows PowerShell per tenant:
   ```powershell
   ./scripts/k3s/loadgen.ps1 -Tenant a -LoadProfile steady
@@ -102,6 +115,106 @@ The replicas are the **simulated** engine (`tenantscaler replica`), not llama.cp
   Remove-NetFirewallHyperVRule -Name TenantScalerGW
   ```
 
+## Side by side: the KEDA baseline beside TenantScaler, on the same live traffic
+
+The baseline runs beside TenantScaler in the same cluster:
+- it has its own pool of simulated replicas (`model-pool-baseline`);
+- a passthrough gateway (`gateway-baseline`) sits in front of that pool;
+- real KEDA (2.21) scales the pool from that gateway's `/stats`: 12 requests in flight per replica, which is the simulated engine's 8 running plus the baseline's 4 waiting.
+
+No Prometheus is needed. On Windows, `tenantscaler mirror` serves the teammates on port 8081: TenantScaler answers each request, and the baseline gets a copy of it. Both pools therefore see the same live traffic.
+
+1. **Install KEDA**, once. This is a download, so get the owner's approval first:
+   ```bash
+   sudo kubectl apply --server-side -f https://github.com/kedacore/keda/releases/download/v2.21.0/keda-2.21.0-core.yaml
+   ```
+   The core manifest has no admission webhooks, so the operator's `cert-rotation ... keda-admission not found` errors are expected.
+
+2. **Deploy the baseline.** Do this after `up.sh` and `demo-size.sh`:
+   ```bash
+   sudo kubectl apply -f deploy/k3s/side-by-side/
+   ```
+
+3. **Forward to this machine only.** Run this in Ubuntu and keep it running:
+   ```bash
+   bash scripts/k3s/expose.sh side-by-side
+   ```
+   It forwards the TenantScaler gateway to 18081, the baseline gateway to 18082 and the controller to 18090.
+
+4. **Start the mirror** in Windows PowerShell. The Windows firewall rule for `bin\tenantscaler.exe` or `scripts/demo/firewall.ps1` covers it, so no Hyper-V rule is needed:
+   ```powershell
+   bin\tenantscaler.exe mirror -addr 0.0.0.0:8081
+   ```
+
+5. **Open the dashboard**, with both panels live:
+   ```powershell
+   bin\tenantscaler.exe demo -config config/live-demo.yaml -observe-gateway http://127.0.0.1:18081 -observe-controller http://127.0.0.1:18090 -observe-baseline-gateway http://127.0.0.1:18082 -observe-keys $env:USERPROFILE\.tenantscaler\k8s.env
+   ```
+   KEDA's target is not read, so the baseline panel shows ready replicas only, with no "starting" line.
+
+Teammates run the same `loadgen` command against `http://<laptop IP>:8081` with their cluster key.
+
+A sturdier mirror runs on the node itself, against the gateways' ClusterIPs, so that no port-forward sits in the data path. A port-forward once dropped requests under load (`results/k8s/2026-10-28-k3s-llama-side-by-side/`, run 1). Run it in Ubuntu:
+
+```bash
+bash scripts/k3s/mirror.sh dist/tenantscaler-linux-amd64
+```
+
+It listens on 8081 with the Hyper-V firewall rule above, so stop the Windows mirror first.
+
+**Narrated backend for the judges.** Run this in Ubuntu:
+
+```bash
+python3 scripts/k3s/explain.py --keys /mnt/c/Users/<you>/.tenantscaler/k8s.env
+```
+
+It prints in plain words only what changed:
+
+| Line | Shows |
+|---|---|
+| `CONTROLLER`, `POOL` | each tenant's grant and why, in the controller's own reason text, and the pool size it applies |
+| `KEDA` | the baseline's metric and replica target |
+| `PODS` | llama pods starting, ready and stopping, in both pools |
+| `TRAFFIC` | per tenant every 10 s: req/s, 429s and p99 TTFT at both gateways |
+
+The admin key is read from the file and never printed.
+
+`./scripts/k3s/demo-up.ps1` opens all four windows in one go: expose, the node mirror, the dashboard and `explain.py`. Run it again whenever they were closed. Closing every WSL window can let WSL stop the VM. k3s comes back by itself when the VM restarts.
+
+## Real llama.cpp replicas (CPU load you can see)
+
+`deploy/k3s/llama` swaps both pools for llama.cpp pods. The Deployment names and labels stay the same, so nothing else needs rewiring.
+
+| | |
+|---|---|
+| Image | official llama.cpp server image, build b11913, pinned by digest, about 309 MB to download |
+| Model | the pinned Qwen2.5-0.5B GGUF, already on disk |
+| Each pod | 2 CPUs requested and limited, `-t 2 -np 4`, 1024 tokens per slot |
+| Budget | 2 replicas per pool, which keeps the laptop's 8-thread cap |
+
+The model reaches the pods through a PersistentVolume. The restricted Pod Security Standard forbids hostPath volumes in pods.
+
+`scripts/k3s/llama-up.sh` does the switch:
+- copies the model to the node and checks its pinned SHA-256;
+- pulls the image if it is absent (ask first);
+- shrinks the tenants to a 1/1, b 1/1, c 0/2 (priority 50);
+- gives the controller `-capacity 2` and `deploy/k3s/llama/15-config.yaml` (C = 117, 10 s cycle);
+- points both gateways at that config (2 requests in flight per replica);
+- sets KEDA to 1..2 replicas at 8 in flight per replica;
+- rolls the pools out.
+
+Run it as root in WSL:
+
+```bash
+sudo bash scripts/k3s/llama-up.sh "/mnt/c/.../.cache/models/qwen2.5-0.5b-instruct-q4_k_m.gguf"
+```
+
+Then start the dashboard with `-observe-replicas llama`, which `demo-up.ps1` passes by default. The badge then reads "KUBERNETES (k3s): REAL llama.cpp replicas".
+
+These pods run unpinned in a VM, so their latencies are real but not comparable with `results/real/`. The 2 s SLO and C = 117 were measured on bare metal. Evidence: `results/k8s/2026-10-28-k3s-llama-side-by-side/`.
+
+To go back to simulated replicas, run `up.sh` and `kubectl apply -f deploy/k3s/side-by-side/` again.
+
 ## Afterwards
 
 ```bash
@@ -115,4 +228,10 @@ Then, in Windows:
 - Run `./scripts/k3s/keys.ps1 -Force` so the keys handed out stop working at the next deploy. Clipboard history may still hold them.
 - Run `wsl --shutdown` to free the VM's memory.
 
-If the laptop changes networks, the node's IP changes with it in mirrored mode. Run `sudo systemctl restart k3s`.
+If the laptop changes networks, the node's IP changes with it in mirrored mode, for example when the hotspot reconnects. k3s keeps the old address, and then several things break:
+- pods time out on the API server (`10.43.0.1`);
+- the gateways stop discovering pods;
+- the controller fails static;
+- KEDA crash-loops.
+
+`sudo bash scripts/k3s/heal.sh` fixes it: it restarts k3s and then KEDA. `demo-up.ps1` runs it first.

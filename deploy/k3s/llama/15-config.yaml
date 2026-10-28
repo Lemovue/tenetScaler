@@ -1,0 +1,48 @@
+# REAL llama.cpp replicas, side by side: the configuration the controller
+# and both gateways run with (scripts/k3s/llama-up.sh mounts it). The
+# machine-safety cap of 8 parallel threads holds 4 replicas of 2 threads:
+# 2 for TenantScaler (this budget) and 2 for the KEDA baseline. a and b keep
+# 1 replica each; c (the noisy neighbour, priority 50) has no guarantee and
+# borrows what a and b leave. C = 117 weighted tokens/s per replica is the
+# bare-metal measurement (results/real/scaling.md); inside the WSL VM,
+# unpinned, it is a placeholder until re-measured. The gateway keeps 2
+# requests in flight per replica (llama-server runs 4 slots), as in
+# config/live-demo.yaml. The tenants must match the TenantScalers.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tenantscaler-llama-config
+  namespace: tenantscaler
+  labels:
+    app.kubernetes.io/part-of: tenantscaler
+data:
+  config.yaml: |
+    pool:
+      name: shared-llm-pool
+      capacityReplicas: 2
+      minReplicas: 1
+    tenants:
+      - name: a
+        guaranteedReplicas: 1
+        maxReplicas: 2
+        priority: 100
+        slo: {ttftSeconds: 2, tpotMillis: 200, targetFraction: 0.99}
+      - name: b
+        guaranteedReplicas: 1
+        maxReplicas: 2
+        priority: 100
+        slo: {ttftSeconds: 2, tpotMillis: 200, targetFraction: 0.99}
+      - name: c
+        guaranteedReplicas: 0
+        maxReplicas: 2
+        priority: 50
+        slo: {ttftSeconds: 2, tpotMillis: 200, targetFraction: 0.99}
+    controller:
+      cycleSeconds: 10
+      headroom: 0.2
+      replicaCapacityTokensPerSec: 117
+      scaleDownWindowSeconds: 60
+      maxStepPerCycle: 2
+      retryAfterSeconds: 2
+    gateway:
+      slotsPerReplica: 2

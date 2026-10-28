@@ -1,0 +1,11 @@
+live demo traffic (not the experiment): profile periodic (B pattern) -> http://127.0.0.1:8081; Ctrl+C stops
+   10s  answered   0  429   0  failed   0  p95 time-to-first-token -
+   20s  answered   2  429   0  failed   0  p95 time-to-first-token 1.00 s
+   30s  answered   3  429   0  failed   0  p95 time-to-first-token 4.81 s
+   40s  answered   7  429   0  failed   0  p95 time-to-first-token 6.84 s
+   50s  answered   7  429   1  failed   0  p95 time-to-first-token 6.95 s
+  1m0s  answered   1  429   0  failed   0  p95 time-to-first-token 2.10 s
+ 1m10s  answered   3  429   0  failed   0  p95 time-to-first-token 2.62 s
+ 1m20s  answered   0  429   0  failed   0  p95 time-to-first-token -
+ 1m30s  answered   1  429   0  failed   0  p95 time-to-first-token 1.72 s
+total after 1m40s: 28 answered, 1 rejected with 429, 6 failed

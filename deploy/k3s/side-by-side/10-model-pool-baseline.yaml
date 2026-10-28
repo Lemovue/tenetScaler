@@ -1,0 +1,84 @@
+# SIDE BY SIDE (deploy/k3s/README.md): the baseline's own pool of simulated
+# replicas, identical to model-pool (deploy/k8s/10-model-pool.yaml) but
+# scaled by KEDA (30-keda.yaml), never by the TenantScaler controller, which
+# only touches model-pool. spec.replicas is omitted: KEDA owns the count.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: model-pool-baseline
+  namespace: tenantscaler
+  labels:
+    app.kubernetes.io/name: model-pool-baseline
+    app.kubernetes.io/part-of: tenantscaler
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: model-pool-baseline
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: model-pool-baseline
+        app.kubernetes.io/part-of: tenantscaler
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: /metrics
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 45
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: replica
+          image: tenantscaler:dev
+          imagePullPolicy: IfNotPresent
+          args: ["replica", "-addr", ":8000"]
+          ports:
+            - name: http
+              containerPort: 8000
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: http
+            periodSeconds: 2
+            failureThreshold: 1
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: http
+            periodSeconds: 10
+          lifecycle:
+            preStop:
+              sleep:
+                seconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: model-pool-baseline
+  namespace: tenantscaler
+  labels:
+    app.kubernetes.io/name: model-pool-baseline
+    app.kubernetes.io/part-of: tenantscaler
+spec:
+  selector:
+    app.kubernetes.io/name: model-pool-baseline
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http

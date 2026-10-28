@@ -41,6 +41,15 @@ type abRun struct {
 	decisions []model.DecisionRecord // the stopped TenantScaler stack's decisions
 	decStart  time.Time              // traffic start of the TenantScaler stack
 	liveMode  *liveMode              // set for a live run (StartLive)
+	observe   *ObserveTarget         // set for an observing run (StartObserve)
+
+	// dataset is an A/B run's source of request sizes (a Dataset key; ""
+	// in live and observing runs, which replay no trace), loadDataset
+	// reads a trace dataset, and datasetUse is what the run used, once
+	// known.
+	dataset     string
+	loadDataset func(key string) ([]workload.LengthSample, DatasetUse, error)
+	datasetUse  *DatasetUse
 }
 
 // stackRun is the progress of one stack, guarded by abRun.mu.
@@ -84,9 +93,22 @@ func (r *abRun) finished() bool {
 func (r *abRun) execute(ctx context.Context) {
 	defer close(r.done)
 	defer r.cancel()
-	trace := workload.Generate(r.opt.Scenario, r.seed)
 	log := r.opt.Logger.With("abRun", r.id, "seed", r.seed)
-	log.Info("A/B run started", "scenario", r.opt.Scenario.Name, "requests", len(trace), "backend", r.opt.Backend.Kind)
+	sc, use := r.opt.Scenario, syntheticUse()
+	if r.dataset != "" && r.dataset != DatasetSynthetic {
+		r.setMessage("Reading the " + datasetName(r.dataset) + " (once per server: a large file takes a few seconds)")
+		samples, u, err := r.loadDataset(r.dataset)
+		if err != nil {
+			r.end(err, log)
+			return
+		}
+		sc.Samples, use = samples, u
+	}
+	r.mu.Lock()
+	r.datasetUse = &use
+	r.mu.Unlock()
+	trace := workload.Generate(sc, r.seed)
+	log.Info("A/B run started", "scenario", sc.Name, "dataset", use.Key, "requests", len(trace), "backend", r.opt.Backend.Kind)
 	for i := range r.stacks {
 		if i > 0 && r.opt.Cooldown > 0 {
 			r.setMessage(fmt.Sprintf("Cooling down for %s before %s", r.opt.Cooldown, r.stacks[i].plan.title))
@@ -274,6 +296,9 @@ func (r *abRun) gatewayStats(ctx context.Context, base string) (*gateway.Stats, 
 	if err != nil {
 		return nil, err
 	}
+	if r.observe != nil && r.observe.AdminKey != "" { // an observed gateway guards /stats
+		req.Header.Set("Authorization", "Bearer "+r.observe.AdminKey)
+	}
 	resp, err := r.stats.Do(req)
 	if err != nil {
 		return nil, err
@@ -300,7 +325,7 @@ func (r *abRun) addSample(i int, smp eval.Sample, ls LiveSample, gs *gateway.Sta
 	}
 	sr.samples = append(sr.samples, ls)
 	sr.elapsed = smp.T
-	if r.liveMode != nil { // no trace: the live stack runs until stopped
+	if r.liveMode != nil || r.observe != nil { // no trace: runs until stopped
 		return
 	}
 	dur := r.opt.Scenario.Duration
