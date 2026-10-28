@@ -37,7 +37,9 @@ for ($i = 0; $i -lt 60 -and -not $up; $i++) {
     } catch {}
 }
 if (-not $up) { throw "the cluster's gateways did not answer within 2 minutes: check the two WSL windows" }
-$dash = "bin\tenantscaler.exe demo -config config/live-demo.yaml -observe-gateway http://127.0.0.1:18081 " +
+# The dashboard's axes: the cluster's budget (2 per pool with llama pods).
+$cfg = if ($Replicas -eq 'llama') { 'config/k3s-llama.yaml' } else { 'config/live-demo.yaml' }
+$dash = "bin\tenantscaler.exe demo -config $cfg -observe-gateway http://127.0.0.1:18081 " +
     "-observe-controller http://127.0.0.1:18090 -observe-baseline-gateway http://127.0.0.1:18082 " +
     "-observe-replicas $Replicas -observe-keys `"$Keys`""
 Start-Process powershell -WorkingDirectory $root -ArgumentList '-NoExit', '-Command', $dash

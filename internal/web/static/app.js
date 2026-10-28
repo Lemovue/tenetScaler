@@ -296,7 +296,11 @@ window.TS = window.TS || {};
   function renderPanel(p, s, state, shared) {
     const sc = state.scenario;
     let status = STATUS_TEXT[s.status] || s.status;
-    if (s.status === "running") status += " · " + Math.round(s.elapsedSeconds) + " / " + sc.durationSeconds + " s";
+    if (s.status === "running") {
+      // Live traffic (teammates, or a watched cluster) is not the replayed trace.
+      status = state.live ? "Live · " + Math.round(s.elapsedSeconds) + " s"
+        : status + " · " + Math.round(s.elapsedSeconds) + " / " + sc.durationSeconds + " s";
+    }
     U.setText(p.status, status);
     p.status.className = "status" + (s.status === "done" ? " status-done" : s.status === "error" ? " status-error" : "");
     p.error.hidden = !s.error;
@@ -309,7 +313,8 @@ window.TS = window.TS || {};
         ys: s.samples.map((x) => (x.tenants && x.tenants[t.name] ? x.tenants[t.name].p99TtftSeconds : null)) }))
         .filter((x) => x.colorVar),
       thresholds: sloThresholds(sc.tenants),
-      band: sc.noisy ? { x0: sc.spikeStartSeconds, x1: sc.spikeEndSeconds, label: sc.noisy + " spike" } : null,
+      // The replayed trace's spike window; live traffic spikes whenever it does.
+      band: sc.noisy && !state.live ? { x0: sc.spikeStartSeconds, x1: sc.spikeEndSeconds, label: sc.noisy + " spike" } : null,
     });
     const cap = config ? config.capacityReplicas : 1;
     p.replicas.update({

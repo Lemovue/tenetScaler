@@ -1,0 +1,36 @@
+# The dashboard's sizing while it watches the k3s cluster with REAL
+# llama.cpp pods (deploy/k3s/llama; scripts/k3s/demo-up.ps1 passes it):
+# each pool has a budget of 2 replicas (the laptop's 8-thread cap holds 2 + 2
+# pods of 2 threads), A and B are guaranteed 1, C (the noisy neighbour,
+# priority 50) none, and the TTFT SLO line is 2 s. The tenants carry the
+# dashboard's names: the cluster's a, b and c are shown as A, B and C. The
+# cluster's own configuration is deploy/k3s/llama/15-config.yaml.
+pool:
+  name: shared-llm-pool
+  capacityReplicas: 2
+  minReplicas: 1
+tenants:
+  - name: A
+    guaranteedReplicas: 1
+    maxReplicas: 2
+    priority: 100
+    slo: {ttftSeconds: 2, tpotMillis: 200, targetFraction: 0.99}
+  - name: B
+    guaranteedReplicas: 1
+    maxReplicas: 2
+    priority: 100
+    slo: {ttftSeconds: 2, tpotMillis: 200, targetFraction: 0.99}
+  - name: C
+    guaranteedReplicas: 0
+    maxReplicas: 2
+    priority: 50
+    slo: {ttftSeconds: 2, tpotMillis: 200, targetFraction: 0.99}
+controller:
+  cycleSeconds: 10
+  headroom: 0.2
+  replicaCapacityTokensPerSec: 117
+  scaleDownWindowSeconds: 60
+  maxStepPerCycle: 2
+  retryAfterSeconds: 2
+gateway:
+  slotsPerReplica: 2
