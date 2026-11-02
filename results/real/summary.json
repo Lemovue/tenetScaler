@@ -1,0 +1,2097 @@
+{
+  "label": "REAL inference — llama.cpp b11898-8b28c2394, model qwen2.5-0.5b-instruct-q4_k_m.gguf, budget of 4 replicas x 2 threads (no GPU); replicas on CPUs 0-1 | 2-3 | 4-5 | 6-7 (one physical core each); gateway, controller and load generator on CPUs 8-15; readiness hold T = 30 s: injected load delay (emulates network model load); inference is real; CPU Intel(R) Core(TM) i5-14450HX (16 logical CPUs), 2026-10-27",
+  "simulated": false,
+  "pinning": "replicas on CPUs 0-1 | 2-3 | 4-5 | 6-7 (one physical core each); gateway, controller and load generator on CPUs 8-15",
+  "claim": {
+    "pairs": [
+      {
+        "run": 0,
+        "s7AttainmentPct": 77.77777777777777,
+        "s4AttainmentPct": 53.333333333333336,
+        "s7ShedAwareAttainmentPct": 77.77777777777777,
+        "s4ShedAwareAttainmentPct": 53.333333333333336,
+        "s7NoisyShedPct": 43.445692883895134,
+        "s4NoisyShedPct": 57.30337078651685,
+        "s7ReplicaMinutes": 15.833343150000013,
+        "s4ReplicaMinutes": 12.333335186666654,
+        "diffPoints": 24.444444444444436
+      },
+      {
+        "run": 1,
+        "s7AttainmentPct": 88.57142857142857,
+        "s4AttainmentPct": 78.125,
+        "s7ShedAwareAttainmentPct": 88.57142857142857,
+        "s4ShedAwareAttainmentPct": 71.42857142857143,
+        "s7NoisyShedPct": 36.39575971731449,
+        "s4NoisyShedPct": 50.53003533568904,
+        "s7ReplicaMinutes": 15.000013261666675,
+        "s4ReplicaMinutes": 10.150009995,
+        "diffPoints": 10.44642857142857
+      },
+      {
+        "run": 2,
+        "s7AttainmentPct": 53.44827586206897,
+        "s4AttainmentPct": 41.37931034482759,
+        "s7ShedAwareAttainmentPct": 52.54237288135593,
+        "s4ShedAwareAttainmentPct": 40.67796610169491,
+        "s7NoisyShedPct": 45.57823129251701,
+        "s4NoisyShedPct": 59.183673469387756,
+        "s7ReplicaMinutes": 15.200027500000012,
+        "s4ReplicaMinutes": 12.366651583333335,
+        "diffPoints": 12.06896551724138
+      },
+      {
+        "run": 3,
+        "s7AttainmentPct": 71.11111111111111,
+        "s4AttainmentPct": 38.63636363636363,
+        "s7ShedAwareAttainmentPct": 71.11111111111111,
+        "s4ShedAwareAttainmentPct": 37.77777777777778,
+        "s7NoisyShedPct": 44.966442953020135,
+        "s4NoisyShedPct": 59.73154362416108,
+        "s7ReplicaMinutes": 14.300040116666667,
+        "s4ReplicaMinutes": 11.466660896666669,
+        "diffPoints": 32.47474747474748
+      },
+      {
+        "run": 4,
+        "s7AttainmentPct": 72.41379310344828,
+        "s4AttainmentPct": 44.642857142857146,
+        "s7ShedAwareAttainmentPct": 72.41379310344828,
+        "s4ShedAwareAttainmentPct": 43.10344827586207,
+        "s7NoisyShedPct": 53.97923875432526,
+        "s4NoisyShedPct": 60.207612456747405,
+        "s7ReplicaMinutes": 15.033573730000002,
+        "s4ReplicaMinutes": 12.000020033333334,
+        "diffPoints": 27.77093596059114
+      }
+    ],
+    "diff": {
+      "Mean": 21.4411043936906,
+      "Std": 9.74099561546497,
+      "CI95": 12.095043104109823,
+      "N": 5
+    },
+    "verdict": "supported"
+  },
+  "readinessHoldSeconds": 30,
+  "engine": {
+    "backend": "llama",
+    "simulated": false,
+    "build": "b11898-8b28c2394",
+    "modelPath": "C:\\Users\\nilay\\OneDrive\\Desktop\\TenantScaler Hackathon\\.cache\\models\\qwen2.5-0.5b-instruct-q4_k_m.gguf",
+    "slots": 4
+  },
+  "cpu": "Intel(R) Core(TM) i5-14450HX (16 logical CPUs)",
+  "date": "2026-10-27",
+  "scenario": {
+    "name": "real",
+    "durationSeconds": 240,
+    "noisy": "C",
+    "victims": [
+      "A",
+      "B"
+    ],
+    "spikeStartSeconds": 90,
+    "spikeEndSeconds": 170
+  },
+  "setups": [
+    {
+      "name": "S2-keda-queue",
+      "gateway": "passthrough",
+      "controlPlane": "KEDA (scalerun) on queued requests: waiting inside the replicas + gateway queue, 4 per replica"
+    },
+    {
+      "name": "S3-static-partition",
+      "gateway": "partition",
+      "controlPlane": "none: pool fixed at capacity, guaranteed replicas as each tenant's slice"
+    },
+    {
+      "name": "S4-flowcontrol-equiv",
+      "gateway": "roundrobin",
+      "controlPlane": "KEDA (scalerun) on the gateway queue length, 4 per replica"
+    },
+    {
+      "name": "S5-ts-no-gateway",
+      "gateway": "passthrough",
+      "controlPlane": "TenantScaler controller, no gateway policy (coupling disabled)"
+    },
+    {
+      "name": "S7-ts-full",
+      "gateway": "fair",
+      "controlPlane": "TenantScaler controller (arbiter + stabilizer) pushing policy to the fair gateway"
+    }
+  ],
+  "runs": 5,
+  "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "initialReplicas": 2,
+  "capacityReplicas": 4,
+  "threadsPerReplica": 2,
+  "slotsPerReplica": 4,
+  "cycleSeconds": 10,
+  "results": [
+    {
+      "setup": "S2-keda-queue",
+      "run": 0,
+      "seed": 1,
+      "simulated": false,
+      "engine": {
+        "backend": "llama",
+        "simulated": false,
+        "build": "b11898-8b28c2394",
+        "modelPath": "C:\\Users\\nilay\\OneDrive\\Desktop\\TenantScaler Hackathon\\.cache\\models\\qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        "slots": 4
+      },
+      "metrics": {
+        "VictimViolationPct": 88.88888888888889,
+        "VictimShedAwareViolationPct": 88.88888888888889,
+        "P99TTFT": {
+          "A": 91.4103013,
+          "B": 86.1090633,
+          "C": 94.0793601
+        },
+        "P99TPOT": {
+          "A": 0.173516929,
+          "B": 0.16036649,
+          "C": 0.164358623
+        },
+        "NoisyShedPct": 0,
+        "ReactionTimeSec": 14.6161873,
+        "ReplicaMinutes": 12.500015693333342,
+        "JainIndex": 0.9123817086178593,
+        "MaxCounterGap": null,
+        "ReclaimLatencySec": null,
+        "PolicyLatencyMeanMs": null,
+        "Completed": 407,
+        "Shed": 0,
+        "Failed": 0
+      },
+      "requests": 407,
+      "initialReplicas": 2,
+      "controlPhaseSeconds": 5.729,
+      "startedAt": "2026-10-27T14:40:55.6319461+05:30",
+      "startupSeconds": 30.0224142,
+      "wallSeconds": 277.3846899,
+      "coldStartSeconds": [
+        30,
+        30,
+        30,
+        30
+      ],
+      "drainTimedOut": false,
+      "order": 1,
+      "sequence": 1,
+      "cpuPerformanceStartPct": 69.503112,
+      "cpuPerformanceEndPct": 90.70519,
+      "tokenizerFallbacks": 0
+    },
+    {
+      "setup": "S3-static-partition",
+      "run": 0,
+      "seed": 1,
+      "simulated": false,
+      "engine": {
+        "backend": "llama",
+        "simulated": false,
+        "build": "b11898-8b28c2394",
+        "modelPath": "C:\\Users\\nilay\\OneDrive\\Desktop\\TenantScaler Hackathon\\.cache\\models\\qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        "slots": 4
+      },
+      "metrics": {
+        "VictimViolationPct": 17.77777777777778,
+        "VictimShedAwareViolationPct": 17.77777777777778,
+        "P99TTFT": {
+          "A": 1.4337683,
+          "B": 10.8061509,
+          "C": 121.3018369
+        },
+        "P99TPOT": {
+          "A": 0.066298217,
+          "B": 0.1187576,
+          "C": 0.152271425
+        },
+        "NoisyShedPct": 0,
+        "ReactionTimeSec": null,
+        "ReplicaMinutes": 16.00003422666667,
+        "JainIndex": 0.6519061260919952,
+        "MaxCounterGap": null,
+        "ReclaimLatencySec": null,
+        "PolicyLatencyMeanMs": null,
+        "Completed": 297,
+        "Shed": 0,
+        "Failed": 110
+      },
+      "requests": 407,
+      "initialReplicas": 4,
+      "startedAt": "2026-10-27T14:46:30.7725146+05:30",
+      "startupSeconds": 30.036466,
+      "wallSeconds": 297.3118991,
+      "coldStartSeconds": [
+        30,
+        30,
+        30,
+        30
+      ],
+      "drainTimedOut": false,
+      "failedBy": {
+        "http 503 Service Unavailable": 110
+      },
+      "order": 2,
+      "sequence": 2,
+      "cpuPerformanceStartPct": 97.740409,
+      "cpuPerformanceEndPct": 92.25967,
+      "tokenizerFallbacks": 0
+    },
+    {
+      "setup": "S4-flowcontrol-equiv",
+      "run": 0,
+      "seed": 1,
+      "simulated": false,
+      "engine": {
+        "backend": "llama",
+        "simulated": false,
+        "build": "b11898-8b28c2394",
+        "modelPath": "C:\\Users\\nilay\\OneDrive\\Desktop\\TenantScaler Hackathon\\.cache\\models\\qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        "slots": 4
+      },
+      "metrics": {
+        "VictimViolationPct": 46.666666666666664,
+        "VictimShedAwareViolationPct": 46.666666666666664,
+        "P99TTFT": {
+          "A": 4.9073932,
+          "B": 7.2681102,
+          "C": 24.726029
+        },
+        "P99TPOT": {
+          "A": 0.147398422,
+          "B": 0.149087685,
+          "C": 0.140604379
+        },
+        "NoisyShedPct": 57.30337078651685,
+        "ReactionTimeSec": 14.6114514,
+        "ReplicaMinutes": 12.333335186666654,
+        "JainIndex": 0.9310124236630964,
+        "MaxCounterGap": null,
+        "ReclaimLatencySec": null,
+        "PolicyLatencyMeanMs": null,
+        "Completed": 254,
+        "Shed": 153,
+        "Failed": 0
+      },
+      "requests": 407,
+      "initialReplicas": 2,
+      "controlPhaseSeconds": 5.729,
+      "startedAt": "2026-10-27T14:52:25.7783708+05:30",
+      "startupSeconds": 30.0159003,
+      "wallSeconds": 239.9663402,
+      "coldStartSeconds": [
+        30,
+        30,
+        30,
+        30
+      ],
+      "drainTimedOut": false,
+      "order": 3,
+      "sequence": 3,
+      "cpuPerformanceStartPct": 90.617388,
+      "cpuPerformanceEndPct": 99.870783,
+      "tokenizerFallbacks": 0
+    },
+    {
+      "setup": "S5-ts-no-gateway",
+      "run": 0,
+      "seed": 1,
+      "simulated": false,
+      "engine": {
+        "backend": "llama",
+        "simulated": false,
+        "build": "b11898-8b28c2394",
+        "modelPath": "C:\\Users\\nilay\\OneDrive\\Desktop\\TenantScaler Hackathon\\.cache\\models\\qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        "slots": 4
+      },
+      "metrics": {
+        "VictimViolationPct": 75.55555555555556,
+        "VictimShedAwareViolationPct": 75.55555555555556,
+        "P99TTFT": {
+          "A": 49.3295088,
+          "B": 42.2713046,
+          "C": 49.7265986
+        },
+        "P99TPOT": {
+          "A": 0.203701462,
+          "B": 0.184104668,
+          "C": 0.166854205
+        },
+        "NoisyShedPct": 0,
+        "ReactionTimeSec": null,
+        "ReplicaMinutes": 15.833349376666673,
+        "JainIndex": 0.7680898501909524,
+        "MaxCounterGap": null,
+        "ReclaimLatencySec": null,
+        "PolicyLatencyMeanMs": null,
+        "Completed": 407,
+        "Shed": 0,
+        "Failed": 0
+      },
+      "requests": 407,
+      "initialReplicas": 2,
+      "controlPhaseSeconds": 5.729,
+      "startedAt": "2026-10-27T14:57:23.4355831+05:30",
+      "startupSeconds": 30.0230681,
+      "wallSeconds": 239.9448949,
+      "coldStartSeconds": [
+        30,
+        30,
+        30,
+        30
+      ],
+      "drainTimedOut": false,
+      "order": 4,
+      "sequence": 4,
+      "cpuPerformanceStartPct": 95.191075,
+      "cpuPerformanceEndPct": 90.526534,
+      "tokenizerFallbacks": 0
+    },
+    {
+      "setup": "S7-ts-full",
+      "run": 0,
+      "seed": 1,
+      "simulated": false,
+      "engine": {
+        "backend": "llama",
+        "simulated": false,
+        "build": "b11898-8b28c2394",
+        "modelPath": "C:\\Users\\nilay\\OneDrive\\Desktop\\TenantScaler Hackathon\\.cache\\models\\qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        "slots": 4
+      },
+      "metrics": {
+        "VictimViolationPct": 22.22222222222222,
+        "VictimShedAwareViolationPct": 22.22222222222222,
+        "P99TTFT": {
+          "A": 3.3226518,
+          "B": 4.4341054,
+          "C": 20.5405235
+        },
+        "P99TPOT": {
+          "A": 0.12688723,
+          "B": 0.154573823,
+          "C": 0.145617327
+        },
+        "NoisyShedPct": 43.445692883895134,
+        "ReactionTimeSec": 14.6075447,
+        "ReplicaMinutes": 15.833343150000013,
+        "JainIndex": 0.9531267207964537,
+        "MaxCounterGap": 359.23932039272404,
+        "ReclaimLatencySec": null,
+        "PolicyLatencyMeanMs": 0.24811249999999996,
+        "Completed": 291,
+        "Shed": 116,
+        "Failed": 0
+      },
+      "requests": 407,
+      "initialReplicas": 2,
+      "controlPhaseSeconds": 5.729,
+      "startedAt": "2026-10-27T15:02:21.0814576+05:30",
+      "startupSeconds": 30.0215423,
+      "wallSeconds": 240.0184776,
+      "coldStartSeconds": [
+        30,
+        30,
+        30,
+        30
+      ],
+      "drainTimedOut": false,
+      "order": 5,
+      "sequence": 5,
+      "cpuPerformanceStartPct": 100.320897,
+      "cpuPerformanceEndPct": 109.155776,
+      "tokenizerFallbacks": 0
+    },
+    {
+      "setup": "S7-ts-full",
+      "run": 1,
+      "seed": 2,
+      "simulated": false,
+      "engine": {
+        "backend": "llama",
+        "simulated": false,
+        "build": "b11898-8b28c2394",
+        "modelPath": "C:\\Users\\nilay\\OneDrive\\Desktop\\TenantScaler Hackathon\\.cache\\models\\qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        "slots": 4
+      },
+      "metrics": {
+        "VictimViolationPct": 11.428571428571429,
+        "VictimShedAwareViolationPct": 11.428571428571429,
+        "P99TTFT": {
+          "A": 2.1451896,
+          "B": 3.5363135999999997,
+          "C": 17.2170396
+        },
+        "P99TPOT": {
+          "A": 0.162241197,
+          "B": 0.181934084,
+          "C": 0.152272237
+        },
+        "NoisyShedPct": 36.39575971731449,
+        "ReactionTimeSec": 7.9580208,
+        "ReplicaMinutes": 15.000013261666675,
+        "JainIndex": 0.9500158679532408,
+        "MaxCounterGap": 470.7101976646027,
+        "ReclaimLatencySec": null,
+        "PolicyLatencyMeanMs": 0.134454125,
+        "Completed": 297,
+        "Shed": 103,
+        "Failed": 0
+      },
+      "requests": 400,
+      "initialReplicas": 2,
+      "controlPhaseSeconds": 9.084,
+      "startedAt": "2026-10-27T15:07:18.7968613+05:30",
+      "startupSeconds": 30.0229595,
+      "wallSeconds": 237.3778166,
+      "coldStartSeconds": [
+        30,
+        30,
+        30,
+        30
+      ],
+      "drainTimedOut": false,
+      "order": 1,
+      "sequence": 6,
+      "cpuPerformanceStartPct": 97.82747,
+      "cpuPerformanceEndPct": 92.71202,
+      "tokenizerFallbacks": 0
+    },
+    {
+      "setup": "S4-flowcontrol-equiv",
+      "run": 1,
+      "seed": 2,
+      "simulated": false,
+      "engine": {
+        "backend": "llama",
+        "simulated": false,
+        "build": "b11898-8b28c2394",
+        "modelPath": "C:\\Users\\nilay\\OneDrive\\Desktop\\TenantScaler Hackathon\\.cache\\models\\qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        "slots": 4
+      },
+      "metrics": {
+        "VictimViolationPct": 21.875,
+        "VictimShedAwareViolationPct": 28.571428571428573,
+        "P99TTFT": {
+          "A": 2.7785792000000002,
+          "B": 3.8658061999999997,
+          "C": 15.025644
+        },
+        "P99TPOT": {
+          "A": 0.149879655,
+          "B": 0.133417896,
+          "C": 0.147380604
+        },
+        "NoisyShedPct": 50.53003533568904,
+        "ReactionTimeSec": 17.9767897,
+        "ReplicaMinutes": 10.150009995,
+        "JainIndex": 0.9643477506859968,
+        "MaxCounterGap": null,
+        "ReclaimLatencySec": null,
+        "PolicyLatencyMeanMs": null,
+        "Completed": 254,
+        "Shed": 146,
+        "Failed": 0
+      },
+      "requests": 400,
+      "initialReplicas": 2,
+      "controlPhaseSeconds": 9.084,
+      "startedAt": "2026-10-27T15:12:13.8464198+05:30",
+      "startupSeconds": 30.0206781,
+      "wallSeconds": 237.8039422,
+      "coldStartSeconds": [
+        30,
+        30,
+        30
+      ],
+      "drainTimedOut": false,
+      "order": 2,
+      "sequence": 7,
+      "cpuPerformanceStartPct": 83.796081,
+      "cpuPerformanceEndPct": 95.239239,
+      "tokenizerFallbacks": 0
+    },
+    {
+      "setup": "S3-static-partition",
+      "run": 1,
+      "seed": 2,
+      "simulated": false,
+      "engine": {
+        "backend": "llama",
+        "simulated": false,
+        "build": "b11898-8b28c2394",
+        "modelPath": "C:\\Users\\nilay\\OneDrive\\Desktop\\TenantScaler Hackathon\\.cache\\models\\qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        "slots": 4
+      },
+      "metrics": {
+        "VictimViolationPct": 17.142857142857142,
+        "VictimShedAwareViolationPct": 17.142857142857142,
+        "P99TTFT": {
+          "A": 1.6319978000000002,
+          "B": 5.8388722,
+          "C": 120.9493779
+        },
+        "P99TPOT": {
+          "A": 0.058383577,
+          "B": 0.163821454,
+          "C": 0.151862215
+        },
+        "NoisyShedPct": 0,
+        "ReactionTimeSec": null,
+        "ReplicaMinutes": 16.000040393333343,
+        "JainIndex": 0.6673265137798406,
+        "MaxCounterGap": null,
+        "ReclaimLatencySec": null,
+        "PolicyLatencyMeanMs": null,
+        "Completed": 301,
+        "Shed": 0,
+        "Failed": 99
+      },
+      "requests": 400,
+      "initialReplicas": 4,
+      "startedAt": "2026-10-27T15:17:09.3248091+05:30",
+      "startupSeconds": 30.0338929,
+      "wallSeconds": 320.1469316,
+      "coldStartSeconds": [
+        30,
+        30,
+        30,
+        30
+      ],
+      "drainTimedOut": false,
+      "failedBy": {
+        "http 503 Service Unavailable": 99
+      },
+      "order": 3,
+      "sequence": 8,
+      "cpuPerformanceStartPct": 87.630573,
+      "cpuPerformanceEndPct": 89.180393,
+      "tokenizerFallbacks": 0
+    },
+    {
+      "setup": "S2-keda-queue",
+      "run": 1,
+      "seed": 2,
+      "simulated": false,
+      "engine": {
+        "backend": "llama",
+        "simulated": false,
+        "build": "b11898-8b28c2394",
+        "modelPath": "C:\\Users\\nilay\\OneDrive\\Desktop\\TenantScaler Hackathon\\.cache\\models\\qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        "slots": 4
+      },
+      "metrics": {
+        "VictimViolationPct": 91.42857142857143,
+        "VictimShedAwareViolationPct": 91.42857142857143,
+        "P99TTFT": {
+          "A": 77.3067465,
+          "B": 75.1322686,
+          "C": 77.1137562
+        },
+        "P99TPOT": {
+          "A": 0.153474404,
+          "B": 0.171962784,
+          "C": 0.163104593
+        },
+        "NoisyShedPct": 0,
+        "ReactionTimeSec": 7.9711549,
+        "ReplicaMinutes": 12.733340799999995,
+        "JainIndex": 0.587914475579448,
+        "MaxCounterGap": null,
+        "ReclaimLatencySec": null,
+        "PolicyLatencyMeanMs": null,
+        "Completed": 400,
+        "Shed": 0,
+        "Failed": 0
+      },
+      "requests": 400,
+      "initialReplicas": 2,
+      "controlPhaseSeconds": 9.084,
+      "startedAt": "2026-10-27T15:23:27.1683078+05:30",
+      "startupSeconds": 30.02435,
+      "wallSeconds": 271.1333564,
+      "coldStartSeconds": [
+        30,
+        30,
+        30,
+        30
+      ],
+      "drainTimedOut": false,
+      "order": 4,
+      "sequence": 9,
+      "cpuPerformanceStartPct": 80.892947,
+      "cpuPerformanceEndPct": 95.792054,
+      "tokenizerFallbacks": 0
+    },
+    {
+      "setup": "S5-ts-no-gateway",
+      "run": 1,
+      "seed": 2,
+      "simulated": false,
+      "engine": {
+        "backend": "llama",
+        "simulated": false,
+        "build": "b11898-8b28c2394",
+        "modelPath": "C:\\Users\\nilay\\OneDrive\\Desktop\\TenantScaler Hackathon\\.cache\\models\\qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        "slots": 4
+      },
+      "metrics": {
+        "VictimViolationPct": 91.42857142857143,
+        "VictimShedAwareViolationPct": 91.42857142857143,
+        "P99TTFT": {
+          "A": 41.2176072,
+          "B": 40.7933311,
+          "C": 41.2298875
+        },
+        "P99TPOT": {
+          "A": 0.154020891,
+          "B": 0.148472008,
+          "C": 0.168758244
+        },
+        "NoisyShedPct": 0,
+        "ReactionTimeSec": null,
+        "ReplicaMinutes": 15.066740245,
+        "JainIndex": 0.5215912257042671,
+        "MaxCounterGap": null,
+        "ReclaimLatencySec": null,
+        "PolicyLatencyMeanMs": null,
+        "Completed": 400,
+        "Shed": 0,
+        "Failed": 0
+      },
+      "requests": 400,
+      "initialReplicas": 2,
+      "controlPhaseSeconds": 9.084,
+      "startedAt": "2026-10-27T15:28:55.9770264+05:30",
+      "startupSeconds": 30.0207283,
+      "wallSeconds": 239.5009431,
+      "coldStartSeconds": [
+        30,
+        30,
+        30,
+        30
+      ],
+      "drainTimedOut": false,
+      "order": 5,
+      "sequence": 10,
+      "cpuPerformanceStartPct": 113.299826,
+      "cpuPerformanceEndPct": 85.616176,
+      "tokenizerFallbacks": 0
+    },
+    {
+      "setup": "S7-ts-full",
+      "run": 2,
+      "seed": 3,
+      "simulated": false,
+      "engine": {
+        "backend": "llama",
+        "simulated": false,
+        "build": "b11898-8b28c2394",
+        "modelPath": "C:\\Users\\nilay\\OneDrive\\Desktop\\TenantScaler Hackathon\\.cache\\models\\qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        "slots": 4
+      },
+      "metrics": {
+        "VictimViolationPct": 46.55172413793103,
+        "VictimShedAwareViolationPct": 47.45762711864407,
+        "P99TTFT": {
+          "A": 5.9208071,
+          "B": 11.4631839,
+          "C": 10.7609146
+        },
+        "P99TPOT": {
+          "A": 0.157399527,
+          "B": 0.1439775,
+          "C": 0.163294113
+        },
+        "NoisyShedPct": 45.57823129251701,
+        "ReactionTimeSec": 8.9891665,
+        "ReplicaMinutes": 15.200027500000012,
+        "JainIndex": 0.9807128528345506,
+        "MaxCounterGap": 795.9362705976127,
+        "ReclaimLatencySec": null,
+        "PolicyLatencyMeanMs": 0.171144,
+        "Completed": 314,
+        "Shed": 135,
+        "Failed": 0
+      },
+      "requests": 449,
+      "initialReplicas": 2,
+      "controlPhaseSeconds": 0.128,
+      "startedAt": "2026-10-27T15:33:53.1495505+05:30",
+      "startupSeconds": 30.0252936,
+      "wallSeconds": 239.1212678,
+      "coldStartSeconds": [
+        30,
+        30,
+        30,
+        30
+      ],
+      "drainTimedOut": false,
+      "order": 1,
+      "sequence": 11,
+      "cpuPerformanceStartPct": 100.58277,
+      "cpuPerformanceEndPct": 101.166691,
+      "tokenizerFallbacks": 0
+    },
+    {
+      "setup": "S4-flowcontrol-equiv",
+      "run": 2,
+      "seed": 3,
+      "simulated": false,
+      "engine": {
+        "backend": "llama",
+        "simulated": false,
+        "build": "b11898-8b28c2394",
+        "modelPath": "C:\\Users\\nilay\\OneDrive\\Desktop\\TenantScaler Hackathon\\.cache\\models\\qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        "slots": 4
+      },
+      "metrics": {
+        "VictimViolationPct": 58.62068965517241,
+        "VictimShedAwareViolationPct": 59.32203389830509,
+        "P99TTFT": {
+          "A": 5.1584328,
+          "B": 8.0041082,
+          "C": 22.6197417
+        },
+        "P99TPOT": {
+          "A": 0.138139796,
+          "B": 0.141202728,
+          "C": 0.146305546
+        },
+        "NoisyShedPct": 59.183673469387756,
+        "ReactionTimeSec": 18.998450300000002,
+        "ReplicaMinutes": 12.366651583333335,
+        "JainIndex": 0.9239096070906089,
+        "MaxCounterGap": null,
+        "ReclaimLatencySec": null,
+        "PolicyLatencyMeanMs": null,
+        "Completed": 274,
+        "Shed": 175,
+        "Failed": 0
+      },
+      "requests": 449,
+      "initialReplicas": 2,
+      "controlPhaseSeconds": 0.128,
+      "startedAt": "2026-10-27T15:38:49.9540271+05:30",
+      "startupSeconds": 30.0197359,
+      "wallSeconds": 239.2246086,
+      "coldStartSeconds": [
+        30,
+        30,
+        30,
+        30
+      ],
+      "drainTimedOut": false,
+      "order": 2,
+      "sequence": 12,
+      "cpuPerformanceStartPct": 69.571917,
+      "cpuPerformanceEndPct": 107.05922,
+      "tokenizerFallbacks": 0
+    },
+    {
+      "setup": "S5-ts-no-gateway",
+      "run": 2,
+      "seed": 3,
+      "simulated": false,
+      "engine": {
+        "backend": "llama",
+        "simulated": false,
+        "build": "b11898-8b28c2394",
+        "modelPath": "C:\\Users\\nilay\\OneDrive\\Desktop\\TenantScaler Hackathon\\.cache\\models\\qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        "slots": 4
+      },
+      "metrics": {
+        "VictimViolationPct": 94.91525423728814,
+        "VictimShedAwareViolationPct": 94.91525423728814,
+        "P99TTFT": {
+          "A": 58.1069745,
+          "B": 60.6142897,
+          "C": 61.8713843
+        },
+        "P99TPOT": {
+          "A": 0.171931632,
+          "B": 0.176503732,
+          "C": 0.197247177
+        },
+        "NoisyShedPct": 0,
+        "ReactionTimeSec": null,
+        "ReplicaMinutes": 15.166689455000002,
+        "JainIndex": 0.9584160124234322,
+        "MaxCounterGap": null,
+        "ReclaimLatencySec": null,
+        "PolicyLatencyMeanMs": null,
+        "Completed": 449,
+        "Shed": 0,
+        "Failed": 0
+      },
+      "requests": 449,
+      "initialReplicas": 2,
+      "controlPhaseSeconds": 0.128,
+      "startedAt": "2026-10-27T15:43:46.8541149+05:30",
+      "startupSeconds": 30.0188701,
+      "wallSeconds": 251.5864288,
+      "coldStartSeconds": [
+        30,
+        30,
+        30,
+        30
+      ],
+      "drainTimedOut": false,
+      "order": 3,
+      "sequence": 13,
+      "cpuPerformanceStartPct": 95.636792,
+      "cpuPerformanceEndPct": 89.714736,
+      "tokenizerFallbacks": 0
+    },
+    {
+      "setup": "S3-static-partition",
+      "run": 2,
+      "seed": 3,
+      "simulated": false,
+      "engine": {
+        "backend": "llama",
+        "simulated": false,
+        "build": "b11898-8b28c2394",
+        "modelPath": "C:\\Users\\nilay\\OneDrive\\Desktop\\TenantScaler Hackathon\\.cache\\models\\qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        "slots": 4
+      },
+      "metrics": {
+        "VictimViolationPct": 32.20338983050848,
+        "VictimShedAwareViolationPct": 32.20338983050848,
+        "P99TTFT": {
+          "A": 2.4543114,
+          "B": 10.7350841,
+          "C": 121.0989917
+        },
+        "P99TPOT": {
+          "A": 0.111376404,
+          "B": 0.151647718,
+          "C": 0.162960093
+        },
+        "NoisyShedPct": 0,
+        "ReactionTimeSec": null,
+        "ReplicaMinutes": 16.000031406666665,
+        "JainIndex": 0.5051671351730844,
+        "MaxCounterGap": null,
+        "ReclaimLatencySec": null,
+        "PolicyLatencyMeanMs": null,
+        "Completed": 325,
+        "Shed": 0,
+        "Failed": 124
+      },
+      "requests": 449,
+      "initialReplicas": 4,
+      "startedAt": "2026-10-27T15:48:56.140831+05:30",
+      "startupSeconds": 30.0490407,
+      "wallSeconds": 301.5360552,
+      "coldStartSeconds": [
+        30,
+        30,
+        30,
+        30
+      ],
+      "drainTimedOut": false,
+      "failedBy": {
+        "http 503 Service Unavailable": 124
+      },
+      "order": 4,
+      "sequence": 14,
+      "cpuPerformanceStartPct": 89.078627,
+      "cpuPerformanceEndPct": 101.716847,
+      "tokenizerFallbacks": 0
+    },
+    {
+      "setup": "S2-keda-queue",
+      "run": 2,
+      "seed": 3,
+      "simulated": false,
+      "engine": {
+        "backend": "llama",
+        "simulated": false,
+        "build": "b11898-8b28c2394",
+        "modelPath": "C:\\Users\\nilay\\OneDrive\\Desktop\\TenantScaler Hackathon\\.cache\\models\\qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        "slots": 4
+      },
+      "metrics": {
+        "VictimViolationPct": 94.91525423728814,
+        "VictimShedAwareViolationPct": 94.91525423728814,
+        "P99TTFT": {
+          "A": 103.7467097,
+          "B": 104.2708315,
+          "C": 105.5035514
+        },
+        "P99TPOT": {
+          "A": 0.169459921,
+          "B": 0.174504457,
+          "C": 0.174772521
+        },
+        "NoisyShedPct": 0,
+        "ReactionTimeSec": 9.008504,
+        "ReplicaMinutes": 12.700021426666675,
+        "JainIndex": 0.5999999999999999,
+        "MaxCounterGap": null,
+        "ReclaimLatencySec": null,
+        "PolicyLatencyMeanMs": null,
+        "Completed": 449,
+        "Shed": 0,
+        "Failed": 0
+      },
+      "requests": 449,
+      "initialReplicas": 2,
+      "controlPhaseSeconds": 0.128,
+      "startedAt": "2026-10-27T15:54:55.3432782+05:30",
+      "startupSeconds": 30.0112314,
+      "wallSeconds": 291.2884651,
+      "coldStartSeconds": [
+        30,
+        30,
+        30,
+        30
+      ],
+      "drainTimedOut": false,
+      "order": 5,
+      "sequence": 15,
+      "cpuPerformanceStartPct": 86.323992,
+      "cpuPerformanceEndPct": 92.435528,
+      "tokenizerFallbacks": 0
+    },
+    {
+      "setup": "S4-flowcontrol-equiv",
+      "run": 3,
+      "seed": 4,
+      "simulated": false,
+      "engine": {
+        "backend": "llama",
+        "simulated": false,
+        "build": "b11898-8b28c2394",
+        "modelPath": "C:\\Users\\nilay\\OneDrive\\Desktop\\TenantScaler Hackathon\\.cache\\models\\qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        "slots": 4
+      },
+      "metrics": {
+        "VictimViolationPct": 61.36363636363637,
+        "VictimShedAwareViolationPct": 62.22222222222222,
+        "P99TTFT": {
+          "A": 7.2076963,
+          "B": 6.3709964,
+          "C": 19.7210296
+        },
+        "P99TPOT": {
+          "A": 0.146097776,
+          "B": 0.134526185,
+          "C": 0.14185304
+        },
+        "NoisyShedPct": 59.73154362416108,
+        "ReactionTimeSec": 35.4172984,
+        "ReplicaMinutes": 11.466660896666669,
+        "JainIndex": 0.858621596955625,
+        "MaxCounterGap": null,
+        "ReclaimLatencySec": null,
+        "PolicyLatencyMeanMs": null,
+        "Completed": 259,
+        "Shed": 179,
+        "Failed": 0
+      },
+      "requests": 438,
+      "initialReplicas": 2,
+      "controlPhaseSeconds": 6.552,
+      "startedAt": "2026-10-27T16:00:44.300433+05:30",
+      "startupSeconds": 30.0188646,
+      "wallSeconds": 240.6086427,
+      "coldStartSeconds": [
+        30,
+        30,
+        30,
+        30
+      ],
+      "drainTimedOut": false,
+      "order": 1,
+      "sequence": 16,
+      "cpuPerformanceStartPct": 83.581159,
+      "cpuPerformanceEndPct": 101.899239,
+      "tokenizerFallbacks": 0
+    },
+    {
+      "setup": "S7-ts-full",
+      "run": 3,
+      "seed": 4,
+      "simulated": false,
+      "engine": {
+        "backend": "llama",
+        "simulated": false,
+        "build": "b11898-8b28c2394",
+        "modelPath": "C:\\Users\\nilay\\OneDrive\\Desktop\\TenantScaler Hackathon\\.cache\\models\\qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        "slots": 4
+      },
+      "metrics": {
+        "VictimViolationPct": 28.88888888888889,
+        "VictimShedAwareViolationPct": 28.88888888888889,
+        "P99TTFT": {
+          "A": 3.6053037999999997,
+          "B": 5.0521123,
+          "C": 7.3658407
+        },
+        "P99TPOT": {
+          "A": 0.14366134,
+          "B": 0.136758335,
+          "C": 0.186773254
+        },
+        "NoisyShedPct": 44.966442953020135,
+        "ReactionTimeSec": 5.4192941,
+        "ReplicaMinutes": 14.300040116666667,
+        "JainIndex": 0.9827465544874433,
+        "MaxCounterGap": 635.5227782739421,
+        "ReclaimLatencySec": null,
+        "PolicyLatencyMeanMs": 0.13822916666666665,
+        "Completed": 304,
+        "Shed": 134,
+        "Failed": 0
+      },
+      "requests": 438,
+      "initialReplicas": 2,
+      "controlPhaseSeconds": 6.552,
+      "startedAt": "2026-10-27T16:05:42.5877132+05:30",
+      "startupSeconds": 30.0178318,
+      "wallSeconds": 240.6170424,
+      "coldStartSeconds": [
+        30,
+        30,
+        30,
+        30
+      ],
+      "drainTimedOut": false,
+      "order": 2,
+      "sequence": 17,
+      "cpuPerformanceStartPct": 106.985973,
+      "cpuPerformanceEndPct": 101.262602,
+      "tokenizerFallbacks": 0
+    },
+    {
+      "setup": "S2-keda-queue",
+      "run": 3,
+      "seed": 4,
+      "simulated": false,
+      "engine": {
+        "backend": "llama",
+        "simulated": false,
+        "build": "b11898-8b28c2394",
+        "modelPath": "C:\\Users\\nilay\\OneDrive\\Desktop\\TenantScaler Hackathon\\.cache\\models\\qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        "slots": 4
+      },
+      "metrics": {
+        "VictimViolationPct": 91.11111111111111,
+        "VictimShedAwareViolationPct": 91.11111111111111,
+        "P99TTFT": {
+          "A": 87.5611922,
+          "B": 89.9473732,
+          "C": 88.525402
+        },
+        "P99TPOT": {
+          "A": 0.202367914,
+          "B": 0.156032925,
+          "C": 0.174637536
+        },
+        "NoisyShedPct": 0,
+        "ReactionTimeSec": 5.4298093,
+        "ReplicaMinutes": 12.799997953333335,
+        "JainIndex": 0.7588024778825369,
+        "MaxCounterGap": null,
+        "ReclaimLatencySec": null,
+        "PolicyLatencyMeanMs": null,
+        "Completed": 438,
+        "Shed": 0,
+        "Failed": 0
+      },
+      "requests": 438,
+      "initialReplicas": 2,
+      "controlPhaseSeconds": 6.552,
+      "startedAt": "2026-10-27T16:10:40.8937627+05:30",
+      "startupSeconds": 30.0189888,
+      "wallSeconds": 280.2147625,
+      "coldStartSeconds": [
+        30,
+        30,
+        30,
+        30
+      ],
+      "drainTimedOut": false,
+      "order": 3,
+      "sequence": 18,
+      "cpuPerformanceStartPct": 73.922781,
+      "cpuPerformanceEndPct": 76.492016,
+      "tokenizerFallbacks": 0
+    },
+    {
+      "setup": "S5-ts-no-gateway",
+      "run": 3,
+      "seed": 4,
+      "simulated": false,
+      "engine": {
+        "backend": "llama",
+        "simulated": false,
+        "build": "b11898-8b28c2394",
+        "modelPath": "C:\\Users\\nilay\\OneDrive\\Desktop\\TenantScaler Hackathon\\.cache\\models\\qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        "slots": 4
+      },
+      "metrics": {
+        "VictimViolationPct": 95.55555555555556,
+        "VictimShedAwareViolationPct": 95.55555555555556,
+        "P99TTFT": {
+          "A": 56.9564369,
+          "B": 58.1737742,
+          "C": 54.7198606
+        },
+        "P99TPOT": {
+          "A": 0.166337694,
+          "B": 0.142839871,
+          "C": 0.165731944
+        },
+        "NoisyShedPct": 0,
+        "ReactionTimeSec": null,
+        "ReplicaMinutes": 14.299999776666661,
+        "JainIndex": 0.6577299170689442,
+        "MaxCounterGap": null,
+        "ReclaimLatencySec": null,
+        "PolicyLatencyMeanMs": null,
+        "Completed": 438,
+        "Shed": 0,
+        "Failed": 0
+      },
+      "requests": 438,
+      "initialReplicas": 2,
+      "controlPhaseSeconds": 6.552,
+      "startedAt": "2026-10-27T16:16:18.7666796+05:30",
+      "startupSeconds": 30.0182159,
+      "wallSeconds": 251.9610386,
+      "coldStartSeconds": [
+        30,
+        30,
+        30,
+        30
+      ],
+      "drainTimedOut": false,
+      "order": 4,
+      "sequence": 19,
+      "cpuPerformanceStartPct": 93.08224,
+      "cpuPerformanceEndPct": 77.156045,
+      "tokenizerFallbacks": 0
+    },
+    {
+      "setup": "S3-static-partition",
+      "run": 3,
+      "seed": 4,
+      "simulated": false,
+      "engine": {
+        "backend": "llama",
+        "simulated": false,
+        "build": "b11898-8b28c2394",
+        "modelPath": "C:\\Users\\nilay\\OneDrive\\Desktop\\TenantScaler Hackathon\\.cache\\models\\qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        "slots": 4
+      },
+      "metrics": {
+        "VictimViolationPct": 20,
+        "VictimShedAwareViolationPct": 20,
+        "P99TTFT": {
+          "A": 1.4373229,
+          "B": 8.079357,
+          "C": 120.9811874
+        },
+        "P99TPOT": {
+          "A": 0.094158211,
+          "B": 0.183476485,
+          "C": 0.144762875
+        },
+        "NoisyShedPct": 0,
+        "ReactionTimeSec": null,
+        "ReplicaMinutes": 16.000038806666655,
+        "JainIndex": 0.6371431839934198,
+        "MaxCounterGap": null,
+        "ReclaimLatencySec": null,
+        "PolicyLatencyMeanMs": null,
+        "Completed": 307,
+        "Shed": 0,
+        "Failed": 131
+      },
+      "requests": 438,
+      "initialReplicas": 4,
+      "startedAt": "2026-10-27T16:21:27.3655543+05:30",
+      "startupSeconds": 30.033358,
+      "wallSeconds": 311.3420055,
+      "coldStartSeconds": [
+        30,
+        30,
+        30,
+        30
+      ],
+      "drainTimedOut": false,
+      "failedBy": {
+        "http 503 Service Unavailable": 131
+      },
+      "order": 5,
+      "sequence": 20,
+      "cpuPerformanceStartPct": 65.238187,
+      "cpuPerformanceEndPct": 103.678131,
+      "tokenizerFallbacks": 0
+    },
+    {
+      "setup": "S7-ts-full",
+      "run": 4,
+      "seed": 5,
+      "simulated": false,
+      "engine": {
+        "backend": "llama",
+        "simulated": false,
+        "build": "b11898-8b28c2394",
+        "modelPath": "C:\\Users\\nilay\\OneDrive\\Desktop\\TenantScaler Hackathon\\.cache\\models\\qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        "slots": 4
+      },
+      "metrics": {
+        "VictimViolationPct": 27.586206896551722,
+        "VictimShedAwareViolationPct": 27.586206896551722,
+        "P99TTFT": {
+          "A": 2.6825898,
+          "B": 7.4088613,
+          "C": 10.9994529
+        },
+        "P99TPOT": {
+          "A": 0.156263536,
+          "B": 0.186885896,
+          "C": 0.183027446
+        },
+        "NoisyShedPct": 53.97923875432526,
+        "ReactionTimeSec": 9.1301987,
+        "ReplicaMinutes": 15.033573730000002,
+        "JainIndex": 0.8968510786725915,
+        "MaxCounterGap": 187,
+        "ReclaimLatencySec": null,
+        "PolicyLatencyMeanMs": 0.09727596,
+        "Completed": 258,
+        "Shed": 156,
+        "Failed": 0
+      },
+      "requests": 414,
+      "initialReplicas": 2,
+      "controlPhaseSeconds": 0.241,
+      "startedAt": "2026-10-27T16:27:36.3664828+05:30",
+      "startupSeconds": 30.0118814,
+      "wallSeconds": 240.6881214,
+      "coldStartSeconds": [
+        30,
+        30,
+        30,
+        30,
+        30
+      ],
+      "drainTimedOut": false,
+      "order": 1,
+      "sequence": 21,
+      "cpuPerformanceStartPct": 98.456503,
+      "cpuPerformanceEndPct": 138.035807,
+      "tokenizerFallbacks": 0
+    },
+    {
+      "setup": "S3-static-partition",
+      "run": 4,
+      "seed": 5,
+      "simulated": false,
+      "engine": {
+        "backend": "llama",
+        "simulated": false,
+        "build": "b11898-8b28c2394",
+        "modelPath": "C:\\Users\\nilay\\OneDrive\\Desktop\\TenantScaler Hackathon\\.cache\\models\\qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        "slots": 4
+      },
+      "metrics": {
+        "VictimViolationPct": 22.413793103448278,
+        "VictimShedAwareViolationPct": 22.413793103448278,
+        "P99TTFT": {
+          "A": 2.3372151,
+          "B": 5.9282116,
+          "C": 120.9293232
+        },
+        "P99TPOT": {
+          "A": 0.133242212,
+          "B": 0.127977864,
+          "C": 0.160849864
+        },
+        "NoisyShedPct": 0,
+        "ReactionTimeSec": null,
+        "ReplicaMinutes": 16.00002001999999,
+        "JainIndex": 0.6330202727424388,
+        "MaxCounterGap": null,
+        "ReclaimLatencySec": null,
+        "PolicyLatencyMeanMs": null,
+        "Completed": 290,
+        "Shed": 0,
+        "Failed": 124
+      },
+      "requests": 414,
+      "initialReplicas": 4,
+      "startedAt": "2026-10-27T16:32:33.1120692+05:30",
+      "startupSeconds": 30.0327488,
+      "wallSeconds": 304.7180046,
+      "coldStartSeconds": [
+        30,
+        30,
+        30,
+        30
+      ],
+      "drainTimedOut": false,
+      "failedBy": {
+        "http 503 Service Unavailable": 124
+      },
+      "order": 2,
+      "sequence": 22,
+      "cpuPerformanceStartPct": 78.091772,
+      "cpuPerformanceEndPct": 115.203317,
+      "tokenizerFallbacks": 0
+    },
+    {
+      "setup": "S2-keda-queue",
+      "run": 4,
+      "seed": 5,
+      "simulated": false,
+      "engine": {
+        "backend": "llama",
+        "simulated": false,
+        "build": "b11898-8b28c2394",
+        "modelPath": "C:\\Users\\nilay\\OneDrive\\Desktop\\TenantScaler Hackathon\\.cache\\models\\qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        "slots": 4
+      },
+      "metrics": {
+        "VictimViolationPct": 91.37931034482759,
+        "VictimShedAwareViolationPct": 91.37931034482759,
+        "P99TTFT": {
+          "A": 107.5357641,
+          "B": 107.3998887,
+          "C": 109.7702593
+        },
+        "P99TPOT": {
+          "A": 0.15404628,
+          "B": 0.169454918,
+          "C": 0.19771809
+        },
+        "NoisyShedPct": 0,
+        "ReactionTimeSec": 9.1271232,
+        "ReplicaMinutes": 12.6666849,
+        "JainIndex": 0.9371778759828697,
+        "MaxCounterGap": null,
+        "ReclaimLatencySec": null,
+        "PolicyLatencyMeanMs": null,
+        "Completed": 414,
+        "Shed": 0,
+        "Failed": 0
+      },
+      "requests": 414,
+      "initialReplicas": 2,
+      "controlPhaseSeconds": 0.241,
+      "startedAt": "2026-10-27T16:38:35.5041538+05:30",
+      "startupSeconds": 30.017516,
+      "wallSeconds": 294.987997,
+      "coldStartSeconds": [
+        30,
+        30,
+        30,
+        30
+      ],
+      "drainTimedOut": false,
+      "order": 3,
+      "sequence": 23,
+      "cpuPerformanceStartPct": 71.866991,
+      "cpuPerformanceEndPct": 72.283029,
+      "tokenizerFallbacks": 0
+    },
+    {
+      "setup": "S4-flowcontrol-equiv",
+      "run": 4,
+      "seed": 5,
+      "simulated": false,
+      "engine": {
+        "backend": "llama",
+        "simulated": false,
+        "build": "b11898-8b28c2394",
+        "modelPath": "C:\\Users\\nilay\\OneDrive\\Desktop\\TenantScaler Hackathon\\.cache\\models\\qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        "slots": 4
+      },
+      "metrics": {
+        "VictimViolationPct": 55.357142857142854,
+        "VictimShedAwareViolationPct": 56.89655172413793,
+        "P99TTFT": {
+          "A": 5.6742412,
+          "B": 9.8551952,
+          "C": 22.2111467
+        },
+        "P99TPOT": {
+          "A": 0.158821388,
+          "B": 0.153431694,
+          "C": 0.145614454
+        },
+        "NoisyShedPct": 60.207612456747405,
+        "ReactionTimeSec": 29.1243863,
+        "ReplicaMinutes": 12.000020033333334,
+        "JainIndex": 0.8861348570471709,
+        "MaxCounterGap": null,
+        "ReclaimLatencySec": null,
+        "PolicyLatencyMeanMs": null,
+        "Completed": 238,
+        "Shed": 176,
+        "Failed": 0
+      },
+      "requests": 414,
+      "initialReplicas": 2,
+      "controlPhaseSeconds": 0.241,
+      "startedAt": "2026-10-27T16:44:28.1801959+05:30",
+      "startupSeconds": 30.0198159,
+      "wallSeconds": 240.6688413,
+      "coldStartSeconds": [
+        30,
+        30,
+        30,
+        30
+      ],
+      "drainTimedOut": false,
+      "order": 4,
+      "sequence": 24,
+      "cpuPerformanceStartPct": 85.074633,
+      "cpuPerformanceEndPct": 77.126423,
+      "tokenizerFallbacks": 0
+    },
+    {
+      "setup": "S5-ts-no-gateway",
+      "run": 4,
+      "seed": 5,
+      "simulated": false,
+      "engine": {
+        "backend": "llama",
+        "simulated": false,
+        "build": "b11898-8b28c2394",
+        "modelPath": "C:\\Users\\nilay\\OneDrive\\Desktop\\TenantScaler Hackathon\\.cache\\models\\qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        "slots": 4
+      },
+      "metrics": {
+        "VictimViolationPct": 84.48275862068965,
+        "VictimShedAwareViolationPct": 84.48275862068965,
+        "P99TTFT": {
+          "A": 77.1511281,
+          "B": 75.4057461,
+          "C": 75.1571048
+        },
+        "P99TPOT": {
+          "A": 0.16033677,
+          "B": 0.141896045,
+          "C": 0.18062093
+        },
+        "NoisyShedPct": 0,
+        "ReactionTimeSec": 9.1126068,
+        "ReplicaMinutes": 15.200030256666667,
+        "JainIndex": 0.6147985007451557,
+        "MaxCounterGap": null,
+        "ReclaimLatencySec": null,
+        "PolicyLatencyMeanMs": null,
+        "Completed": 414,
+        "Shed": 0,
+        "Failed": 0
+      },
+      "requests": 414,
+      "initialReplicas": 2,
+      "controlPhaseSeconds": 0.241,
+      "startedAt": "2026-10-27T16:49:26.5210053+05:30",
+      "startupSeconds": 30.0264913,
+      "wallSeconds": 262.898328,
+      "coldStartSeconds": [
+        30,
+        30,
+        30,
+        30,
+        30
+      ],
+      "drainTimedOut": false,
+      "order": 5,
+      "sequence": 25,
+      "cpuPerformanceStartPct": 99.730387,
+      "cpuPerformanceEndPct": 78.45234,
+      "tokenizerFallbacks": 0
+    }
+  ],
+  "stats": [
+    {
+      "setup": "S2-keda-queue",
+      "runs": 5,
+      "metrics": {
+        "completed": {
+          "Mean": 421.6,
+          "Std": 20.959484726490775,
+          "CI95": 26.024636619727783,
+          "N": 5
+        },
+        "failed": {
+          "Mean": 0,
+          "Std": 0,
+          "CI95": 0,
+          "N": 5
+        },
+        "jain_index": {
+          "Mean": 0.7592553076125428,
+          "Std": 0.1656987279670984,
+          "CI95": 0.2057421372694622,
+          "N": 5
+        },
+        "max_counter_gap": {
+          "Mean": null,
+          "Std": null,
+          "CI95": null,
+          "N": 0
+        },
+        "noisy_shed_pct": {
+          "Mean": 0,
+          "Std": 0,
+          "CI95": 0,
+          "N": 5
+        },
+        "p99_tpot_s_A": {
+          "Mean": 0.1705730896,
+          "Std": 0.01991429560751618,
+          "CI95": 0.02472686296855457,
+          "N": 5
+        },
+        "p99_tpot_s_B": {
+          "Mean": 0.16646431479999999,
+          "Std": 0.007902817821676948,
+          "CI95": 0.009812644001744315,
+          "N": 5
+        },
+        "p99_tpot_s_C": {
+          "Mean": 0.17491827259999998,
+          "Std": 0.013883451978948372,
+          "CI95": 0.017238581839891732,
+          "N": 5
+        },
+        "p99_ttft_s_A": {
+          "Mean": 93.51214275999999,
+          "Std": 12.286727940863726,
+          "CI95": 15.255987161854785,
+          "N": 5
+        },
+        "p99_ttft_s_B": {
+          "Mean": 92.57188506000001,
+          "Std": 13.318515210324264,
+          "CI95": 16.537120219607555,
+          "N": 5
+        },
+        "p99_ttft_s_C": {
+          "Mean": 94.99846579999999,
+          "Std": 13.145064229521143,
+          "CI95": 16.32175238945134,
+          "N": 5
+        },
+        "policy_latency_mean_ms": {
+          "Mean": null,
+          "Std": null,
+          "CI95": null,
+          "N": 0
+        },
+        "reaction_time_s": {
+          "Mean": 9.230555740000002,
+          "Std": 3.357707422580223,
+          "CI95": 4.169144265153102,
+          "N": 5
+        },
+        "reclaim_latency_s": {
+          "Mean": null,
+          "Std": null,
+          "CI95": null,
+          "N": 0
+        },
+        "replica_minutes": {
+          "Mean": 12.680012154666668,
+          "Std": 0.11204602745100532,
+          "CI95": 0.1391235131563596,
+          "N": 5
+        },
+        "shed": {
+          "Mean": 0,
+          "Std": 0,
+          "CI95": 0,
+          "N": 5
+        },
+        "victim_shed_aware_violation_pct": {
+          "Mean": 91.54462720213742,
+          "Std": 2.158865871563853,
+          "CI95": 2.6805859281058755,
+          "N": 5
+        },
+        "victim_violation_pct": {
+          "Mean": 91.54462720213742,
+          "Std": 2.158865871563853,
+          "CI95": 2.6805859281058755,
+          "N": 5
+        }
+      }
+    },
+    {
+      "setup": "S3-static-partition",
+      "runs": 5,
+      "metrics": {
+        "completed": {
+          "Mean": 304,
+          "Std": 13.2664991614216,
+          "CI95": 16.47253376680345,
+          "N": 5
+        },
+        "failed": {
+          "Mean": 117.6,
+          "Std": 12.895735729302148,
+          "CI95": 16.012170178733157,
+          "N": 5
+        },
+        "jain_index": {
+          "Mean": 0.6189126463561557,
+          "Std": 0.06500363682728498,
+          "CI95": 0.08071267254259858,
+          "N": 5
+        },
+        "max_counter_gap": {
+          "Mean": null,
+          "Std": null,
+          "CI95": null,
+          "N": 0
+        },
+        "noisy_shed_pct": {
+          "Mean": 0,
+          "Std": 0,
+          "CI95": 0,
+          "N": 5
+        },
+        "p99_tpot_s_A": {
+          "Mean": 0.0926917242,
+          "Std": 0.031101752724703356,
+          "CI95": 0.03861792517609054,
+          "N": 5
+        },
+        "p99_tpot_s_B": {
+          "Mean": 0.1491362242,
+          "Std": 0.026323725523926287,
+          "CI95": 0.03268522104323386,
+          "N": 5
+        },
+        "p99_tpot_s_C": {
+          "Mean": 0.15454129440000003,
+          "Std": 0.007392927021015816,
+          "CI95": 0.009179530975536358,
+          "N": 5
+        },
+        "p99_ttft_s_A": {
+          "Mean": 1.8589230999999997,
+          "Std": 0.4983093641062898,
+          "CI95": 0.6187327739351868,
+          "N": 5
+        },
+        "p99_ttft_s_B": {
+          "Mean": 8.27753516,
+          "Std": 2.4463808553769226,
+          "CI95": 3.037582918924305,
+          "N": 5
+        },
+        "p99_ttft_s_C": {
+          "Mean": 121.05214342,
+          "Std": 0.1542902383573142,
+          "CI95": 0.19157662698383393,
+          "N": 5
+        },
+        "policy_latency_mean_ms": {
+          "Mean": null,
+          "Std": null,
+          "CI95": null,
+          "N": 0
+        },
+        "reaction_time_s": {
+          "Mean": null,
+          "Std": null,
+          "CI95": null,
+          "N": 0
+        },
+        "reclaim_latency_s": {
+          "Mean": null,
+          "Std": null,
+          "CI95": null,
+          "N": 0
+        },
+        "replica_minutes": {
+          "Mean": 16.000032970666666,
+          "Std": 0.000008076172915361946,
+          "CI95": 0.000010027892772322574,
+          "N": 5
+        },
+        "shed": {
+          "Mean": 0,
+          "Std": 0,
+          "CI95": 0,
+          "N": 5
+        },
+        "victim_shed_aware_violation_pct": {
+          "Mean": 21.907563570918335,
+          "Std": 6.11671201560118,
+          "CI95": 7.594900809386243,
+          "N": 5
+        },
+        "victim_violation_pct": {
+          "Mean": 21.907563570918335,
+          "Std": 6.11671201560118,
+          "CI95": 7.594900809386243,
+          "N": 5
+        }
+      }
+    },
+    {
+      "setup": "S4-flowcontrol-equiv",
+      "runs": 5,
+      "metrics": {
+        "completed": {
+          "Mean": 255.8,
+          "Std": 12.891857895586657,
+          "CI95": 16.007355212400046,
+          "N": 5
+        },
+        "failed": {
+          "Mean": 0,
+          "Std": 0,
+          "CI95": 0,
+          "N": 5
+        },
+        "jain_index": {
+          "Mean": 0.9128052470884997,
+          "Std": 0.04110539932189981,
+          "CI95": 0.05103909253595259,
+          "N": 5
+        },
+        "max_counter_gap": {
+          "Mean": null,
+          "Std": null,
+          "CI95": null,
+          "N": 0
+        },
+        "noisy_shed_pct": {
+          "Mean": 57.39124713450043,
+          "Std": 3.990790744155674,
+          "CI95": 4.955221003632633,
+          "N": 5
+        },
+        "p99_tpot_s_A": {
+          "Mean": 0.1480674074,
+          "Std": 0.007446757642349641,
+          "CI95": 0.009246370517515,
+          "N": 5
+        },
+        "p99_tpot_s_B": {
+          "Mean": 0.1423332376,
+          "Std": 0.00881064316950836,
+          "CI95": 0.010939858010093943,
+          "N": 5
+        },
+        "p99_tpot_s_C": {
+          "Mean": 0.14435160460000002,
+          "Std": 0.0029526275469733375,
+          "CI95": 0.003666171186272515,
+          "N": 5
+        },
+        "p99_ttft_s_A": {
+          "Mean": 5.14526854,
+          "Std": 1.5961983544845855,
+          "CI95": 1.9819419556610378,
+          "N": 5
+        },
+        "p99_ttft_s_B": {
+          "Mean": 7.07284324,
+          "Std": 2.2036640853052694,
+          "CI95": 2.736210255184858,
+          "N": 5
+        },
+        "p99_ttft_s_C": {
+          "Mean": 20.8607182,
+          "Std": 3.7150178132896197,
+          "CI95": 4.612803696671098,
+          "N": 5
+        },
+        "policy_latency_mean_ms": {
+          "Mean": null,
+          "Std": null,
+          "CI95": null,
+          "N": 0
+        },
+        "reaction_time_s": {
+          "Mean": 23.22567522,
+          "Std": 8.704245371021806,
+          "CI95": 10.807747699230626,
+          "N": 5
+        },
+        "reclaim_latency_s": {
+          "Mean": null,
+          "Std": null,
+          "CI95": null,
+          "N": 0
+        },
+        "replica_minutes": {
+          "Mean": 11.663335538999998,
+          "Std": 0.9200196399906991,
+          "CI95": 1.1423552213337023,
+          "N": 5
+        },
+        "shed": {
+          "Mean": 165.8,
+          "Std": 15.15585695366646,
+          "CI95": 18.818481228273136,
+          "N": 5
+        },
+        "victim_shed_aware_violation_pct": {
+          "Mean": 50.7357806165521,
+          "Std": 13.706142571273213,
+          "CI95": 17.01842314018033,
+          "N": 5
+        },
+        "victim_violation_pct": {
+          "Mean": 48.77662710852366,
+          "Std": 16.02179009256384,
+          "CI95": 19.893679190955005,
+          "N": 5
+        }
+      }
+    },
+    {
+      "setup": "S5-ts-no-gateway",
+      "runs": 5,
+      "metrics": {
+        "completed": {
+          "Mean": 421.6,
+          "Std": 20.959484726490775,
+          "CI95": 26.024636619727783,
+          "N": 5
+        },
+        "failed": {
+          "Mean": 0,
+          "Std": 0,
+          "CI95": 0,
+          "N": 5
+        },
+        "jain_index": {
+          "Mean": 0.7041251012265504,
+          "Std": 0.1674856165519779,
+          "CI95": 0.2079608524100426,
+          "N": 5
+        },
+        "max_counter_gap": {
+          "Mean": null,
+          "Std": null,
+          "CI95": null,
+          "N": 0
+        },
+        "noisy_shed_pct": {
+          "Mean": 0,
+          "Std": 0,
+          "CI95": 0,
+          "N": 5
+        },
+        "p99_tpot_s_A": {
+          "Mean": 0.17126568979999998,
+          "Std": 0.019323769776341294,
+          "CI95": 0.023993628331757163,
+          "N": 5
+        },
+        "p99_tpot_s_B": {
+          "Mean": 0.1587632648,
+          "Std": 0.020005489453111255,
+          "CI95": 0.024840095079197426,
+          "N": 5
+        },
+        "p99_tpot_s_C": {
+          "Mean": 0.1758425,
+          "Std": 0.013362195398295577,
+          "CI95": 0.016591356334391336,
+          "N": 5
+        },
+        "p99_ttft_s_A": {
+          "Mean": 56.55233109999999,
+          "Std": 13.362387272794617,
+          "CI95": 16.59159457803994,
+          "N": 5
+        },
+        "p99_ttft_s_B": {
+          "Mean": 55.45168914,
+          "Std": 14.324948323030833,
+          "CI95": 17.78677193490692,
+          "N": 5
+        },
+        "p99_ttft_s_C": {
+          "Mean": 56.54096716,
+          "Std": 12.83700837273903,
+          "CI95": 15.939250537141941,
+          "N": 5
+        },
+        "policy_latency_mean_ms": {
+          "Mean": null,
+          "Std": null,
+          "CI95": null,
+          "N": 0
+        },
+        "reaction_time_s": {
+          "Mean": 9.1126068,
+          "Std": null,
+          "CI95": null,
+          "N": 1
+        },
+        "reclaim_latency_s": {
+          "Mean": null,
+          "Std": null,
+          "CI95": null,
+          "N": 0
+        },
+        "replica_minutes": {
+          "Mean": 15.113361822000002,
+          "Std": 0.5460010808401957,
+          "CI95": 0.6779498593725107,
+          "N": 5
+        },
+        "shed": {
+          "Mean": 0,
+          "Std": 0,
+          "CI95": 0,
+          "N": 5
+        },
+        "victim_shed_aware_violation_pct": {
+          "Mean": 88.38753907953206,
+          "Std": 8.413478987918861,
+          "CI95": 10.446713563123138,
+          "N": 5
+        },
+        "victim_violation_pct": {
+          "Mean": 88.38753907953206,
+          "Std": 8.413478987918861,
+          "CI95": 10.446713563123138,
+          "N": 5
+        }
+      }
+    },
+    {
+      "setup": "S7-ts-full",
+      "runs": 5,
+      "metrics": {
+        "completed": {
+          "Mean": 292.8,
+          "Std": 21.253235047869772,
+          "CI95": 26.38937580442513,
+          "N": 5
+        },
+        "failed": {
+          "Mean": 0,
+          "Std": 0,
+          "CI95": 0,
+          "N": 5
+        },
+        "jain_index": {
+          "Mean": 0.9526906149488561,
+          "Std": 0.034691510449311624,
+          "CI95": 0.04307519793612717,
+          "N": 5
+        },
+        "max_counter_gap": {
+          "Mean": 489.68171338577633,
+          "Std": 236.67109347013314,
+          "CI95": 293.86596504298154,
+          "N": 5
+        },
+        "noisy_shed_pct": {
+          "Mean": 44.87307312021441,
+          "Std": 6.271572278933055,
+          "CI95": 7.787185215832251,
+          "N": 5
+        },
+        "p99_tpot_s_A": {
+          "Mean": 0.14929056599999999,
+          "Std": 0.0142801790229198,
+          "CI95": 0.01773118350884048,
+          "N": 5
+        },
+        "p99_tpot_s_B": {
+          "Mean": 0.1608259276,
+          "Std": 0.022510461777233804,
+          "CI95": 0.02795042891270857,
+          "N": 5
+        },
+        "p99_tpot_s_C": {
+          "Mean": 0.1661968754,
+          "Std": 0.01825167704268346,
+          "CI95": 0.022662449432075925,
+          "N": 5
+        },
+        "p99_ttft_s_A": {
+          "Mean": 3.53530842,
+          "Std": 1.4491623030345677,
+          "CI95": 1.7993725910549552,
+          "N": 5
+        },
+        "p99_ttft_s_B": {
+          "Mean": 6.3789153,
+          "Std": 3.1833022214616955,
+          "CI95": 3.9525916140297874,
+          "N": 5
+        },
+        "p99_ttft_s_C": {
+          "Mean": 13.376754259999998,
+          "Std": 5.354732531263063,
+          "CI95": 6.6487783521617345,
+          "N": 5
+        },
+        "policy_latency_mean_ms": {
+          "Mean": 0.1578431503333333,
+          "Std": 0.056845420873831154,
+          "CI95": 0.07058290988743385,
+          "N": 5
+        },
+        "reaction_time_s": {
+          "Mean": 9.220844959999999,
+          "Std": 3.3587549606380365,
+          "CI95": 4.170444955396956,
+          "N": 5
+        },
+        "reclaim_latency_s": {
+          "Mean": null,
+          "Std": null,
+          "CI95": null,
+          "N": 0
+        },
+        "replica_minutes": {
+          "Mean": 15.073399551666673,
+          "Std": 0.5474041855160259,
+          "CI95": 0.6796920438681902,
+          "N": 5
+        },
+        "shed": {
+          "Mean": 128.8,
+          "Std": 20.216330032921405,
+          "CI95": 25.10188822658892,
+          "N": 5
+        },
+        "victim_shed_aware_violation_pct": {
+          "Mean": 27.516703310975664,
+          "Std": 13.099500789883912,
+          "CI95": 16.265177908963036,
+          "N": 5
+        },
+        "victim_violation_pct": {
+          "Mean": 27.335522714833058,
+          "Std": 12.756519189359338,
+          "CI95": 15.839310019681237,
+          "N": 5
+        }
+      }
+    }
+  ]
+}
