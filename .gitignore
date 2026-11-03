@@ -27,3 +27,12 @@ desktop.ini
 
 # Cross-compiled binaries (scripts/build-dist.*)
 dist/
+
+# Experiment / benchmark results (generated output)
+/results/
+
+# Internal planning and team docs
+/phase_1_.md
+/PLAN.md
+/CLAIMS.md
+/docs/team/
