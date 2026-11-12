@@ -1,12 +1,8 @@
 # CODEOWNERS for Lemovue/tenetScaler
 #
-# PLACEHOLDER OWNER: "@Lemovue/founders" is a proposed team, not an existing one.
-# On 2026-11-12 the Lemovue organization had no teams (GET /orgs/Lemovue/teams
-# returned an empty list). Until a team with the slug "founders" exists, contains
-# the four Founders and has Write (or higher) access to this repository, GitHub
-# reports these lines as unknown owners and requests no reviews from them.
-#
-# Before enabling "Require review from Code Owners", follow
+# "@Lemovue/founders" is a visible team containing the four Founders, with
+# Write access to this repository (created 2026-11-12). The main-protection
+# ruleset requires a Code Owner review; see
 # docs/legal/GITHUB-BRANCH-PROTECTION-CHECKLIST.md.
 
 # Default: every path is owned by the Founders.

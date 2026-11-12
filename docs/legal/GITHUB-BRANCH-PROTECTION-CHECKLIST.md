@@ -1,6 +1,29 @@
 # GitHub Branch Protection and Repository Safety Checklist
 
-**Manual checklist - nothing here has been applied. Do not remove any Founder's admin access.**
+**Do not remove any Founder's admin access.**
+
+## Status (2026-11-12)
+
+Applied by nilay007hckkr and verified with read-only `gh api` calls:
+
+| Item | Setting | Status |
+|---|---|---|
+| 1.4, 1.5 | Team `founders` (visible), with all four Founders as maintainers and **Write** on `tenetScaler` | Done |
+| 2.1 to 2.8 | Ruleset `main-protection` (active, default branch, empty bypass list): restrict deletions, block force pushes, require a pull request with 1 approval, dismiss stale approvals, Code Owner review, approval of the most recent push, conversation resolution | Done |
+| 5.4 | Secret scanning and push protection | Done |
+| (extra) | Private vulnerability reporting | Done |
+
+Still open:
+
+| Item | Why it is open |
+|---|---|
+| 1.2, 1.3 | Every Founder turns on 2FA for their own account; only then require 2FA for the organization. |
+| 1.6 | Merge `.github/CODEOWNERS` into `main` through the licensing pull request. |
+| 3 | CI does not exist yet, so no status check can be required. |
+| 4.1, 4.2 | GitHub's REST API does not change these member privileges, so set them in the organization settings page. |
+| 5.1, 5.3, 5.6 | Optional: tag ruleset, automatic head-branch deletion, audit-log reviews. |
+
+The sections below remain the full reference.
 
 This is an operational checklist for the four Founders of Lemovue. It is not an agreement and not legal advice. It changes nothing by itself: an organization owner must apply each item by hand in the GitHub UI, after the Founders have agreed on it. GitHub settings are technical controls only. A pull request approval, comment or settings change on GitHub is not a "Founder Approval" under `docs/legal/FOUNDERS-IP-OWNERSHIP-AGREEMENT.md`. That requires a document signed by each required Founder.
 

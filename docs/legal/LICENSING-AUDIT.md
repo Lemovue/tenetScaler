@@ -22,7 +22,7 @@ This audit does not establish who owns anything. Git history shows who committed
 2. **Four founders.** The four git author identities and the four GitHub organization owners are the same four people, as stated by one founder on 2026-11-12. Each founder confirms their own account in writing at signature (Schedule 3 of the founders agreement). No other author appears in git history.
 3. **Commit authorship is not reliable evidence of who wrote what** (section 4). Each founder must document their own contributions before ownership shares are agreed.
 4. **Third-party licenses are all permissive** (Apache-2.0, MIT, BSD-3-Clause, ISC, OFL-1.1). They are compatible with a proprietary license, but **compiled binaries and container images currently ship none of the required notices** (section 6).
-5. **Nothing is protected on GitHub yet.** There is no branch protection, no ruleset, no CI and no team. All four founders are organization owners. Organization-wide 2FA is not required.
+5. **GitHub protection was missing when the audit started.** There was no branch protection, no ruleset, no CI and no team. All four founders are organization owners, and organization-wide 2FA is not required. The `founders` team, the `main` ruleset, secret scanning, push protection and private vulnerability reporting were applied on 2026-11-12; see `GITHUB-BRANCH-PROTECTION-CHECKLIST.md`.
 
 ## 3. Identified original contributors
 
@@ -175,7 +175,7 @@ There are no external contributors today. Any future contributor signs `CONTRIBU
 5. All four sign the founders agreement. Record the signature dates privately.
 6. Review this audit together.
 7. Merge the LICENSE, README, CONTRIBUTING, CODEOWNERS and `docs/legal/` changes through a PR approved by the founders.
-8. Create the `founders` team. Confirm every member has 2FA on, then require 2FA. Apply the branch protection checklist.
+8. Confirm every member has 2FA on, then require 2FA. Finish the open items in the branch protection checklist.
 9. Before distributing any binary or image, add a third-party notices file and ship it with the build (section 6.2).
 10. Decide what to do with the stale public branches (section 9, item 3).
 11. Only after steps 1 to 8 are done, announce the licensing policy.

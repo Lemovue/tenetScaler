@@ -21,7 +21,7 @@ Who this page applies to:
    ```
 
    Say in the pull request which checks you ran and their result.
-4. **Review.** A founder reviews every pull request. Once the `founders` team named in [`.github/CODEOWNERS`](.github/CODEOWNERS) exists, GitHub requests its review automatically. Only a founder merges.
+4. **Review.** GitHub requests a review from the `founders` team named in [`.github/CODEOWNERS`](.github/CODEOWNERS). A pull request into `main` needs approval from a founder other than the last person who pushed to it. Only a founder merges.
 
 Never put passwords, API keys, tokens, `.env` contents, personal data or confidential material in an issue, a pull request or a commit.
 
@@ -70,4 +70,4 @@ Rules:
 - **Technical questions and bug reports:** a GitHub issue on [Lemovue/tenetScaler](https://github.com/Lemovue/tenetScaler/issues).
 - **Licensing, authorization and contributor agreements:** tenetscaler-licensing@googlegroups.com.
 - **Security vulnerabilities:** report them privately to tenetscaler-licensing@googlegroups.com, not in a public issue.
-- **Maintainers:** the four founders (proposed GitHub team `@Lemovue/founders`, not created yet).
+- **Maintainers:** the four founders (GitHub team `@Lemovue/founders`).
