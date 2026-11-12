@@ -1,0 +1,136 @@
+tenetScaler Proprietary Source-Available License
+
+Copyright (c) 2026 The Founders of Lemovue. All rights reserved.
+
+1. The Software and its owners
+
+   "Software" means tenetScaler (also referred to as "TenantScaler"): the
+   source code, object code, architecture, design documents, documentation,
+   configuration, deployment manifests, scripts, tests, dashboard assets and
+   other original materials in the GitHub repository Lemovue/tenetScaler,
+   on every branch and in its history, excluding the third-party materials
+   described in section 7.
+
+   "Copyright Owners" means the four founders of tenetScaler and any person
+   who lawfully succeeds to a founder's rights in the Software. "Lemovue" is
+   the name of the GitHub organization through which the Software is
+   published and licensing requests are handled. Lemovue is not a legal
+   entity and does not own the Software.
+
+   The Software is proprietary. Its source code is published so that it can
+   be inspected. It is not open-source software, and this License is not an
+   open-source license.
+
+2. Publication is not permission
+
+   Making the source code publicly visible does not grant any license to use,
+   copy, modify, distribute or otherwise exploit the Software. All rights not
+   expressly granted in section 3 are reserved by the Copyright Owners.
+
+3. What you may do
+
+   You may view and read the source code through GitHub's website and
+   services in order to inspect it.
+
+   By publishing the repository on GitHub, the Copyright Owners grant GitHub
+   users the rights that GitHub's Terms of Service require for public
+   repositories (for example, viewing the repository and forking it within
+   GitHub's functionality). This License does not restrict those rights, and
+   it grants no rights beyond them and the inspection right above.
+
+4. What requires prior written authorization
+
+   Unless you hold a written authorization under section 5 that expressly
+   covers the activity, you may not:
+
+   (a) install, build, run, deploy or otherwise use the Software for any
+       purpose, commercial or non-commercial;
+   (b) copy or reproduce the Software, in whole or in part, except as
+       permitted by section 3;
+   (c) modify, adapt, translate or create derivative works of the Software,
+       or distribute any such work;
+   (d) distribute, publish, sell, rent, lease, lend or otherwise make the
+       Software available to anyone, including as a hosted or managed
+       service;
+   (e) sublicense, assign or transfer any right in the Software;
+   (f) use the Software, or any part of it, for any commercial purpose;
+   (g) use the Software or any part of it as training data for a
+       machine-learning model;
+   (h) remove, alter or obscure any copyright notice, license text or
+       attribution in the Software.
+
+5. How to obtain authorization
+
+   Requests for authorization go to: [LICENSING CONTACT EMAIL]
+
+   An authorization is valid only if it is in writing and signed by every
+   Copyright Owner: by default all four founders or, for a founder who has
+   died, lacks capacity or has transferred their interest, the person
+   lawfully entitled to act for them. No single founder can grant an
+   authorization alone. Permission given verbally, by chat, by email alone or in a GitHub
+   issue, pull request or comment is not an authorization. The standard form
+   is docs/legal/PROJECT-USE-AUTHORIZATION.md. An authorization covers only
+   the activities, purpose, duration and territory it states.
+
+6. Contributions
+
+   Contributions from anyone other than the founders are accepted only after
+   the contributor agreement described in CONTRIBUTING.md has been signed by
+   the contributor and countersigned by all four founders. Opening an issue or pull request does not give the
+   contributor any right to use the Software.
+
+7. Third-party materials
+
+   Parts of this repository, and tools and data that its scripts download or
+   that users supply, are owned by third parties and licensed under their own terms. Those terms
+   continue to apply. This License does not replace, restrict or override
+   them, does not grant any right in third-party materials, and does not
+   reduce any right their licenses give you in those materials. They include:
+
+   - three.js r170, MIT License:
+     internal/web/static/vendor/three.module.min.js, with its license in
+     internal/web/static/vendor/LICENSE-three.txt
+   - the Bangers font, SIL Open Font License 1.1:
+     internal/web/static/fonts/Bangers-Regular.ttf, with its license in
+     internal/web/static/fonts/OFL-Bangers.txt
+   - the Go standard library and the Go modules compiled into the program
+     (BSD-3-Clause, Apache-2.0, MIT and ISC licenses), each under its own
+     license; their license texts and NOTICE files must accompany any
+     binary or container image that is distributed
+   - tools, models and datasets that are not stored in this repository:
+     llama.cpp, NVIDIA's CUDA runtime package and the Qwen2.5-0.5B-Instruct
+     model (downloaded by scripts/setup-llama.ps1), the Azure LLM inference
+     trace (downloaded by scripts/get-trace.ps1) and the BurstGPT trace
+     (supplied by the user). They are not part of the Software and are
+     governed solely by their own terms
+
+   docs/legal/LICENSING-AUDIT.md lists the third-party materials known to the
+   Copyright Owners and their license obligations.
+
+8. Termination
+
+   If you breach this License, any permission you have under it ends
+   automatically. You must then stop any use of the Software and delete any
+   copies you made, except any copy that GitHub's Terms of Service entitle
+   you to keep. A written authorization under section 5 ends only under its
+   own termination terms.
+
+9. No trademark, patent or implied rights
+
+   This License grants no right to use the names "tenetScaler",
+   "TenantScaler" or "Lemovue", any founder's name, or any logo, and no
+   patent license. No license is granted by implication, estoppel or
+   otherwise.
+
+10. No warranty
+
+   To the extent permitted by law, the Software is provided as is. The
+   Copyright Owners give no warranty of any kind, express or implied,
+   including warranties of merchantability, fitness for a particular
+   purpose, title or non-infringement.
+
+11. Limitation of liability
+
+   To the extent permitted by law, the Copyright Owners are not liable for
+   any loss or damage of any kind arising from the Software or its use,
+   whether in contract, tort or otherwise.

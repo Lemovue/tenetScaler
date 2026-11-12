@@ -151,3 +151,14 @@ The end-to-end tests start the real binary, check `/healthz`, drive the dashboar
 Copy `.env.example` to `.env` to set them. `.env` is git-ignored, and real environment variables win over it.
 
 ⟪TBD: mapping / results / limitations⟫
+
+## License
+
+tenetScaler is **proprietary, source-available** software, not open source. Copyright (c) 2026 The Founders of Lemovue. All rights reserved.
+
+- The four founders collectively own the project's intellectual property, subject to completed legal assignments. The agreements drafted in [`docs/legal/`](docs/legal/) are not yet signed; until they are, each founder keeps whatever rights they have in their own contributions.
+- The repository is public so the code can be inspected. Public visibility is not permission to use, copy, modify, redistribute, sublicense or commercially exploit it. GitHub users keep the rights GitHub's Terms of Service give over public repositories, such as viewing and forking on GitHub.
+- Any other use, including building and running the software by following the setup and run instructions above, needs prior written authorization signed by all four founders. Send requests to [LICENSING CONTACT EMAIL].
+- Third-party components (three.js, the Bangers font, the Go modules) remain under their own licenses.
+
+See [LICENSE](LICENSE) for the terms and [CONTRIBUTING.md](CONTRIBUTING.md) for contributions and authorization requests.
