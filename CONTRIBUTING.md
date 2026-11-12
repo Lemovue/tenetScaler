@@ -29,7 +29,7 @@ Never put passwords, API keys, tokens, `.env` contents, personal data or confide
 
 A pull request from an external contributor is merged only after that contributor has signed the contributor IP assignment agreement ([`docs/legal/CONTRIBUTOR-IP-ASSIGNMENT-AGREEMENT.md`](docs/legal/CONTRIBUTOR-IP-ASSIGNMENT-AGREEMENT.md)) and the founders have countersigned it.
 
-- **How:** email [LICENSING CONTACT EMAIL] with your name and GitHub username. The founders send you the agreement to sign. Do not post signed agreements or identity documents in public issues.
+- **How:** email tenetscaler-licensing@googlegroups.com with your name and GitHub username. The founders send you the agreement to sign. Do not post signed agreements or identity documents in public issues.
 - **Why it is required:** GitHub's Terms of Service license a contribution to a repository under the repository's own license. This repository's LICENSE grants almost no rights, so without a signed agreement the project could not use your contribution.
 - **Employer or university:** if an employer, university, sponsor or anyone else may own what you create, get their written permission before you contribute, and say so in the agreement.
 - **Moral rights:** any moral rights that the law does not allow you to transfer stay with you.
@@ -41,7 +41,7 @@ Contributing does not give you a license to use the software.
 
 Installing, building, running, modifying, redistributing or commercially using tenetScaler needs prior written authorization (see LICENSE, sections 4 and 5).
 
-1. Email [LICENSING CONTACT EMAIL] with who you are (person or organization), what you want to do, whether the use is commercial, how long and where you will use it, and whether you need to modify or redistribute it.
+1. Email tenetscaler-licensing@googlegroups.com with who you are (person or organization), what you want to do, whether the use is commercial, how long and where you will use it, and whether you need to modify or redistribute it.
 2. The founders decide together. An authorization is valid only once it is written on the form in [`docs/legal/PROJECT-USE-AUTHORIZATION.md`](docs/legal/PROJECT-USE-AUTHORIZATION.md) (or an equivalent document) and signed by all four founders. No single founder can grant it alone.
 3. A reply by email or chat, or a comment on GitHub, is not an authorization.
 
@@ -68,6 +68,6 @@ Rules:
 ## 5. Contact
 
 - **Technical questions and bug reports:** a GitHub issue on [Lemovue/tenetScaler](https://github.com/Lemovue/tenetScaler/issues).
-- **Licensing, authorization and contributor agreements:** [LICENSING CONTACT EMAIL].
-- **Security vulnerabilities:** report them privately to [SECURITY CONTACT EMAIL], not in a public issue.
+- **Licensing, authorization and contributor agreements:** tenetscaler-licensing@googlegroups.com.
+- **Security vulnerabilities:** report them privately to tenetscaler-licensing@googlegroups.com, not in a public issue.
 - **Maintainers:** the four founders (proposed GitHub team `@Lemovue/founders`, not created yet).

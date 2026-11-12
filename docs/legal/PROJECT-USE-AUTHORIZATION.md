@@ -12,7 +12,7 @@
 4. "Unanimous Founder Approval" means the written approval of all four Founders. It is always required for commercial use, any exclusive license, and any grant of redistribution, sublicensing, modified-version distribution or derivative-work distribution rights. A non-exclusive, non-commercial, revocable authorization limited to evaluation or academic research requires [APPROVAL THRESHOLD FOR NON-COMMERCIAL AUTHORIZATIONS - DEFAULT: ALL FOUR FOUNDERS].
 5. "Written" and "signed" mean a document signed by each required Founder by hand or by an electronic signature that is legally valid in [GOVERNING LAW JURISDICTION].
 6. Each executed authorization receives a reference number and is recorded in the private Licensing Register kept by the Founders. Executed authorizations and the Licensing Register contain licensees' personal data. They are never committed to the public repository.
-7. Requests for an authorization go to [LICENSING CONTACT EMAIL].
+7. Requests for an authorization go to tenetscaler-licensing@googlegroups.com.
 8. To complete this form: replace every placeholder in square brackets, tick and initial only the activities being granted, and complete Annex A and Annex B. Anything left blank or ambiguous is read as not granted.
 
 ## 1. Authorization reference and parties
@@ -230,7 +230,7 @@
 
 14.4 Severability. If any provision is unenforceable, the rest remains in effect and that provision applies to the extent it is enforceable.
 
-14.5 Notices. Notices must be in writing and sent to the Licensee's contact email and address in Section 2, and to [LICENSING CONTACT EMAIL] and every Founder's email in Section 1.3.
+14.5 Notices. Notices must be in writing and sent to the Licensee's contact email and address in Section 2, and to tenetscaler-licensing@googlegroups.com and every Founder's email in Section 1.3.
 
 14.6 Counterparts and electronic signatures. This Authorization may be signed in counterparts, which together form one document, and by electronic signature [VERIFY ELECTRONIC SIGNATURE VALIDITY].
 

@@ -143,8 +143,6 @@ There are no external contributors today. Any future contributor signs `CONTRIBU
 | Each founder's Background IP | founders agreement, Schedule 2 |
 | Each founder's contribution record | founders agreement, Schedule 3 |
 | Third-party claims: university, employer, sponsor, scholarship | founders agreement, Schedule 4 |
-| Licensing contact email `[LICENSING CONTACT EMAIL]` | LICENSE, README, CONTRIBUTING, agreements |
-| Security contact email `[SECURITY CONTACT EMAIL]` | CONTRIBUTING |
 | Governing law, dispute forum, arbitration rules | every agreement |
 | Approval threshold for non-commercial authorizations (default: all four) | founders agreement, use authorization. If it is lowered, LICENSE section 5 must change too. |
 | Exit, death, incapacity and valuation terms | founders agreement |
@@ -160,7 +158,6 @@ There are no external contributors today. Any future contributor signs `CONTRIBU
 7. **Governance depends on trust.** All four founders are organization owners. Any one of them can still change visibility, delete or transfer the repository, or edit protection rules. Once the founders agreement is signed, its no-unilateral-action clause will govern this; until then, only the founders' mutual trust and the audit log guard against it.
 8. **Deadlock.** Unanimous approval means any one founder can block a decision, and four founders can split two against two. The founders agreement sends both to dispute resolution (clauses 12.7, 12.8 and 13).
 9. **Lemovue is not a legal entity.** Licenses are signed, and fees received, by the four founders personally. Tax and liability consequences need advice.
-10. **Placeholders in a live LICENSE.** `[LICENSING CONTACT EMAIL]` must be filled in before the LICENSE is merged. Otherwise nobody can request authorization.
 
 ## 10. Outstanding approvals and signatures
 
@@ -171,7 +168,7 @@ There are no external contributors today. Any future contributor signs `CONTRIBU
 
 ## 11. Recommended actions before enforcing the new licensing policy
 
-1. Fill in the licensing and security contact emails. Use an address that all four founders can access.
+1. Add all four founders as owners of the licensing group (tenetscaler-licensing@googlegroups.com) and confirm that emails from outsiders arrive.
 2. Each founder completes their Schedule 3 contribution record and Schedule 4 disclosures, including any university, employer or sponsor claim.
 3. Check the university IP policy and any course, sponsor or competition rules (section 9, item 2).
 4. Agree ownership percentages, governing law, approval thresholds and exit terms. Have a lawyer review all agreements.

@@ -182,7 +182,7 @@ The Founders are numbered in alphabetical order of GitHub username. The numberin
 
 7.4 **Procedure.**
 
-(a) Requests are received at [LICENSING CONTACT EMAIL]. A Founder who receives a request elsewhere forwards it there promptly.
+(a) Requests are received at tenetscaler-licensing@googlegroups.com. A Founder who receives a request elsewhere forwards it there promptly.
 
 (b) The request, with a draft authorization, is circulated in writing to all four Founders.
 
@@ -198,7 +198,7 @@ The Founders are numbered in alphabetical order of GitHub username. The numberin
 
 7.6 **Licensing Register.** The Founders keep a private Licensing Register of every approved authorization: licensee, scope, term, fees (if any), signatories, date, and revocation or expiry. It contains licensees' personal data, so it is never committed to the Repository or kept in any public place. It is kept at [LICENSING REGISTER LOCATION - PRIVATE], and each Founder has their own access to it.
 
-7.7 **Licensing contact.** [LICENSING CONTACT EMAIL] is the intake address for licensing requests. It is set up so that all four Founders receive its messages through their own access (for example a shared mailbox or a forwarding alias), without sharing a password. No Founder may remove another Founder's access to it.
+7.7 **Licensing contact.** tenetscaler-licensing@googlegroups.com is the intake address for licensing requests. It is a Google Group, and all four Founders receive its messages as group owners through their own accounts, without sharing a password. No Founder may remove another Founder's access to it.
 
 7.8 **GitHub Terms of Service.** By keeping the Repository public, the Founders grant GitHub users the rights that GitHub's Terms of Service give over public content (viewing, and forking within GitHub's functionality). Nothing in this Agreement purports to restrict those rights, and nothing in it grants more.
 
